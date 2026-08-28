@@ -14,6 +14,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerInputLock.IsLocked) return;
+
         Vector2 input = ReadMoveInput();
         Vector3 moveDir = new Vector3(input.x, 0f, input.y);
 

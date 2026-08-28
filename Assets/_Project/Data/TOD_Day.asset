@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3dfe32788109d8648a4d7f03f1dbdae0, type: 3}
   m_Name: TOD_Day
   m_EditorClassIdentifier: Assembly-CSharp::TimeOfDayModifier
-  timeOfDayName: 
+  timeOfDayName: Day
   spawnCountMultiplier: 1
   enemyStrengthMultiplier: 1
   rareCrystalDropRateMultiplier: 1

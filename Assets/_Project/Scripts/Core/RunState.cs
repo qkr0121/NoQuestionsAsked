@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum TimeSlot { Morning, Day, Night }
@@ -7,19 +8,27 @@ public class RunState : MonoBehaviour
     public static RunState Instance { get; private set; }
 
     [SerializeField] private int currentDay = 1;
-    [SerializeField] private int segmentQuota = 100;
-    [SerializeField] private int segmentProgress = 0;
+    [SerializeField] private int missionInterval = 10;
+    [SerializeField] private int missionQuota = 100;
 
     public int CurrentDay => currentDay;
-    public int SegmentQuota => SegmentQuota;
-    public int SegmentProgress => SegmentProgress;
+    public TimeSlot CurrentSlot { get; private set; } = TimeSlot.Morning;
 
+    public Mission CurrentMission { get; private set; }
     public WaveDefinition SelectedWave { get; private set; }
     public TimeOfDayModifier SelectedTimeOfDay { get; private set; }
+
+    public event Action<Mission> OnMissionIssued;
+    public event Action<bool> OnMissionResolved;
 
     private void Awake()
     {
         Instance = this;
+    }
+
+    private void Start()
+    {
+        IssueNewMission();
     }
 
     public void SelectWave(WaveDefinition wave, TimeOfDayModifier timeOfDay)
@@ -28,29 +37,68 @@ public class RunState : MonoBehaviour
         SelectedTimeOfDay = timeOfDay;
     }
 
-    public void AddSegmentProgress(int amount)
+    public void ClearSelectedWave()
     {
-        segmentProgress += amount;
+        SelectedWave = null;
+        SelectedTimeOfDay = null;
+    }
+
+    public void AdvanceSlot()
+    {
+        if (CurrentSlot == TimeSlot.Night)
+        {
+            AdvanceDay();
+            CurrentSlot = TimeSlot.Morning;
+        }
+        else
+        {
+            CurrentSlot = CurrentSlot + 1;
+        }
     }
 
     public void AdvanceDay()
     {
         currentDay++;
+
+        if (CurrentMission != null && !CurrentMission.IsSubmitted && CurrentMission.IsOverdue(currentDay))
+        {
+            OnMissionResolved?.Invoke(false);
+        }
+        
+        if(IsMissionIssueDay())
+        {
+            IssueNewMission();
+        }
     }
 
-    public bool IsSegmentDeadline()
+    private bool IsMissionIssueDay()
     {
-        return currentDay % 10 == 0;
+        return (currentDay - 1) % missionInterval == 0;
     }
 
-    public bool IsSegmentQuotaMet()
+    private void IssueNewMission()
     {
-        return segmentProgress >= segmentQuota;
+        CurrentMission = new Mission
+        {
+            MissionName = $"크리스탈 상납",
+            RequiredCrystal = missionQuota,
+            IssuedDay = CurrentDay,
+            DueDay = currentDay + missionInterval - 1,
+            IsSubmitted = false
+        };
+
+        OnMissionIssued?.Invoke(CurrentMission);
     }
 
-    public void ClearSelectedWave()
+    public bool TrySubmitMission()
     {
-        SelectedWave = null;
-        SelectedTimeOfDay = null;
+        if (CurrentMission == null || CurrentMission.IsSubmitted) return false;
+        if (CurrencyManager.Instance.Crystal < CurrentMission.RequiredCrystal) return false;
+
+        CurrencyManager.Instance.TrySpend(CurrentMission.RequiredCrystal);
+        CurrentMission.IsSubmitted = true;
+
+        OnMissionResolved?.Invoke(true);
+        return true;
     }
 }

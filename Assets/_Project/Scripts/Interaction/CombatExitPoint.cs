@@ -10,12 +10,8 @@ public class CombatExitPoint : MonoBehaviour
     {
         if (!waveSpawner.CanExit) return;
 
-        if (waveSpawner.IsCleared)
-        {
-            RunState.Instance.AddSegmentProgress(CurrencyManager.Instance.Crystal);
-        }
-
         RunState.Instance.ClearSelectedWave();
+        RunState.Instance.AdvanceSlot();
         SceneManager.LoadScene("Base");
     }
 }

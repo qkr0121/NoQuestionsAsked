@@ -11,6 +11,8 @@ public class PlayerShoot : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerInputLock.IsLocked) return;
+
         cooldownTimer -= Time.deltaTime;
 
         Mouse mouse = Mouse.current;

@@ -23,6 +23,8 @@ public class PlayerAim : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerInputLock.IsLocked) return;
+
         Vector3? aimPoint = GetMouseWorldPoint();
         if (aimPoint == null) return;
 
