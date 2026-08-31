@@ -100,6 +100,7 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 - `EnemyHealth.Initialize(strengthMultiplier, onDeathCallback)`을 `SpawnEnemy()`에서 `Get()` 직후 명시 호출 — `OnEnable`은 최소 리셋만 담당(풀링 오브젝트는 `OnEnable`에서 진짜 초기화하면 안 됨, 호출자가 넘긴 데이터가 아직 없는 시점이라).
 
 **런/미션 시스템 (진행 중, 최근 재설계됨)**
+- **주의**: "10일마다 미션 발급, 100일 런" 같은 구체적 수치는 확정된 최종 값이 아니라 지금 잡아둔 큰 틀. 사용자가 명시적으로 "언제든 바뀔 수 있다(예: 5일마다 미션 제공, 50일 런 완료 등)"고 밝힘 — 코드에 하드코딩된 수치를 GDD 원문처럼 고정값으로 취급하지 말고, 나중에 사용자가 다른 값으로 바꿔도 자연스러운 일이라고 여길 것.
 - 원래 계획했던 "10일마다 자동 판정 + 경고3회+이월" 구조를 버리고, **미션 보드판 방식**으로 교체 완료.
 - `Mission.cs`: 순수 데이터 클래스(`[Serializable]`). `MissionName`, `RequiredCrystal`, `IssuedDay`, `DueDay`, `IsSubmitted`, `DaysRemaining()`, `IsOverdue()`(정확히 `currentDay > DueDay`일 때만 true — 마감일 당일까지는 제출 가능하도록 의도적으로 설계됨).
 - `RunState.cs`: `currentDay`, `TimeSlot`(Morning/Day/Night) 3슬롯 진행, `CurrentMission`, `OnMissionIssued`/`OnMissionResolved` 이벤트(event Action). `AdvanceSlot()`이 Night→다음날 전환 시 `AdvanceDay()` 호출 → 그 안에서 (1) 기존 미션 기한 초과 체크 → 실패 처리, (2) 오늘이 발급일(`(currentDay-1) % missionInterval == 0`, 즉 1/11/21...)이면 새 미션 발급. **중요: 미션 제출 즉시 다음 미션을 주지 않음** — 오직 정해진 발급일에만 새 미션이 뜸(91일에 조기 제출해도 92~100일은 미션 없는 자유 구간이 되도록 하는 핵심 설계).
@@ -226,5 +227,6 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 - Unity MCP를 통한 씬/에셋 조작(GameObject 생성, 컴포넌트 부착, 프리팹화, 머티리얼 생성, 텍스처 생성 등)은 허용됨 — 이건 "코드"가 아니라 에디터 설정이라는 구분.
 - 질문이 오면 먼저 정확한 원인 진단(왜 이런 증상이 나는지)을 설명한 뒤 수정 방향을 코드로 제시하는 순서를 선호함.
 - 오류/버그가 나오면 코드를 실제로 Read해서 정확한 원인을 짚어주길 원함(추측성 답변 지양).
+- **커밋 타이밍**: 기능 구현 중 Claude가 판단하기에 적당한 지점(예: 기능 하나 완료)에 도달하면, 사용자에게 GitHub(Desktop)에 커밋하라고 먼저 알려줄 것. Claude가 직접 git commit을 실행하지 않고(코드는 사용자가 직접 관리), 타이밍만 알려주는 역할.
 - 설계 관련 질문에서는 "왜 이 방식이 좋은지"와 "실제로 언제 이 방식이 손해인지"를 균형 있게 설명하는 걸 선호 — 무조건 정석/베스트 프랙티스를 밀어붙이기보다, 지금 규모에 맞는 실용적 판단을 요구함 (예: 상속 vs 직접 작성 논쟁에서 사용자가 오버엔지니어링을 지적하면 그 지적이 맞으면 인정하고 더 간단한 대안 제시).
 - 메모리 파일(`C:\Users\KGA1\.claude\projects\C--Unity-ZombieWaveDefence\memory\project_zombie_wave_defence.md`)에 프로젝트 결정사항이 계속 누적되고 있음 — 새 세션에서도 이 메모리가 로드되므로 이 SessionLog와 함께 참고하면 됨.
