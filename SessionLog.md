@@ -1,6 +1,6 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-08-28
+마지막 업데이트: 2026-08-31
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다. Unity/에디터 작업은 전부 사용자가 직접 진행하고, Claude는 설명·코드 안내만 담당(직접 코드 수정 금지 — Unity MCP로 씬/에셋 조작만 허용)하는 방식으로 작업해왔습니다.
 
@@ -22,7 +22,8 @@
 2. **One-page GDD 작성** — 게임을 정식 타이틀로 발전시키기로 하고 기획서 작성. Artifact로 게시: **https://claude.ai/code/artifact/5688964a-2d15-44d1-a894-eeb74df19cde** (제목: "No Questions Asked"). 같은 URL로 계속 갱신 중이므로 새 세션에서도 이 링크를 다시 읽으면 최신 기획 내용을 알 수 있음.
 3. **Notion 포트폴리오** — "No Questions Asked" 페이지 안 "진행과정" 데이터베이스에 5개 하위 페이지 작성됨 (GDD 요약, 기술 스택, 필수 11단계, 로그라이트 전환 설계, 배운 점/버그 기록). Notion 링크는 사용자 워크스페이스에 있음 (검색 가능: "No Questions Asked").
 4. **아키텍처 전환**: 단일 씬 → `Base`(지하실, 관리) / `ZWD`(전투) 2씬 구조 + `DontDestroyOnLoad` 영속 매니저.
-5. **웨이브 선택 UI, HUD 공용화, 미션 보드 시스템**까지 구현 완료 (아래 상세 참고).
+5. **웨이브 선택 UI, HUD 공용화, 미션 보드 시스템**까지 구현 완료.
+6. **세이브/로드 + MainMenu 씬 + 로딩/페이드 연출**까지 구현 완료 (아래 8번 섹션 참고). 이제 씬이 4개(`MainMenu`, `Loading`, `Base`, `ZWD`)로 늘어남.
 
 ---
 
@@ -170,15 +171,51 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 
 ---
 
+## 8. 세이브/로드 · MainMenu · 로딩/페이드 시스템 (구현 완료)
+
+새 씬 `MainMenu.unity`(빌드 인덱스 0)와 `Loading.unity`을 추가해 씬이 총 4개(`MainMenu`, `Loading`, `Base`, `ZWD`)가 됨.
+
+**세이브/로드**
+- `SaveData.cs` 한 파일에 독립 top-level 클래스 3개(중첩 아님, 그냥 이름으로 바로 참조): `MissionSaveEntry`(미션을 배열로 저장 — 지금은 0~1개뿐이지만 나중에 여러 미션 동시 진행 확장 대비), `PlayerSaveData`(지금은 체력만, 무기/웨이브해금트리는 나중에 필드 추가 예정), `SaveData`(day/slot/crystal/rareCrystal + missions 배열 + player + HasSaveData).
+- `SaveManager.cs` (`PersistentManagers`, static Instance 패턴): JSON 직렬화(`JsonUtility`)로 저장/로드/삭제. **`HasSaveData` 필드는 현재 Save()에서 세팅 안 됨(죽은 필드) — HasSave()는 파일 존재 여부로만 판단하니 실害 없지만 나중에 정리 대상.**
+- **임시 디버그 설정**: `SaveManager.SavePath`를 `Application.persistentDataPath` 대신 `Application.dataPath/_Project/save.json`으로 변경해 `Assets/_Project/save.json`에서 직접 확인 가능하게 함. **반드시 실제 빌드 전에 `Application.persistentDataPath`로 되돌려야 함** (`Application.dataPath`는 에디터에서만 Assets 폴더를 가리키고 빌드에서는 다른 경로를 가리킴). 지금은 의도적으로 이 save.json을 **git에 커밋**해서 여러 PC 간 동일한 세이브로 이어서 테스트할 목적 — `.gitignore`에 넣지 않음(넣으면 다른 PC에 세이브가 안 딸려옴). 실제 빌드 준비 시점에 경로 원복 + 이 파일 정리 필요.
+- 자동저장은 `RunState.AdvanceSlot()` 안에서만 트리거(슬롯/날짜 넘어갈 때). **의도적으로** `GameUI.OnReturnToMainMenuClicked()`에는 저장 호출을 넣지 않음 — 슬롯 중간에 메뉴로 나가면 그 진행은 저장 안 되는 게 설계 의도(일부러 손실 나게 함), 나중에 "왜 저장 안 하지"라고 헷갈리지 말 것.
+
+**실행 순서 버그와 해결 (기록해둘 가치 있음)**
+- `RunState`가 `PersistentManagers`(`DontDestroyOnLoad`)에 있고, `MainMenu` 씬에도 `Bootstrap`이 있어서 `RunState.Awake()`가 `MainMenu` 로드 시점에 이미 실행됨. 원래 로드-체크 로직을 `RunState.Start()`에 뒀더니, Base 씬 진입 시점엔 이미 `Start()`가 지나간 뒤라(같은 인스턴스가 살아남아서) 전혀 실행되지 않는 버그가 있었음. **해결**: `Start()`를 없애고 `Awake()`에서 `SceneManager.sceneLoaded`를 구독, `scene.name == "Base"`일 때만 반응 + `if (CurrentMission != null) return;`로 이미 진행 중인 런에서 Base↔ZWD를 오갈 때 재트리거되지 않게 가드. **교훈**: DontDestroyOnLoad 오브젝트에서 "씬 X가 로드될 때 뭔가 하기" 로직은 `Start()`가 아니라 `SceneManager.sceneLoaded`를 써야 함 — `Start()`는 살아남은 인스턴스에서 다시 안 불림.
+- "새로 시작"이 세이브 파일만 지우고 메모리 상의 `RunState`/`CurrencyManager`/`PlayerManager` 값은 그대로 남아 이전 런 이어서 시작되는 버그도 같은 원인 계열. **해결**: `RunState.ResetForNewRun()`, `CurrencyManager.ResetCrystal()`을 추가해 `MainMenuUI.OnNewGameClicked()`에서 명시 호출 + `PlayerManager.SetHealth(max,max)`로 체력도 리셋. **교훈**: DontDestroyOnLoad 싱글톤은 "새로 시작" 시나리오를 위한 명시적 리셋 메서드가 필요함 — 세이브 파일 삭제는 디스크만 지울 뿐 살아있는 인스턴스의 메모리 상태는 안 건드림.
+
+**MainMenu 씬**
+- `MainMenuUI.cs`: 이어하기(`SaveManager.HasSave()`로 표시 여부 결정 후 `PendingLoad.ShouldLoad=true` 설정 → 씬 이동), 새로시작(세이브 삭제 + 위 리셋들 호출), 설정(미구현), 종료(`Application.Quit()`, 에디터에서는 no-op, 빌드에서만 동작).
+- 버튼 4개를 `ButtonContainer`(`Vertical Layout Group`, Control Child Size는 Width만 체크/Height는 체크 해제, Child Force Expand Width) 아래 자식으로 배치 — 이어하기 버튼이 `SetActive(false)`되면 Layout Group이 자동으로 나머지 3개를 재정렬하므로 별도 정렬 코드 불필요.
+- 배경은 임시로 단색 Panel(`#1C1A15`, GDD에서 쓰던 표면색) — 화면 전체를 덮으면 사실상 거의 검정으로 보임(육안 차이 미미), 어차피 나중에 실제 배경 이미지로 교체 예정이라 지금은 무시하고 넘어감.
+
+**Loading 씬 (MainMenu↔Base 전용)**
+- `GlobalFlags.cs`에 `SceneTransitionRequest`(static, `TargetSceneName` 문자열 하나) 추가 — `PlayerInputLock`, `PendingLoad`와 함께 한 파일에 모음(cs 파일 개수가 39개까지 늘어나 파악하기 어려워져서, 이후 이런 순수 static 플래그/데이터 클래스들은 이 파일에 모으기로 함. MonoBehaviour + Instance 싱글톤류는 계속 개별 파일 유지).
+- `SceneTransitioner.cs`(static, `GoTo(sceneName)`): 목표 씬 이름을 `SceneTransitionRequest`에 적어두고 `"Loading"` 씬으로 이동.
+- `LoadingScreen.cs`: `SceneManager.LoadSceneAsync` + `operation.allowSceneActivation = false`로 90%에서 대기시켜두고, 최소 표시 시간(1.2초)과 실제 로드 진행률 중 더 느린 쪽을 프로그레스바에 반영, 로드 완료 + 최소시간 경과 둘 다 만족해야 `allowSceneActivation = true`로 실제 전환. 씬이 가벼워서 로딩이 순식간에 끝나도 로딩 화면이 최소 시간만큼은 항상 보이도록 하기 위한 장치.
+- `MainMenuUI`의 씬 이동 호출을 전부 `SceneTransitioner.GoTo(...)`로 교체.
+
+**Base↔ZWD 페이드 인/아웃 (Loading 씬 대신, 더 빈번한 전환이라 가벼운 연출 선택)**
+- `SceneFader.cs`(`PersistentManagers`, static Instance): `FadeToScene(name)` → 화면을 검게 페이드아웃 → `SceneManager.LoadScene`(동기, Base/ZWD는 가벼워서 문제없음) → 페이드인.
+- `FadeCanvas`(Sort Order 높게) + `FadeImage`(화면 전체 덮는 검은 Image, 초기 Alpha 0)를 `PersistentManagers`에 추가. **겪은 버그**: Alpha 0이라도 `Image`의 `Raycast Target`이 켜져 있으면 투명해도 클릭을 가로채서 뒤의 버튼이 안 눌림 — `Raycast Target` 체크 해제로 해결. 렌더링 자체는 계속 되고 있지만(완전 투명 풀스크린 사각형 1장) 성능에 영향 없는 수준이라 그냥 두기로 함(SetActive로 껐다 켜는 최적화는 불필요하다고 판단).
+- `BaseExitPoint.Exit()`, `CombatExitPoint.TryExit()`의 `SceneManager.LoadScene(...)`를 `SceneFader.Instance.FadeToScene(...)`로 교체.
+
+---
+
 ## 7. 다음에 할 일 (우선순위 순, 사용자가 마지막에 확인한 흐름 기준)
 
-1. **미션 보드 UI 마무리**: `RefreshDisplay()`에 `hasMission` 분기(미션 있음/없음에 따라 텍스트·버튼 그룹 SetActive 전환, "대기 중" 텍스트 별도 표시) 실제 반영 확인.
-2. `WaveSelectionUI`의 `valueEnemyCount`에 시간대 스폰수 배율 반영 (안내는 했으나 미적용 확인됨).
-3. `CombatExitPoint.cs`에서 삭제 대상으로 안내한 `AddSegmentProgress()` 호출 실제 삭제 확인.
-4. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설/수면 임시 상호작용도 만들어서 슬롯 소비 흐름 전체 검증.
-5. 미션 실패/성공 시 보드판에 시각적 피드백(느낌표 아이콘 등) — 사용자가 "이건 이거(미션 시스템) 다 작성한 다음 진행할 예정"이라고 명시.
-6. "웨이브 미선택 상태로 지상 다녀오면 시간 흐르는 문제" 기획 결정 (위 3옵션 중 선택).
-7. **전투 피드백 구현** — 설계는 위 6번 섹션에 완료, 실제 구현 착수. (총구화염/킥백/카메라셰이크 → 좀비 색상플래시/넉백/스턴 → 피 튀김 파티클 → 사운드 순서 추천)
+**완료됨**: 미션 보드 UI hasMission 분기 / 웨이브 선택 UI 시간대 배율 반영 / CombatExitPoint AddSegmentProgress 삭제 / 세이브·로드 시스템 / MainMenu 씬 / 인게임→메인메뉴 복귀 버튼 / Loading 씬(MainMenu↔Base) / 페이드 인아웃(Base↔ZWD). 상세는 위 8번 섹션.
+
+남은 목록 (다음 목표: **3D 모델 적용 → 웨이브 추가 → 프로토타입 v1**):
+
+1. **3D 모델 적용** — VARCO 3D AI로 카툰풍 인간형 캐릭터/좀비 제작 및 적용 (다음 작업).
+2. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
+3. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설/수면 임시 상호작용도 만들어서 슬롯 소비 흐름 전체 검증.
+4. 미션 실패/성공 시 보드판에 시각적 피드백(느낌표 아이콘 등) — 사용자가 "이건 이거(미션 시스템) 다 작성한 다음 진행할 예정"이라고 명시.
+5. "웨이브 미선택 상태로 지상 다녀오면 시간 흐르는 문제" 기획 결정 (3옵션 중 선택 필요).
+6. **전투 피드백 구현** — 설계는 위 6번 섹션에 완료, 실제 구현 착수. (총구화염/킥백/카메라셰이크 → 좀비 색상플래시/넉백/스턴 → 피 튀김 파티클 → 사운드 순서 추천)
+7. **빌드 전 필수**: `SaveManager.SavePath`를 `Application.persistentDataPath`로 원복, `Assets/_Project/save.json` 정리.
 8. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 사망 처리 로그라이트화, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
 
 ---

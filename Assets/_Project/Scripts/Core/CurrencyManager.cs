@@ -25,4 +25,14 @@ public class CurrencyManager : MonoBehaviour
         Crystal -= amount;
         return true;
     }
+
+    public void SetCrystal(int amount)
+    {
+        Crystal = amount;
+    }
+
+    public void ResetCrystal()
+    {
+        Crystal = 0;
+    }
 }

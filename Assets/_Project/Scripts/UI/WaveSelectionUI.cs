@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEditor.Search;
 
 public class WaveSelectionUI : MonoBehaviour
 {

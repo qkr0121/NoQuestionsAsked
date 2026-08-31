@@ -31,4 +31,9 @@ public class GameUI : MonoBehaviour
             _ => ""
         };
     }
+
+    public void OnReturnToMainMenuClicked()
+    {
+        SceneTransitioner.GoTo("MainMenu");
+    }
 }

@@ -12,6 +12,6 @@ public class CombatExitPoint : MonoBehaviour
 
         RunState.Instance.ClearSelectedWave();
         RunState.Instance.AdvanceSlot();
-        SceneManager.LoadScene("Base");
+        SceneFader.Instance.FadeToScene("Base");
     }
 }

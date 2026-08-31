@@ -75,3 +75,6 @@ crashlytics-build.properties
 
 # Windows
 Thumbs.db
+
+# 세이브 파일 (PC간 동기화용, 임시)
+/[Aa]ssets/_Project/save.json

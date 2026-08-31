@@ -5,6 +5,6 @@ public class BaseExitPoint : MonoBehaviour
 {
     public void Exit()
     {
-        SceneManager.LoadScene("ZWD");
+        SceneFader.Instance.FadeToScene("ZWD");
     }
 }
