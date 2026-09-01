@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 26738b7837ca62b44a7c2f50d45b09e1
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 392094
+  packageName: Stylized Toon Shader Pack - URP & Built-In
+  packageVersion: 1.0.1
+  assetPath: Assets/HaniJahanDesign/Shaders/Toon/Scenes/Shaders_Toon_Demo_URP.unity
+  uploadId: 968926

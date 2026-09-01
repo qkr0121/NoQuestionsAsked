@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6de5b2f2c382ee44095ad4aef3330b6a
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 392094
+  packageName: Stylized Toon Shader Pack - URP & Built-In
+  packageVersion: 1.0.1
+  assetPath: Assets/HaniJahanDesign/Shaders/SharedShaders/HJD_Toon_Common.hlsl
+  uploadId: 968926

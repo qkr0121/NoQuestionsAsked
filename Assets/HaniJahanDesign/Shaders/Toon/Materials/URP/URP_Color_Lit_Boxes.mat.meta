@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d343b90c9203c9d4fb74cbc3527156c6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 392094
+  packageName: Stylized Toon Shader Pack - URP & Built-In
+  packageVersion: 1.0.1
+  assetPath: Assets/HaniJahanDesign/Shaders/Toon/Materials/URP/URP_Color_Lit_Boxes.mat
+  uploadId: 968926

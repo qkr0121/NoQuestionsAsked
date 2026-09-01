@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5af5b0a40db79474e969ad71c876614c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 392094
+  packageName: Stylized Toon Shader Pack - URP & Built-In
+  packageVersion: 1.0.1
+  assetPath: Assets/HaniJahanDesign/Shaders/Toon/Materials/BuiltIn/BuiltIn_Toon_03.mat
+  uploadId: 968926
