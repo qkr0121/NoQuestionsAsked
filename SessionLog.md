@@ -227,6 +227,11 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 - **`interactPrompt` 필드는 모든 InteractableStructure(소환기/미션보드/엘리베이터 전부)에서 아직 비어 있음(null)** — `SetPromptVisible`이 null 체크로 방어되어 있어 에러는 안 나지만, 상호작용 시 화면에 안내 UI 자체가 안 뜸. 프롬프트 UI(예: "F: 상호작용" 텍스트)는 아직 미구현 상태로, 별도 작업 필요.
 - **나중에 할 일(폴리싱, 지금은 보류)**: 엘리베이터 몸통이 안 보여서 "이게 엘리베이터"라는 게 헷갈릴 수 있는 문제 — (a) interactPrompt 구현 시 "엘리베이터 탑승/지상으로 이동" 등 명확한 문구로 채우기, (b) 상판 가장자리에 발광 라인이나 스포트라이트 조명으로 강조. 몸통 일부 노출은 구현 난이도상 보류 결정.
 
+**카메라 줌 인/아웃 기능 완료** (2026-09-03): Base 지하 기지가 고정 카메라 거리로는 너무 멀어 보이는 문제로 착수, 마우스 휠로 카메라 거리를 조절하는 기능 추가.
+- `CameraFollow.cs`에 `zoomLevel`(배율, 기본 1)을 추가하고, 기존 `offset` 벡터에 이 배율을 곱해서 카메라-플레이어 거리만 조절되도록 함(방향/각도는 고정). 마우스 휠 입력은 New Input System의 `Mouse.current.scroll`을 직접 읽는 방식(프로젝트 전체가 이미 `Keyboard.current`/`Mouse.current` 직접 조회 패턴이라 Input Actions 에셋 등록 없이 바로 사용 가능했음).
+- **겪은 버그**: 처음 구현 시 `Update()`에서 `zoomLevel` 값은 마우스 휠에 따라 정상적으로 계산되고 있었지만, 실제 카메라 위치를 계산하는 `LateUpdate()`의 `desirePosition = target.position + offset` 식에는 이 값이 곱해지지 않아 화면상 아무 변화가 없었음. `offset * zoomLevel`로 수정해 해결 — New Input System 입력 인식 문제가 아니라, 계산된 값을 실제로 사용하지 않은 단순 로직 누락이었음.
+- **씬별 기본 줌 차이**: Base(지하실)와 ZWD(전투)는 원하는 기본 카메라 거리가 다름. `zoomLevel`을 코드에서 고정값(`= 1f`)으로 초기화하면 Play 모드마다 항상 그 값으로 리셋되어, 씬마다 다른 기본값을 주기 어려웠음. 씬 이름으로 분기하는 조건문 대신, `initialZoom`이라는 별도 `[SerializeField]` 필드를 두고 `Awake()`에서 `zoomLevel = initialZoom`으로 초기화하는 방식을 택함 — Base/ZWD 각 씬의 카메라 오브젝트 인스펙터에서 값만 다르게 넣으면 되므로, 코드를 씬 이름에 의존시키지 않고 순수하게 데이터(인스펙터 값) 차이로 처리.
+
 남은 목록 (다음 목표: **웨이브 추가 → 프로토타입 v1**):
 
 1. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
