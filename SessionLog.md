@@ -1,6 +1,6 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-08-31
+마지막 업데이트: 2026-09-03
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다. Unity/에디터 작업은 전부 사용자가 직접 진행하고, Claude는 설명·코드 안내만 담당(직접 코드 수정 금지 — Unity MCP로 씬/에셋 조작만 허용)하는 방식으로 작업해왔습니다.
 
@@ -208,16 +208,36 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 
 **완료됨**: 미션 보드 UI hasMission 분기 / 웨이브 선택 UI 시간대 배율 반영 / CombatExitPoint AddSegmentProgress 삭제 / 세이브·로드 시스템 / MainMenu 씬 / 인게임→메인메뉴 복귀 버튼 / Loading 씬(MainMenu↔Base) / 페이드 인아웃(Base↔ZWD). 상세는 위 8번 섹션.
 
-남은 목록 (다음 목표: **3D 모델 적용 → 웨이브 추가 → 프로토타입 v1**):
+**3D 모델 적용 완료** (2026-09-03): VARCO 3D로 제작한 카툰풍 모델을 플레이어/HeavyZombie/Summoner(소환기)/MissionBoard/ExitPoint(Base·ZWD 공용 엘리베이터)까지, Base·ZWD 씬의 바닥/벽/천장까지 전부 적용 완료. **지금 존재하는 기능 범위 내에서는 3D 모델 적용 단계 끝** — CrystalRock/Store/Bed는 해당 기능(채굴/상점/수면) 자체가 아직 없어서 모델만 대기 중, 새 기능 만들 때마다 그때그때 모델 적용이 필요함(예: 새 웨이브의 적 종류 추가 시 등).
+- **Base 바닥/벽/천장**: fbx 모델이 아니라 Plane/Cube 프리미티브 + 이미지 생성(Nano Banana Pro)으로 뽑은 seamless 타일링 텍스처로 구현. 이유: 바닥/벽처럼 반복 배치가 전제되는 평면 구조물은 통짜 3D 모델보다 텍스처 타일링 방식이 맵 크기 변경에 유연하고 이음새 문제도 적음. 스타일은 소환기/미션보드(카툰이지만 리벳·금속 하이라이트가 있는 "살짝 사실적인 스타일라이즈드" 톤)에 맞춰 "카툰 SF" 절충으로 결정, 색상은 회색 콘크리트 톤이 아니라 철/스틸 톤으로. 세계관상 벽/바닥은 크리스탈 없는 순수 인간 건축(소환기 등 장비만 외계 크리스탈 기술)이라는 설정 반영해 프롬프트에 명시적으로 크리스탈 배제.
+- **콜라이더-바닥 정렬 팁**: Plane과 Cube는 피벗 위치가 다름(Plane은 표면 중앙, Cube는 정육면체 중앙) — 벽(Cube) Position.y를 `벽 높이/2`로 맞춰야 바닥(Plane, Y=0)과 밑면이 딱 맞음. 정확히 맞추려면 Scene 뷰에서 `V` 키를 누른 채 벽의 모서리 버텍스를 바닥 모서리 버텍스로 드래그하는 버텍스 스냅이 가장 정확함.
+- 플레이어: `PlayerCharacterPistolIdle.fbx`(Idle) + `Pistol Walk.fbx`(Mixamo 소스 Walk 애니메이션)를 Humanoid Animator로 연결. `PlayerMovement.cs`에 `Animator` 참조 추가, 입력 있으면 `IsMoving` bool true/false로 Idle↔Walk 전환.
+- **겪은 버그와 원인 (기록해둘 가치 있음)**:
+  - Walk 애니메이션 재생 시 캐릭터가 맵 중앙으로 이동해버리는 문제 → fbx Animation 클립의 `Root Transform Position (XZ)`가 `Bake Into Pose`(keepOriginalPositionXZ) 꺼진 상태라, 원본 캡처의 실제 이동 궤적이 그대로 재생된 것. XZ Bake Into Pose 체크로 해결.
+  - 이동은 멈췄지만 방향이 살짝 틀어짐 → 같은 원리로 `Root Transform Rotation`의 Bake Into Pose(lockRootRotation)가 꺼져 있던 게 원인. 체크로 해결.
+  - Y축으로 약 1 정도 뜬 채로 걷는 문제 → 처음엔 피벗 위치 차이로 추정했으나 실제 원인은 **스케일 불일치**: Idle 모델은 Blender에서 3배 확대 + 피벗 중앙 이동 작업을 거쳤지만, Walk 애니메이션(Mixamo 원본)은 그 작업을 안 거쳐 리그 크기가 3배 차이 났음(Hips~발 높이 비교로 확인). Walk fbx도 Blender에서 동일하게 3배 확대 후 재출력하여 해결. **교훈**: 같은 캐�릭터에 물릴 여러 fbx(모델/애니메이션 별도 파일)는 반드시 동일한 스케일 작업을 거쳐야 함 — 하나만 스케일 조정하면 Humanoid 리타겟팅의 루트 높이 계산이 어긋나 위아래로 뜨거나 붕 뜨는 것처럼 보임.
+- 좀비/소환기/미션보드는 기존 프리미티브(캡슐/큐브) 자리에 fbx를 자식으로 넣고 시각 컴포넌트(MeshFilter/MeshRenderer)만 제거하는 방식으로 교체.
+- **Summoner(소환기) 콜라이더 변경**: 기존 BoxCollider가 소환기의 좁은 실제 형태보다 넓게 감싸서 빈 공간까지 막는 문제가 있어 MeshCollider(Non-convex, Is Trigger 꺼짐)로 교체. 플레이어의 `PlayerInteractor`가 이미 `SphereCollider`+`Rigidbody`로 트리거 이벤트를 발생시키므로(트리거는 둘 중 하나만 있어도 발생), Summoner 쪽 콜라이더는 Solid로 두면서 막힘+상호작용 감지를 콜라이더 하나로 겸함. 정적 오브젝트라 MeshCollider 성능 비용도 무시할 수준.
+- MissionBoard도 동일한 방식으로 모델 교체 완료(비균등 스케일 이슈는 실제로 안 걸림, 그대로 진행).
+- **CrystalRock(Purple/Emerald 1~3), Store, Bed는 모델은 임포트 완료되었으나 기능(채굴, 상점, 수면) 자체가 아직 미구현이라 배치/연결은 보류** — 해당 기능 만들 때 같이 진행하기로 함.
 
-1. **3D 모델 적용** — VARCO 3D AI로 카툰풍 인간형 캐릭터/좀비 제작 및 적용 (다음 작업).
-2. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
-3. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설/수면 임시 상호작용도 만들어서 슬롯 소비 흐름 전체 검증.
+**3D 모델 적용 단계 상세 기록**:
+- **ExitPoint 디자인 결정**: 문/포탈 대신 원기둥 엘리베이터로 확정 — 세계관(순수 인간 건축, 크리스탈 없음)과 지하/지상 수직 이동 공간감에 가장 잘 맞음. Base·ZWD 양쪽에 완전히 동일한 모델(`ExitElevator.fbx`) 사용(하나의 승강 장치가 오르내리는 설정). 난간까지 있는 모델이라 실제로 막는 콜라이더를 만들면 문 여는 연출 등이 필요해져서, **의도적으로 난간도 그냥 통과되도록 둠**(나중에 여유 생기면 난간 없는 버전으로 재생성 검토).
+- **배치 방식**: 계단 등 실제 Y축 이동 구현은 지금 `PlayerMovement.cs`(순수 수평 이동만 처리)를 크게 건드려야 해서 범위 밖 — 대신 엘리베이터 모델을 Ground 아래로 파묻어 발판 상단만 보이게 배치, 콜라이더는 `SphereCollider`(Is Trigger, 발판 중앙 근처 좁은 범위) 하나만 사용. `BaseExitPoint`/`CombatExitPoint` 오브젝트에 `InteractableStructure`+ExitPoint 스크립트+`SphereCollider`가 함께 있고, 모델(`ExitElevator`)은 자식으로 MeshFilter/MeshRenderer만 가진 순수 시각 오브젝트 — 소환기 때와 같은 패턴. Base/ZWD 양쪽 다 동일한 로컬 Transform 값으로 배치해서 시각적으로 통일.
+- **`interactPrompt` 필드는 모든 InteractableStructure(소환기/미션보드/엘리베이터 전부)에서 아직 비어 있음(null)** — `SetPromptVisible`이 null 체크로 방어되어 있어 에러는 안 나지만, 상호작용 시 화면에 안내 UI 자체가 안 뜸. 프롬프트 UI(예: "F: 상호작용" 텍스트)는 아직 미구현 상태로, 별도 작업 필요.
+- **나중에 할 일(폴리싱, 지금은 보류)**: 엘리베이터 몸통이 안 보여서 "이게 엘리베이터"라는 게 헷갈릴 수 있는 문제 — (a) interactPrompt 구현 시 "엘리베이터 탑승/지상으로 이동" 등 명확한 문구로 채우기, (b) 상판 가장자리에 발광 라인이나 스포트라이트 조명으로 강조. 몸통 일부 노출은 구현 난이도상 보류 결정.
+
+남은 목록 (다음 목표: **웨이브 추가 → 프로토타입 v1**):
+
+1. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
+2. 상호작용 프롬프트 UI 구현 — 위에서 언급한 대로 모든 InteractableStructure의 `interactPrompt`가 비어 있어 상호작용 가능 여부가 화면에 안 보임. 별도 UI 오브젝트(예: "F" 아이콘 + 안내 텍스트) 제작 필요.
+3. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설(Store)/수면(Bed) 상호작용을 실제 기능으로 구현하며 슬롯 소비 흐름 전체 검증 — Store/Bed 모델은 이미 임포트되어 있으니 기능 구현 시 바로 배치 가능.
 4. 미션 실패/성공 시 보드판에 시각적 피드백(느낌표 아이콘 등) — 사용자가 "이건 이거(미션 시스템) 다 작성한 다음 진행할 예정"이라고 명시.
 5. "웨이브 미선택 상태로 지상 다녀오면 시간 흐르는 문제" 기획 결정 (3옵션 중 선택 필요).
 6. **전투 피드백 구현** — 설계는 위 6번 섹션에 완료, 실제 구현 착수. (총구화염/킥백/카메라셰이크 → 좀비 색상플래시/넉백/스턴 → 피 튀김 파티클 → 사운드 순서 추천)
-7. **빌드 전 필수**: `SaveManager.SavePath`를 `Application.persistentDataPath`로 원복, `Assets/_Project/save.json` 정리.
-8. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 사망 처리 로그라이트화, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
+7. CrystalRock(채굴 기능) 구현 — 모델(Purple/Emerald Crystal 1~3)은 준비됨, 채굴 로직/재화 연결 미착수.
+8. **빌드 전 필수**: `SaveManager.SavePath`를 `Application.persistentDataPath`로 원복, `Assets/_Project/save.json` 정리.
+9. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 사망 처리 로그라이트화, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
 
 ---
 

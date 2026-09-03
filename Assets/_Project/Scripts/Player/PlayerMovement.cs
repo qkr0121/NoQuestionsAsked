@@ -5,11 +5,13 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 6f;
 
+    private Animator playerCharacterAnimator;
     private CharacterController controller;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        playerCharacterAnimator = GetComponentInChildren<Animator>();
     }
 
     private void Update()
@@ -20,6 +22,12 @@ public class PlayerMovement : MonoBehaviour
         Vector3 moveDir = new Vector3(input.x, 0f, input.y);
 
         controller.Move(moveDir * moveSpeed * Time.deltaTime);
+        
+        if(playerCharacterAnimator != null)
+        {
+            playerCharacterAnimator.SetBool("IsMoving", input.magnitude > 0f);
+        }
+        
     }
 
     private Vector2 ReadMoveInput()
