@@ -11,18 +11,18 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnContinueClicked()
     {
-        PendingLoad.ShouldLoad = true;
+        PendingLoad.MarkForLoad();
         SceneTransitioner.GoTo("Base");
     }
 
     public void OnNewGameClicked()
     {
         SaveManager.Instance.DeleteSave();
-        PendingLoad.ShouldLoad = false;
+        PendingLoad.Reset();
 
         RunState.Instance.ResetForNewRun();
         CurrencyManager.Instance.ResetCrystal();
-        PlayerManager.Instance.SetHealth(PlayerManager.Instance.MaxHealth, PlayerManager.Instance.MaxHealth);
+        PlayerManager.Instance.ResetHealth();
 
         SceneTransitioner.GoTo("Base");
     }

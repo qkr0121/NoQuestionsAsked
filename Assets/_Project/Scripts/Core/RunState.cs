@@ -8,17 +8,26 @@ public class RunState : MonoBehaviour
 {
     public static RunState Instance { get; private set; }
 
+    [Header("런 진행 상태")]
     [SerializeField] private int currentDay = 1;
+
+    [Header("미션 설정")]
     [SerializeField] private int missionInterval = 10;
     [SerializeField] private int missionQuota = 100;
 
     public int CurrentDay => currentDay;
     public TimeSlot CurrentSlot { get; private set; } = TimeSlot.Morning;
 
+    // 지금은 미션 1개만 가정. 여러 미션 동시 진행(로그라이트 랜덤 미션)으로 확장 시,
+    // Mission[]/List<Mission> 으로 변경하고 발급,제출,마감판정 로직을 별도 MissionManager 로 분리 예정
     public Mission CurrentMission { get; private set; }
     public WaveDefinition SelectedWave { get; private set; }
     public TimeOfDayModifier SelectedTimeOfDay { get; private set; }
 
+    // 지금은 구독자 없음(MissionBoardUI 가 구독하던 걸 Open()의 강제 갱신과 중복이라 제거함)
+    // 다만 삭제하지 않고 남겨둠 - 미션 시각적 피드백(미션보드 위 느낌표/물음표 표시) 구현 시 이 이벤트들을 사용할 예정:
+    // - OnMissionIssued : 새 미션 발급 시 느낌표 표시 트리거
+    // - OnMissionResolved : 실패 피드백(성공과는 별도 구현 예정)에 사용 가능
     public event Action<Mission> OnMissionIssued;
     public event Action<bool> OnMissionResolved;
 
@@ -31,26 +40,6 @@ public class RunState : MonoBehaviour
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        if (scene.name != "Base") return;
-        if (CurrentMission != null) return;
-
-        if (PendingLoad.ShouldLoad)
-        {
-            SaveData data = SaveManager.Instance.Load();
-            if (data != null)
-            {
-                LoadFrom(data);
-                PendingLoad.ShouldLoad = false;
-                return;
-            }
-            PendingLoad.ShouldLoad = false;
-        }
-
-        IssueNewMission();
     }
 
     public void SelectWave(WaveDefinition wave, TimeOfDayModifier timeOfDay)
@@ -95,47 +84,30 @@ public class RunState : MonoBehaviour
         }
     }
 
-    private bool IsMissionIssueDay()
-    {
-        return (currentDay - 1) % missionInterval == 0;
-    }
-
-    private void IssueNewMission()
-    {
-        CurrentMission = new Mission
-        {
-            MissionName = $"크리스탈 상납",
-            RequiredCrystal = missionQuota,
-            IssuedDay = CurrentDay,
-            DueDay = currentDay + missionInterval - 1,
-            IsSubmitted = false
-        };
-
-        OnMissionIssued?.Invoke(CurrentMission);
-    }
-
     public bool TrySubmitMission()
     {
+        // 미션이 없거나 이미 제출됐거나, 크리스탈이 부족하면 실패
         if (CurrentMission == null || CurrentMission.IsSubmitted) return false;
-        if (CurrencyManager.Instance.Crystal < CurrentMission.RequiredCrystal) return false;
+        if (!CurrencyManager.Instance.TrySpend(CurrentMission.RequiredCrystal)) return false;
 
-        CurrencyManager.Instance.TrySpend(CurrentMission.RequiredCrystal);
         CurrentMission.IsSubmitted = true;
-
         OnMissionResolved?.Invoke(true);
         return true;
     }
 
-    private void LoadFrom(SaveData data)
+    public void ResetForNewRun()
+    {
+        currentDay = 1;
+        CurrentSlot = TimeSlot.Morning;
+        CurrentMission = null;
+        SelectedWave = null;
+        SelectedTimeOfDay = null;
+    }
+
+    public void LoadFrom(SaveData data)
     {
         currentDay = data.currentDay;
         CurrentSlot = (TimeSlot)data.currentSlot;
-
-        CurrencyManager.Instance.SetCrystal(data.crystal);
-        if(data.player != null)
-        {
-            PlayerManager.Instance.SetHealth(data.player.currentHealth, data.player.maxHealth);
-        }
 
         if(data.missions != null && data.missions.Length > 0)
         {
@@ -156,12 +128,43 @@ public class RunState : MonoBehaviour
         }
     }
 
-    public void ResetForNewRun()
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        currentDay = 1;
-        CurrentSlot = TimeSlot.Morning;
-        CurrentMission = null;
-        SelectedWave = null;
-        SelectedTimeOfDay = null;
+        if (scene.name != "Base") return;
+        if (CurrentMission != null) return;
+        // 이미 런이 진행 중(미션이 있음)이면 재트리거 방지 - Base <-> ZWD 를 오갈 때마다 이 콜백이 또 불리는데
+        // 그때마다 세이브 로드/새 미션 발급이 반복되면 안 되므로 이 가드가 필수
+
+        if (PendingLoad.ShouldLoad)
+        {
+            if (SaveManager.Instance.TryLoadAndApply())
+            {
+                PendingLoad.Reset();
+                return;
+            }
+            PendingLoad.Reset();
+        }
+
+        IssueNewMission();
+    }
+
+    private bool IsMissionIssueDay()
+    {
+        // 1일차, 11일차, 21일차... (missionInterval 배수+1일째)에만 true
+        return (currentDay - 1) % missionInterval == 0;
+    }
+
+    private void IssueNewMission()
+    {
+        CurrentMission = new Mission
+        {
+            MissionName = $"크리스탈 상납",
+            RequiredCrystal = missionQuota,
+            IssuedDay = CurrentDay,
+            DueDay = currentDay + missionInterval - 1,
+            IsSubmitted = false
+        };
+
+        OnMissionIssued?.Invoke(CurrentMission);
     }
 }

@@ -7,11 +7,7 @@ public class PlayerAim : MonoBehaviour
     [SerializeField] private Transform firePoint;
 
     public Vector3 AimPoint { get; private set; }
-
-    public void SetCamera(Camera camera)
-    {
-        mainCamera = camera;
-    }
+    public Transform FirePoint => firePoint;
 
     private void Awake()
     {
@@ -39,6 +35,11 @@ public class PlayerAim : MonoBehaviour
         transform.rotation = targetRotation;
     }
 
+    public void SetCamera(Camera camera)
+    {
+        mainCamera = camera;
+    }
+
     private Vector3? GetMouseWorldPoint()
     {
         Mouse mouse = Mouse.current;
@@ -47,6 +48,8 @@ public class PlayerAim : MonoBehaviour
         Vector2 mousePos = mouse.position.ReadValue();
         Ray ray = mainCamera.ScreenPointToRay(mousePos);
 
+        // 바닥(Ground)에 직접 Raycast 하지 않고 firePoint 높이의 가상 평면을 쓰는 이유 :
+        // 총구 높이와 바닥 높이가 다르면 화면상 마우스 위치와 실제 탄착점이 어긋나는 버그가 있었음
         Plane aimPlane = new Plane(Vector3.up, firePoint.position);
 
         if (aimPlane.Raycast(ray, out float enter))

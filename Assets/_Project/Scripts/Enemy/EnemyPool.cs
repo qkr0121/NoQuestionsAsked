@@ -38,7 +38,7 @@ public class EnemyPool : MonoBehaviour
 
     private EnemyMovement CreateEnemy()
     {
-        GameObject obj = Instantiate(enemyPrefab, transform);
+        GameObject obj = Instantiate(enemyPrefab, transform); // EnemyPool 오브젝트의 자식으로 생성(Hierarchy 정리 목적)
         EnemyMovement enemy = obj.GetComponent<EnemyMovement>();
         enemy.SetPool(this);
         return enemy;

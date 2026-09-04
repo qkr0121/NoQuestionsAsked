@@ -8,11 +8,6 @@ public class GameUI : MonoBehaviour
     [SerializeField] private TMP_Text dayText;
     [SerializeField] private TMP_Text slotText;
 
-    private void Start()
-    {
-        UIManager.Instance.RegisterGameUI(this);
-    }
-
     private void Update()
     {
         crystalText.text = $"Crystal: {CurrencyManager.Instance.Crystal}";

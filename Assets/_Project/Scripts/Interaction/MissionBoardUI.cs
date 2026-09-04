@@ -3,29 +3,21 @@ using TMPro;
 
 public class MissionBoardUI : MonoBehaviour
 {
+    [Header("패널")]
     [SerializeField] private GameObject panel;
+
+    [Header("미션 진행 중 표시")]
     [SerializeField] private TMP_Text missionNameText;
     [SerializeField] private TMP_Text daysRemainingText;
     [SerializeField] private TMP_Text requiredCrystalText;
     [SerializeField] private UnityEngine.UI.Button submitButton;
+
+    [Header("대기 중 표시")]
     [SerializeField] private TMP_Text waitingText;
 
     private void Awake()
     {
         panel.SetActive(false);
-    }
-
-    private void Start()
-    {
-        RunState.Instance.OnMissionIssued += RefreshDisplay;
-    }
-
-    private void OnDisable()
-    {
-        if(RunState.Instance != null)
-        {
-            RunState.Instance.OnMissionIssued -= RefreshDisplay;
-        }
     }
 
     public void Open()
@@ -37,6 +29,14 @@ public class MissionBoardUI : MonoBehaviour
     public void Close()
     {
         panel.SetActive(false);
+    }
+
+    public void OnSubmitClicked()
+    {
+        if(RunState.Instance.TrySubmitMission())
+        {
+            RefreshDisplay(RunState.Instance.CurrentMission);
+        }
     }
 
     private void RefreshDisplay(Mission mission)
@@ -58,13 +58,5 @@ public class MissionBoardUI : MonoBehaviour
         daysRemainingText.text = $"{mission.DaysRemaining(RunState.Instance.CurrentDay)}일 남음";
         requiredCrystalText.text = $"{mission.RequiredCrystal} 크리스탈";
         submitButton.interactable = CurrencyManager.Instance.Crystal >= mission.RequiredCrystal;
-    }
-
-    public void OnSubmitClicked()
-    {
-        if(RunState.Instance.TrySubmitMission())
-        {
-            RefreshDisplay(RunState.Instance.CurrentMission);
-        }
     }
 }

@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 public class PlayerShoot : MonoBehaviour
 {
-    [SerializeField] private Transform firePoint;
     [SerializeField] private PlayerAim playerAim;
     [SerializeField] private float fireCooldown = 0.2f;
 
@@ -27,14 +26,8 @@ public class PlayerShoot : MonoBehaviour
 
     private void Fire()
     {
-        Vector3 direction = playerAim.AimPoint - firePoint.position;
-        direction.y = 0f;
+        Transform fp = playerAim.FirePoint;
 
-        Quaternion fireRotation = direction.sqrMagnitude > 0.0001f
-            ? Quaternion.LookRotation(direction)
-            : firePoint.rotation;
-
-        ProjectilePool.Instance.Get(firePoint.position, fireRotation);
+        ProjectilePool.Instance.Get(fp.position, fp.rotation);
     }
-
 }

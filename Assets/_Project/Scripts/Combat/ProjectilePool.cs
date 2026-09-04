@@ -20,7 +20,6 @@ public class ProjectilePool : MonoBehaviour
             actionOnGet: OnGetProjectile,
             actionOnRelease: OnReleaseProjectile,
             actionOnDestroy: OnDestroyProjectile,
-            collectionCheck: false,
             defaultCapacity: defaultCapacity,
             maxSize: maxSize
             );

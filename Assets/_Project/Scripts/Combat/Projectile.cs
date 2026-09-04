@@ -34,6 +34,7 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Update() 의 시간 만료 반납과 OnTriggerEnter() 의 충돌 반납이 동시에 발생할 수 있기 때문에 중복 방지
         if (isReleased) return;
 
         if(other.CompareTag("Enemy"))

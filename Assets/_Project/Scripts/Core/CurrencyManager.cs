@@ -26,7 +26,7 @@ public class CurrencyManager : MonoBehaviour
         return true;
     }
 
-    public void SetCrystal(int amount)
+    public void LoadCrystal(int amount)
     {
         Crystal = amount;
     }

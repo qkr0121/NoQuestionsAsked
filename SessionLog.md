@@ -1,6 +1,6 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-09-03
+마지막 업데이트: 2026-09-04
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다. Unity/에디터 작업은 전부 사용자가 직접 진행하고, Claude는 설명·코드 안내만 담당(직접 코드 수정 금지 — Unity MCP로 씬/에셋 조작만 허용)하는 방식으로 작업해왔습니다.
 
@@ -237,12 +237,72 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 1. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
 2. 상호작용 프롬프트 UI 구현 — 위에서 언급한 대로 모든 InteractableStructure의 `interactPrompt`가 비어 있어 상호작용 가능 여부가 화면에 안 보임. 별도 UI 오브젝트(예: "F" 아이콘 + 안내 텍스트) 제작 필요.
 3. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설(Store)/수면(Bed) 상호작용을 실제 기능으로 구현하며 슬롯 소비 흐름 전체 검증 — Store/Bed 모델은 이미 임포트되어 있으니 기능 구현 시 바로 배치 가능.
-4. 미션 실패/성공 시 보드판에 시각적 피드백(느낌표 아이콘 등) — 사용자가 "이건 이거(미션 시스템) 다 작성한 다음 진행할 예정"이라고 명시.
+4. **미션 시각적 피드백 (구체 계획 확정됨)**:
+   - 새 미션 발급 시 미션보드 오브젝트 위에 느낌표 표시(월드스페이스 UI 또는 3D 오브젝트) — `RunState.OnMissionIssued` 이벤트를 구독해서 구현 예정.
+   - 미션을 처음 확인(패널 진입) 또는 수락 버튼 클릭 중 하나의 시점에 물음표로 전환 — 이건 이벤트가 아니라 `MissionBoardUI.Open()`/`OnSubmitClicked()`에서 표시기 오브젝트를 직접 호출하는 방식으로 구현 예정.
+   - 실패 피드백은 별도로 만들 예정(성공/실패 공용 피드백 아님).
+   - **현재 상태**: `RunState.OnMissionIssued`/`OnMissionResolved` 둘 다 구독자가 없는 상태(`MissionBoardUI`가 구독하던 걸 죽은 코드로 판단해 제거함 — `Open()`이 이미 강제 갱신하고 있어서 이벤트 구독이 중복이었음). 다만 이 이벤트들 자체는 위 느낌표/물음표 기능을 위해 의도적으로 남겨둠, 삭제 아님.
 5. "웨이브 미선택 상태로 지상 다녀오면 시간 흐르는 문제" 기획 결정 (3옵션 중 선택 필요).
 6. **전투 피드백 구현** — 설계는 위 6번 섹션에 완료, 실제 구현 착수. (총구화염/킥백/카메라셰이크 → 좀비 색상플래시/넉백/스턴 → 피 튀김 파티클 → 사운드 순서 추천)
 7. CrystalRock(채굴 기능) 구현 — 모델(Purple/Emerald Crystal 1~3)은 준비됨, 채굴 로직/재화 연결 미착수.
 8. **빌드 전 필수**: `SaveManager.SavePath`를 `Application.persistentDataPath`로 원복, `Assets/_Project/save.json` 정리.
 9. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 사망 처리 로그라이트화, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
+10. **좀비 종류 추가 시 같이 처리**: `CurrencyManager.crystalPerKill`(고정값)을 `EnemyHealth`(또는 향후 좀비 데이터)로 이동하고, `AddKillReward()`에 `int amount` 매개변수를 추가해 좀비 종류별로 다른 크리스탈 보상을 줄 수 있게 변경 예정. 지금은 좀비가 HeavyZombie 하나뿐이라 보류 중.
+11. **여러 미션 동시 진행(로그라이트 랜덤 미션) 도입 시 `RunState.cs`에서 같이 처리할 것**:
+    - `CurrentMission`(단일 `Mission`)을 `Mission[]`/`List<Mission>`으로 변경, 발급·제출·마감판정 로직(`IssueNewMission`, `TrySubmitMission`, `AdvanceDay`의 마감 체크)을 별도 `MissionManager` 클래스로 분리 검토.
+    - **잠재 버그(지금은 발현 안 함, 반드시 같이 고칠 것)**: `RunState.AdvanceDay()`에서 미션 마감 실패 시(`OnMissionResolved?.Invoke(false)`) `CurrentMission`을 `null`로 비우지 않음. 지금은 `DueDay = 발급일 + missionInterval - 1` 공식 덕분에 "마감 실패 판정 나는 날 = 항상 다음 발급일"이 우연히 성립해서 `IssueNewMission()`이 실패한 미션을 바로 덮어써 문제가 안 보임. 랜덤 미션 도입으로 발급 간격/마감일이 불규칙해지면 이 전제가 깨져 실패한 미션이 `CurrentMission`에 계속 남을 수 있음 — 실패 판정 직후 명시적으로 `CurrentMission = null` 처리 추가 필요.
+
+## 8. 코드 리팩토링 진행 상황 (폴더별로 하나씩 검토 중)
+
+방식: 폴더 순서(Core → Player → Enemy → Combat → Interaction → Wave → UI → Camera)로, 스크립트 하나씩 6가지 관점(①한 줄씩 설명 ②주석 필요 여부 ③더 효율적인 방법 ④확장 계획 ⑤멤버/메서드 순서 ⑥`[SerializeField]`인데 `[Header]` 없는 필드 분류)으로 검토. 코드 수정은 사용자가 직접 진행.
+
+**진행률 (2026-09-04 기준): 27/41 스크립트 완료.** Core·Player·Enemy·Combat·Interaction·Camera 폴더 전부 완료. **남은 것: Wave 폴더(4개: `CombatSceneEntry`, `TimeOfDayModifier`, `WaveDefinition`, `WaveSpawner`), UI 폴더(7개: `DayCycleUI`, `GameOverUI`, `GameUI`, `LoadingScreen`, `MainMenuUI`, `WaveClearUI`, `WaveSelectionUI`).**
+
+### Core 폴더 — 완료
+- `GlobalFlags.cs` — `PendingLoad`/`SceneTransitionRequest`를 `PlayerInputLock`과 같은 `{ get; private set; }` + 전용 메서드 패턴으로 통일(캡슐화), 각 클래스 역할 설명 주석 추가.
+- `GameBootstrap.cs` — 구조 이미 견고, 주석만 보강 권장(수정 안 함).
+- `CurrencyManager.cs` — `SetCrystal` → `LoadCrystal`로 이름 변경(세이브 로드 전용임을 명확히). `crystalPerKill`/`AddKillReward()`는 좀비 종류 추가 시 `EnemyHealth`로 이동 + 매개변수화 예정(7번 목록 10번 항목).
+- `GameManager.cs` — 구조 견고, 수정 없음(주석 보강만 권장).
+- `Mission.cs` — 순수 데이터 클래스. `IsOverdue()`의 `>` 부등호(마감일 당일까지 제출 가능) 의도 확인. 여러 미션 확장 시 `MissionManager` 분리 계획 확정(7번 목록 11번 항목).
+- `PlayerManager.cs` — `TakeDamage`/`Heal`을 `PlayerManager`에서 `PlayerHealth`(Player 폴더)로 이동, `PlayerManager`는 순수 데이터 계층(`CurrentHealth`, `MaxHealth`, `LoadHealth`, `ResetHealth`, `SetCurrentHealth`)으로 축소 — 상세는 아래 Player 폴더 항목 참고.
+- `RunState.cs` — 메서드 순서 정리(public/private 그룹화), `TrySubmitMission()`의 크리스탈 체크 중복 제거(`TrySpend` 반환값만 사용), `LoadFrom()`을 자기 필드만 복원하도록 축소(아래 SaveManager 항목과 연계), `[Header]` 2그룹 분리. `OnMissionIssued`/`OnMissionResolved`는 현재 구독자 없지만 미션 시각 피드백(느낌표/물음표) 구현 예정이라 의도적으로 유지 — 삭제 아님.
+- `SaveData.cs` — `HasSaveData` 필드는 완전히 죽은 코드(삭제 가능, 미실행). `rareCrystal`은 살아있지만 아직 저장/로드 배관 없음(희귀 크리스탈 시스템 도입 시 연결 예정).
+- `SaveManager.cs` — **Save/Load 비대칭 구조 리팩토링**: `Save()`는 이미 여러 매니저→SaveData 조립하는 조율자였는데 `Load()`는 파일→객체 변환만 하던 것을, `TryLoadAndApply()` 신설로 대칭 맞춤(SaveData→여러 매니저 분배까지 SaveManager가 전담). `RunState.OnSceneLoaded()`가 이제 `SaveManager.Instance.TryLoadAndApply()`만 호출하도록 단순화됨.
+- `SceneFader.cs` — 구조 견고, 동기 로드 이유/alpha 보정 이유 주석만 권장(수정 안 함).
+- `ScenePlayerSpawner.cs` — 구조 견고, `[Header]` 2그룹(생성/연동) 제안(수정 안 함).
+- `SceneTransitioner.cs` — 완결된 2줄짜리 클래스, 수정 없음.
+- `UIManager.cs` — **`gameUI` 필드 삭제**(등록만 되고 실제로 안 쓰이던 죽은 배선 확인 후 제거). `GameUI.Start()`의 `RegisterGameUI` 호출도 함께 제거. `GameUI`가 코드로 활성/비활성화되는 게 아니라 `HUD.prefab` 자체가 Base/ZWD 씬에만 배치되어 있어 MainMenu에는 안 보인다는 것 확인.
+
+### Player 폴더 — 완료
+- `PlayerMovement.cs` — 구조 견고(이전 세션에서 null 체크 버그 이미 수정).
+- `PlayerAim.cs` — `FirePoint` 프로퍼티 추가(외부 노출), `Plane` 기반 조준 계산 이유 주석 추가.
+- `PlayerHealth.cs` — **PlayerManager와 책임 재분리**: `TakeDamage`/`Heal` 로직을 `PlayerManager`에서 이 클래스로 이동. `PlayerManager`는 순수 데이터 저장소, `PlayerHealth`는 게임 로직(사망 판정, GameManager 연동) 전담. 자체 체력 필드는 두지 않고 항상 `PlayerManager.Instance.CurrentHealth`를 통해 읽고 씀(값이 두 곳에 따로 존재하며 어긋나는 버그 방지). `PlayerManager`에 저수준 API `SetCurrentHealth(int value)` 추가.
+- `PlayerInteractor.cs` — 구조 견고, `OnTriggerEnter`/`OnTriggerExit` 중복 코드 헬퍼 추출은 선택 사항(수정 안 함).
+- `PlayerShoot.cs` — **PlayerAim과의 중복 제거**: `firePoint` 필드 삭제하고 `playerAim.FirePoint` 재사용, 자체 방향 계산 없이 `firePoint.rotation` 그대로 사용. 참고: `PlayerAim.Update()`와 `PlayerShoot.Update()`의 스크립트 실행 순서가 보장되지 않아 이론상 한 프레임 오차 가능성 있음(지금은 체감 안 됨, 필요시 Script Execution Order로 명시 가능).
+
+### Enemy 폴더 — 완료
+- `EnemyHealth.cs` — 구조 견고. `CurrencyManager.AddKillReward()` 관련해 `crystalPerKill`을 여기로 옮기고 매개변수화하는 계획 재확인(좀비 종류 추가 시 진행, 7번 목록 10번 항목).
+- `EnemyMovement.cs` — 구조 견고, 지수 감쇠 회전/멱등 가드 등 기존 설계 그대로 유지.
+- `EnemyAttack.cs` — 구조 견고. `attackTimer = attackInterval`이 if 블록 밖에 있는 이유(playerHealth가 null인 예외 상황에서도 매 프레임 GetComponent 반복 호출되는 것을 막는 안전장치) 확인 — 지금 구조가 맞음, 수정 안 함.
+- `EnemyPool.cs` — Unity 표준 ObjectPool<T> 정확한 활용, 수정 없음.
+
+### Combat 폴더 — 완료
+- `Projectile.cs` — 구조 견고, `isReleased` 가드가 실제 경쟁 상황(시간 만료+충돌 동시 발생)을 막는 것 확인.
+- `ProjectilePool.cs` — **`collectionCheck: false` 옵션 제거**(EnemyPool과 통일). Projectile의 `isReleased` 가드가 이미 중복 Release를 원천 차단하고 있어 이 옵션이 불필요했음— 끄면 오히려 향후 실수 시 에디터 경고를 못 받는 안전망 손실이었음.
+
+### Interaction 폴더 — 완료
+- `InteractableStructure.cs` — **`Debug.Log("Interact")` 삭제**(디버그용 임시 로그였음). `onInteract`(UnityEvent) 설계 이유 주석 추가.
+- `LocksInputWhileAcitve.cs` → **`LocksInputWhileActive.cs`로 파일명/클래스명 오타 수정** (SessionLog에 기존 기록된 오타). 여러 UI가 동시에 겹쳐 열리는 경우 `PlayerInputLock`이 단순 bool이라 먼저 닫힌 패널이 늦게 열린 패널의 잠금까지 풀어버릴 수 있는 잠재 이슈 확인(카운터 방식 전환 후보) — 지금은 UI가 동시에 안 겹쳐서 미발현, 필요시 재검토.
+- `MissionBoardUI.cs` — **이벤트 구독 제거**: `RunState.OnMissionIssued` 구독(`Start`/`OnDisable`)이 `Open()`의 강제 갱신과 완전히 중복되는 죽은 코드였음을 확인 후 삭제. `RunState.OnMissionIssued`/`OnMissionResolved` 이벤트 자체는 삭제하지 않음 — 미션 시각 피드백(느낌표/물음표) 구현 계획이 확정되어 그때 다시 쓰일 예정(7번 목록 4번 항목에 상세).
+- `BaseExitPoint.cs` — `[RequireComponent(typeof(InteractableStructure))]` 추가(CombatExitPoint와 일관성 맞춤), 안 쓰이는 `using UnityEngine.SceneManagement;` 제거.
+- `CombatExitPoint.cs` — 구조 견고, BaseExitPoint와 합치지 않기로 결정(각자 다른 로직을 가진 별개 행동이라 분리 유지가 맞음). 확인 UI(나가기 전 확인 팝업 + 웨이브 미완료 시 안내)는 공용 컴포넌트(예: `ConfirmationDialog`) 하나를 만들어 양쪽이 호출만 하는 방식으로 구현 예정 — 중복 구현 불필요.
+
+### Camera 폴더 — 완료
+- `CameraFollow.cs` — `[Header]` 2그룹(추적/줌) 분리. **줌 계산에서 `Time.deltaTime` 제거**: 마우스 스크롤 델타값이 이산적 입력(`scroll` ±1)이라 `Time.deltaTime`을 곱하면 프레임레이트에 따라 감도가 달라지는 문제가 있어, 고정 배율(`* 0.01f`)로 변경. `zoomSpeed`가 이제 정수 단위(1~25 등)로 직관적 조정 가능.
+
+### 남은 것
+- **Wave 폴더**: `CombatSceneEntry.cs`, `TimeOfDayModifier.cs`, `WaveDefinition.cs`, `WaveSpawner.cs`
+- **UI 폴더**: `DayCycleUI.cs`, `GameOverUI.cs`, `GameUI.cs`, `LoadingScreen.cs`, `MainMenuUI.cs`, `WaveClearUI.cs`, `WaveSelectionUI.cs`
 
 ---
 

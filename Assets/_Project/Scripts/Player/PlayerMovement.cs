@@ -11,6 +11,7 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        // Animator 는 fbx 자식 오브젝트에 있어서 GetComponentInChildren 필요
         playerCharacterAnimator = GetComponentInChildren<Animator>();
     }
 
@@ -41,6 +42,7 @@ public class PlayerMovement : MonoBehaviour
         if (kb.aKey.isPressed) input.x -= 1f;
         if (kb.dKey.isPressed) input.x += 1f;
 
+        // 대각선 이동 시 더 빠르게 이동하는 버그 방지
         return input.normalized;
     }
 }
