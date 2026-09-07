@@ -11,6 +11,8 @@ public class SceneFader : MonoBehaviour
     [SerializeField] private Image fadeImage;
     [SerializeField] private float fadeDuration = 0.4f;
 
+    private bool isTransitioning;
+
     private void Awake()
     {
         Instance = this;
@@ -18,6 +20,10 @@ public class SceneFader : MonoBehaviour
 
     public void FadeToScene(string sceneName)
     {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        PlayerInputLock.Lock();
         StartCoroutine(FadeRoutine(sceneName));
     }
 
@@ -28,6 +34,9 @@ public class SceneFader : MonoBehaviour
         // 동기 로드 - Base/ZWD 는 가벼운 씬이라 로딩 지연이 거의 없음(로딩 화면 없이 처리)
         // 무거워지면 LoadingScreen 처럼 비동기 로드+진행바로 바꿀 필요 있음
         yield return Fade(1f, 0f);
+
+        PlayerInputLock.Unlock();
+        isTransitioning = false;
     }
 
     private IEnumerator Fade(float from, float to)

@@ -31,7 +31,23 @@ public static class PendingLoad
     {
         ShouldLoad = false;
     }
+}
 
+// GameOverUI 에서 메인메뉴로 돌아갈 때, 화면이 로딩 UI(LoadingScreen)로 가려진 뒤에 런을 리셋하기 위한 플래그
+// GameOverUI 가 직접 리셋하면 씬 전환 전 잠깐 HUD에 리셋된 값(0,1일차 등)이 보이는 문제가 있어 이렇게 분리함
+public static class PendingRunReset
+{
+    public static bool ShouldReset { get; private set; }
+
+    public static void MarkForReset()
+    {
+        ShouldReset = true;
+    }
+
+    public static void Reset()
+    {
+        ShouldReset = false;
+    }
 }
 
 // SceneTransitioner 가 Loading 씬으로 넘어가기 직전, 실제로 로드할 목표 씬 이름을 적어두는 용도

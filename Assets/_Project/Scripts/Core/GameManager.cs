@@ -19,4 +19,9 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
         UIManager.Instance.ShowGameOver();
     }
+
+    public void ResetGameOver()
+    {
+        IsGameOver = false;
+    }
 }

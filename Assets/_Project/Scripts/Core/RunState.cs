@@ -104,6 +104,14 @@ public class RunState : MonoBehaviour
         SelectedTimeOfDay = null;
     }
 
+    public void ResetEntireRun()
+    {
+        ResetForNewRun();
+        CurrencyManager.Instance.ResetCrystal();
+        PlayerManager.Instance.ResetHealth();
+        GameManager.Instance.ResetGameOver();
+    }
+
     public void LoadFrom(SaveData data)
     {
         currentDay = data.currentDay;

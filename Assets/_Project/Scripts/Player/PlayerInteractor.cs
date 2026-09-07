@@ -32,6 +32,7 @@ public class PlayerInteractor : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerInputLock.IsLocked) return;
         if (currentTarget == null) return;
 
         Keyboard kb = Keyboard.current;

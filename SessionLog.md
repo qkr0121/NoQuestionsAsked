@@ -234,13 +234,13 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 
 남은 목록 (다음 목표: **리팩토링 완료 → 사망 처리 로그라이트화(1순위) → 프로토타입 v1**):
 
-1. **사망 처리 로그라이트화 — 설계 확정, 리팩토링 완료 직후 1순위로 구현** (`GameOverUI.cs`가 현재 필수 11단계 시절의 낡은 `Restart()` 로직을 그대로 갖고 있어 로그라이트 구조와 안 맞는 상태를 발견하고 재설계함):
-   - **UI**: 사망 시 뜨는 패널에 생존 일수(`RunState.CurrentDay`)와 최종 크리스탈(`CurrencyManager.Crystal`) 표시. 버튼은 "재시작"이 아니라 "메인메뉴로" 하나만.
-   - **메인메뉴 이동 시 처리**: `RunState.ResetForNewRun()`, `CurrencyManager.ResetCrystal()`, `PlayerManager.ResetHealth()` 호출 + `SaveManager.DeleteSave()`로 세이브 파일 삭제. 지금 시점엔 "다음 런에 넘길 저장 데이터"가 없음(유산 기록 시스템 미착수라서) — 전부 초기화 대상. 유산 기록 시스템이 생기면 그때 "저장할 것" 목록이 채워짐.
-   - **이어하기 버튼 자동 처리**: `MainMenuUI.Start()`의 `continueButton.SetActive(SaveManager.Instance.HasSave())`가 파일 존재 여부로 판단하므로, 위에서 `DeleteSave()`만 해두면 별도 코드 수정 없이 메인메뉴에 이어하기 버튼이 자동으로 안 뜸.
-   - **`Time.timeScale` 복구 시점**: `GameManager.GameOver()`가 멈춘 시간을, `GameOverUI`의 "메인메뉴로" 버튼을 누르는 시점(`OnReturnToMainMenuClicked()` 안)에 `Time.timeScale = 1f`로 되돌리기로 함 — 사망 UI가 떠 있는 동안은 배경이 정지된 채로 보이는 게 자연스럽고, 버튼 클릭이 "이 장면을 떠나겠다"는 의사표시이므로 그 시점에 되돌리는 게 논리적으로 맞음.
-   - **씬 전환 방식**: `SceneFader`(페이드)가 아니라 `SceneTransitioner.GoTo("MainMenu")`(Loading 씬 경유)로 결정 — 기존 원칙(Loading은 MainMenu↔Base급 무거운/저빈도 전환용, SceneFader는 Base↔ZWD급 가벼운/고빈도 전환용)을 그대로 적용하면 ZWD→MainMenu도 Loading 쪽이 맞음. `GameUI.OnReturnToMainMenuClicked()`가 이미 같은 패턴을 씀.
-   - **리셋 로직 공통화**: `MainMenuUI.OnNewGameClicked()`가 이미 `RunState.ResetForNewRun()` + `CurrencyManager.ResetCrystal()` + `PlayerManager.ResetHealth()`를 호출하고 있는데, `GameOverUI`가 필요로 하는 리셋도 정확히 이 세 줄과 동일함(코드 중복 발생 지점). `RunState.cs`에 이 셋을 한 번에 호출하는 조율 메서드 `ResetEntireRun()`을 추가해서 양쪽(`MainMenuUI.OnNewGameClicked`, `GameOverUI.OnReturnToMainMenuClicked`)이 이 메서드 하나만 호출하도록 통일 예정 — 나중에 리셋 대상이 늘어나도(희귀 크리스탈, 유물 등) `ResetEntireRun()` 한 곳만 고치면 되게.
+1. **사망 처리 로그라이트화 — 1차 마무리 완료 (2026-09-07)** (`GameOverUI.cs`가 필수 11단계 시절의 낡은 `Restart()` 로직을 그대로 갖고 있어 로그라이트 구조와 안 맞는 상태를 발견하고 재설계, 실제 구현까지 완료):
+   - **UI**: 사망 시 뜨는 패널에 생존 일수(`RunState.CurrentDay`)와 최종 크리스탈(`CurrencyManager.Crystal`) 표시. 버튼은 "메인메뉴로" 하나만 — `survivedDaysText` 필드 추가, `Restart()` 삭제하고 `OnReturnToMainMenuClicked()`로 교체 완료.
+   - **`RunState.ResetEntireRun()` 신설**: `ResetForNewRun()` + `CurrencyManager.ResetCrystal()` + `PlayerManager.ResetHealth()` + `GameManager.ResetGameOver()`를 한 번에 호출하는 조율 메서드. `MainMenuUI.OnNewGameClicked()`와 `GameOverUI.OnReturnToMainMenuClicked()` 양쪽이 이 메서드 하나로 통일됨(코드 중복 제거).
+   - **겪은 버그 1 — `GameManager.IsGameOver`가 두 번째 런에서 리셋 안 됨**: `GameManager`도 영속 매니저라 `IsGameOver = true`가 씬을 재로드해도 안 풀림 → 두 번째 런에서 체력이 0이 돼도 `GameOver()`의 `if (IsGameOver) return;` 가드에 막혀 게임오버가 아예 트리거 안 됨. `GameManager.ResetGameOver()` 추가 후 `ResetEntireRun()`에 포함시켜 해결.
+   - **겪은 버그 2 — 메인메뉴 복귀 시 HUD에 리셋값이 잠깐 노출**: `GameOverUI`가 직접 `ResetEntireRun()`을 호출하면, 씬 전환이 실제로 일어나기 전 몇 프레임 동안 ZWD의 HUD가 리셋된 값(크리스탈 0, 1일차 등)을 잠깐 보여주는 깜빡임이 있었음. **해결**: `PendingRunReset`(GlobalFlags.cs, `PendingLoad`와 동일 패턴) static 플래그를 신설해, `GameOverUI`는 리셋을 요청만 하고 실제 `ResetEntireRun()` 호출은 `LoadingScreen.LoadTargetScene()` 코루틴 맨 앞(화면이 이미 로딩 UI로 가려진 시점)으로 옮김 — 화면 전환 중 상태 변경은 "가려진 뒤에" 처리한다는 패턴으로 일반화 가능.
+   - **씬 전환 방식**: `SceneFader`(페이드)가 아니라 `SceneTransitioner.GoTo("MainMenu")`(Loading 씬 경유) — 기존 원칙(Loading은 무거운/저빈도 전환용, SceneFader는 가벼운/고빈도 전환용)을 그대로 적용.
+   - **"1차" 마무리인 이유(남은 것 2가지, 아래 항목으로 분리)**: ① 런 결과(생존 일수/크리스탈) 기록 시스템 미착수 — 지금은 리셋 시 그냥 사라짐. ② 씬 전환 중 입력 잠금 미착수 — ExitPoint 연타 시 페이드 코루틴이 중복 시작되어 화면이 깜빡이는 문제 확인함(에러는 안 남).
 2. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
 3. 상호작용 프롬프트 UI 구현 — 위에서 언급한 대로 모든 InteractableStructure의 `interactPrompt`가 비어 있어 상호작용 가능 여부가 화면에 안 보임. 별도 UI 오브젝트(예: "F" 아이콘 + 안내 텍스트) 제작 필요.
 4. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설(Store)/수면(Bed) 상호작용을 실제 기능으로 구현하며 슬롯 소비 흐름 전체 검증 — Store/Bed 모델은 이미 임포트되어 있으니 기능 구현 시 바로 배치 가능.
@@ -259,17 +259,88 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 8. **전투 피드백 구현** — 설계는 위 6번 섹션에 완료, 실제 구현 착수. (총구화염/킥백/카메라셰이크 → 좀비 색상플래시/넉백/스턴 → 피 튀김 파티클 → 사운드 순서 추천)
 9. CrystalRock(채굴 기능) 구현 — 모델(Purple/Emerald Crystal 1~3)은 준비됨, 채굴 로직/재화 연결 미착수.
 10. **빌드 전 필수**: `SaveManager.SavePath`를 `Application.persistentDataPath`로 원복, `Assets/_Project/save.json` 정리.
-10. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
-11. **좀비 종류 추가 시 같이 처리 (설계 방향 확정, 구현은 실제 종류 늘어날 때)**:
+11. **런 결과 기록 시스템 (사망 처리 로그라이트화에서 분리, 별도 작업으로 미룸)**: 지금 `RunState.ResetEntireRun()`은 이번 런의 결과(생존 일수, 최종 크리스탈)를 어디에도 남기지 않고 그냥 리셋해버림 — GDD의 "런 종료 시 남은 크리스탈이 순위표에 오른다"는 기록 시스템 자체가 아직 없음. `GameOverUI.Show()`가 화면에 잠깐 보여주는 게 전부. 순위표/최고기록을 영속 저장할지, 어떤 형태로 할지 결정 필요.
+12. **HUD/UI 텍스트 → 이미지 전환**: 지금 `GameUI`, `GameOverUI`, `WaveSelectionUI` 등 대부분의 정보 표시가 TMP_Text 텍스트임. 체력, 크리스탈, 슬롯(아침/낮/밤) 등 대부분을 이미지(게이지 바, 아이콘 등)로 교체 예정 — "Day 1"처럼 가변 숫자라 텍스트가 필수인 것들은 제외.
+13. **씬 전환 중 입력 잠금 — 완료 (2026-09-07)**: `ExitPoint`에서 E키를 연타하면 `SceneFader.FadeToScene()`(코루틴)이 중복으로 시작되어 화면이 깜빡이던 문제(에러는 안 남) 해결.
+    - `SceneFader.cs`: `isTransitioning` bool 필드 추가 — `FadeToScene()` 시작 시 이미 전환 중이면 즉시 return(중복 코루틴 시작 원천 차단), 아니면 `PlayerInputLock.Lock()` 호출 후 코루틴 시작. `FadeRoutine()` 끝(페이드 인 완료 후)에서 `PlayerInputLock.Unlock()` + `isTransitioning = false`.
+    - `PlayerInteractor.cs`: `Update()` 맨 위에 `if (PlayerInputLock.IsLocked) return;` 추가 — 다른 입력 스크립트(PlayerMovement/PlayerAim/PlayerShoot)와 동일한 가드를 상호작용에도 적용, E키 연타 자체가 `Interact()` 호출로 이어지지 않게 원천 차단.
+    - `LoadingScreen.cs`: 처음엔 예방적으로 `Start()`에서 `PlayerInputLock.Lock()`, 코루틴(`while` 루프) 끝나고 `Unlock()`하는 패턴을 적용했으나, **실제 버그로 이어짐(아래 참고)**.
+    - 정리하면 `SceneFader`(Base↔ZWD)는 이중 방어(코루틴 중복 차단 + 입력 잠금), `LoadingScreen`(MainMenu↔Base 등)은 입력 잠금만으로 충분 — 단 Unlock 호출 위치는 아래 버그 수정 반영.
+    - **겪은 버그 — 입력 잠금이 영구히 안 풀림 (2026-09-07, 플레이테스트로 발견)**: Base 씬에서 메인메뉴로 갔다가 다시 Base로 돌아오면 `PlayerInputLock.IsLocked`가 계속 `true`로 남아 이동/조준/발사/상호작용이 전부 막힘. `Debug.Log`로 추적한 결과 `LoadingScreen.LoadTargetScene()` 코루틴 끝의 `PlayerInputLock.Unlock()`이 아예 실행되지 않는 것으로 확인됨.
+      - **원인**: `operation.allowSceneActivation = true`로 설정하는 순간 Loading 씬이 실제로 언로드되면서, 그 코루틴을 실행 중이던 `LoadingScreen` 오브젝트 자체가 파괴됨 — `while` 루프 밖(코루틴 맨 끝)에 있던 `Unlock()`까지 도달하기 전에 코루틴이 강제 중단되는 것이었음. `GameBootstrap.Awake()`에서 씬 진입 시 무조건 `Unlock()`을 부르는 방식도 고려했으나, 이러면 `SceneFader`가 페이드 인이 끝나기 전에 입력을 막아두는 보호가 무력화되는 부작용이 있어 기각.
+      - **해결**: `Unlock()` 호출 위치를 코루틴 끝이 아니라, **`allowSceneActivation = true`로 설정하기 직전 줄**로 이동 — 이 시점엔 `LoadingScreen` 오브젝트가 아직 파괴되기 전이라 확실히 실행됨. `SceneFader.cs`는 건드리지 않아 그쪽 보호 로직은 그대로 유지.
+      - **남은 이론적 허점(무해함, 주석으로 남겨둠)**: `Unlock()` 실행 시점과 실제 씬 전환 사이에 짧은 시차(보통 한 프레임)가 있어 그 사이엔 "Loading 화면이 아직 보이는데 입력은 이미 풀린" 상태가 되지만, Loading 씬엔 플레이어 오브젝트 자체가 없어 실질적 영향 없음. 나중에 Loading 씬에도 페이드 등 별도 연출이 추가되면 이 타이밍을 재검토 필요.
+14. **플레이어 조준 회전 부드럽게 — 완료 (2026-09-07)**: `PlayerAim.cs`의 `transform.rotation = targetRotation;`(즉시 스냅)이 마우스가 반대 방향으로 휙 움직일 때 180도 회전이 순간이동처럼 부자연스러웠던 문제. `EnemyMovement.cs`가 이미 쓰던 것과 동일한 지수 감쇠 `Quaternion.Slerp` 패턴(`1 - Mathf.Exp(-rotationSpeed * Time.deltaTime)`)으로 교체, `rotationSpeed`(기본값 15) 필드를 인스펙터에 노출해 조절 가능하게 함 — 좀비(8)보다 플레이어는 훨씬 즉각적으로 반응해야 하므로 더 큰 기본값 사용.
+15. **플레이어 Idle/Walk 애니메이션 방향 불일치 — 얼추 해결 (2026-09-07)**: Idle 상태에서 사격 방향이 어긋나 모델을 y=30 회전으로 보정했더니, Walk로 전환되면 그 보정이 다시 어긋나 보이는 문제.
+    - **원인 조사**: 두 fbx(`PlayerCharacterPistolIdle.fbx`, `PlayerCharacterPistolWalk.fbx`)의 정적 바인드 포즈(Armature localRotation)는 거의 동일(270도, 오차 범위)했으나, 각각 `Avatar Definition = Create From This Model`로 별도의 Avatar(`...IdleAvatar`, `...WalkAvatar`)를 갖고 있어 리타겟팅 기준이 미세하게 다를 가능성을 의심 — Walk의 Avatar를 Idle 것으로 공유(`Copy From Other Avatar`)하도록 시도했으나 그래도 방향 차이(5~10도)가 남아있어, 결국 **원본 캡처 자체(모션 캡처/AI 생성 소스)의 미세한 회전 오차**로 결론.
+    - **해결 방법**: 모델 오브젝트 전체를 통째로 회전시키는 방식(Idle 기준 y=30) 대신, 각 fbx 클립의 **Root Transform Rotation → Offset** 값(임포트 설정, `ModelImporterClipAnimation.rotationOffset`)을 클립별로 독립적으로 조정 — 원본 fbx나 리그를 건드리지 않고 Unity 임포트 메타데이터에만 저장되는 값이라 안전하고 되돌리기 쉬움. Idle과 Walk 각각 다른 Offset 값으로 얼추 맞춤.
+    - **참고**: 사격 애니메이션은 별도로 만들지 않고 Idle/Walk 두 상태 모두에서 사격 가능하도록 유지 — 사격 피드백은 다른 방식(총구화염/킥백 등, 6번 섹션 전투 피드백 설계)으로 커버할 예정.
+16. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
+17. **좀비 종류 추가 시 같이 처리 (설계 방향 확정, 구현은 실제 종류 늘어날 때)**:
     - `CurrencyManager.crystalPerKill`(고정값)을 `EnemyHealth`(또는 향후 좀비 데이터)로 이동하고, `AddKillReward()`에 `int amount` 매개변수를 추가해 좀비 종류별로 다른 크리스탈 보상을 줄 수 있게 변경.
     - **웨이브 내 좀비 등장 순서 제어**: 지금 `WaveSpawner`는 "총 마릿수"만 세는 카운터 방식(`totalToSpawn`/`spawnedCount`)이고 `EnemyPool`도 프리팹 하나만 관리하는 싱글톤이라, 여러 종류를 정해진 순서로 등장시킬 수 없음. 확장 방향:
       1. `WaveDefinition`에 `EnemySpawnEntry[] spawnSequence`(각 항목 = `{enemyPrefab, count}`) 배열 추가 — 배열 순서 자체가 등장 순서(예: [0]=정찰 5마리, [1]=중형 3마리, [2]=정예 1마리).
       2. `WaveSpawner`의 카운터 로직을 "총 마릿수" 방식에서 "시퀀스 인덱스"(`sequenceIndex`, `countInCurrentEntry`) 방식으로 변경 — 현재 시퀀스 항목의 count를 다 채우면 다음 인덱스로 진행.
       3. `EnemyPool`을 프리팹 하나만 관리하는 싱글톤에서, **프리팹별로 풀을 나눠 관리하는 매니저**(`Dictionary<GameObject, ObjectPool<EnemyMovement>>` 등)로 확장 — 가장 큰 변경 지점.
     - 지금은 좀비가 HeavyZombie 하나뿐이라 전부 보류 중, 새 좀비 종류(3D 모델 포함) 추가하는 시점에 위 설계대로 함께 구현 예정.
-12. **여러 미션 동시 진행(로그라이트 랜덤 미션) 도입 시 `RunState.cs`에서 같이 처리할 것**:
+16. **여러 미션 동시 진행(로그라이트 랜덤 미션) 도입 시 `RunState.cs`에서 같이 처리할 것**:
     - `CurrentMission`(단일 `Mission`)을 `Mission[]`/`List<Mission>`으로 변경, 발급·제출·마감판정 로직(`IssueNewMission`, `TrySubmitMission`, `AdvanceDay`의 마감 체크)을 별도 `MissionManager` 클래스로 분리 검토.
     - **잠재 버그(지금은 발현 안 함, 반드시 같이 고칠 것)**: `RunState.AdvanceDay()`에서 미션 마감 실패 시(`OnMissionResolved?.Invoke(false)`) `CurrentMission`을 `null`로 비우지 않음. 지금은 `DueDay = 발급일 + missionInterval - 1` 공식 덕분에 "마감 실패 판정 나는 날 = 항상 다음 발급일"이 우연히 성립해서 `IssueNewMission()`이 실패한 미션을 바로 덮어써 문제가 안 보임. 랜덤 미션 도입으로 발급 간격/마감일이 불규칙해지면 이 전제가 깨져 실패한 미션이 `CurrentMission`에 계속 남을 수 있음 — 실패 판정 직후 명시적으로 `CurrentMission = null` 처리 추가 필요.
+
+## 9. 다음 구현 순서 및 무기/좀비 상성 설계 (2026-09-07 논의, 기록만 — 구현 시 세부사항 다시 논의)
+
+**구현 순서 확정**: 1) 침대 구현(하면서 슬롯 소비 지점 결정) → 2) 상점 구현(하면서 방어구조물(벽) + 무기 트리 중 권총 계열만 우선) → 3) 좀비 한 종류 추가(하면서 좀비의 구조물 공격 구현) → 4) 웨이브 추가. 세부사항(침대 상호작용 흐름 등)은 각 구현 시점에 다시 논의하기로 함.
+
+### 1) 침대 구현 — 완료 (2026-09-07)
+
+**슬롯 소비 원칙 확정**: 이 게임은 슬롯 소비가 계획적으로 이루어져야 하는 게임이라, **모든 슬롯 소비 지점은 반드시 확인 UI를 거쳐야 함**(원클릭 즉시 소비 금지) — 이 원칙은 앞으로 만들 상점/다른 슬롯 소비 지점에도 동일하게 적용.
+
+**공용 `ConfirmationDialog` 신설**: 지금까지 이런 예/아니오 확인 팝업이 프로젝트에 없었어서 침대를 계기로 처음 만듦. `PersistentManagers` 프리팹 하위에 `ConfirmationCanvas`(Canvas + `ConfirmationDialog` 컴포넌트) → `ConfirmationPanel`(`LocksInputWhileActive` 부착, 열려있는 동안 자동 입력 잠금) → `MessageText`/`YesButton`/`NoButton` 구조로 배치. `Show(string message, Action onConfirmAction)` 하나만 호출하면 메시지와 확인 시 실행할 콜백을 넘길 수 있어, 앞으로 상점 구매 확인·ExitPoint 확인 등에도 그대로 재사용 가능한 공용 컴포넌트로 설계.
+
+**체력 회복 기준 확정**: 침대(슬롯 1개 소비) = 완전 회복(풀피)을 기준점으로 잡음. 나중에 상점에서 크리스탈로 사는 회복 아이템(물약 등)은 이 기준보다 저렴/불완전한 회복으로 설계될 예정 — 침대가 "가장 확실하지만 슬롯(시간)을 쓰는 회복", 물약이 "즉시지만 크리스탈을 쓰는 회복"으로 위계를 나눔.
+- `PlayerManager.cs`에 `FillHealth()` 신설 — 기존 `ResetHealth()`(새 런 시작 전용, 런 생애주기 이벤트)와 개념이 다름을 인지하고 분리. `FillHealth()`는 게임플레이 중 체력을 채우는 일반 행동이라 저수준 API `SetCurrentHealth(maxHealth)`를 통해 처리(직접 대입 아님) — 나중에 "최대 체력 초과 회복 규칙"이 바뀌어도 한 곳만 고치면 되도록.
+- **이미 풀피 상태에서 침대 이용 가능 여부**: 막지 않기로 결정. 침대의 본질은 "체력 회복"이 아니라 "슬롯을 소비하며 안전하게 시간을 넘기는 행동"이고 회복은 부수 효과일 뿐 — 이미 풀피여도 "이번 슬롯은 안전하게 쉬고 싶다"는 선택은 여전히 유효하므로 상호작용 자체를 막을 이유가 없음.
+- `BedInteraction.cs`(신설): `InteractableStructure.onInteract`에 연결되는 `OnInteract()` → `ConfirmationDialog.Show("수면하시겠습니까?", Sleep)` → 확인 시 `PlayerManager.FillHealth()` + `RunState.AdvanceSlot()`.
+
+**중요 발견 — 소환기/미션보드/침대 콜라이더가 전부 `Is Trigger = false`(Solid)인데도 상호작용 정상 작동**: `PlayerInteractor`가 트리거 이벤트로 감지하는데, 상호작용 구조물 쪽 콜라이더는 트리거가 아니어도 문제없음 — 플레이어의 `SphereCollider`(트리거) + `Rigidbody` 조합이 이미 트리거 이벤트 발생 조건을 충족시키므로, 상대방 콜라이더는 Solid여도 무방(이전에 Summoner 리팩토링 때 확인했던 "트리거는 둘 중 하나만 있어도 발생" 원리가 여기서도 그대로 적용됨). 즉 **상호작용 구조물의 콜라이더는 굳이 트리거로 바꿀 필요 없음** — 오히려 Solid로 두면 플레이어를 물리적으로도 막아주는 효과를 겸함.
+
+**주의사항 — 새 상호작용 구조물 만들 때마다 챙길 것**: 상호작용 구조물은 **Layer를 `Interactable`로 설정**해야 `PlayerInteractor`가 감지함(`interactableLayer` 마스크 체크). 지금까지는 만들 때마다 개별적으로 설정해왔는데, 앞으로 새 구조물(상점, 방어구조물 등) 만들 때 이 설정을 빠뜨리지 않도록 매번 같이 확인할 것.
+
+**남은 것(다음 단계에서 처리)**:
+1. `Bed` 오브젝트에 아직 실제 3D 모델(fbx)이 안 들어가 있음(지금은 기본 Cube 형태) — **다음 단계(상점 구현) 시작하자마자 가장 먼저 Bed에 fbx 모델 배치할 것**.
+2. 침대 확인 → 수면 처리 시 화면 페이드 인/아웃 연출 추가 예정(같은 씬 내 암전, `SceneFader`와는 별개의 새 컴포넌트 필요 — 씬 전환이 없는 페이드).
+
+### ⚠️ 상점 구현 시작 전 먼저 처리할 5가지 (2026-09-07 발견, 지금은 기록만 — 상점 구현보다 우선)
+
+**다른 PC에서 이어서 작업 시 이 5개부터 처리하고 나서 "2) 상점 구현" 단계로 넘어갈 것.**
+
+1. **`Bed`에 아직 3D 모델(fbx)이 없음** — 지금은 기본 Cube 형태로 콜라이더/상호작용만 연결된 상태. 다른 구조물(소환기, 미션보드) 때와 같은 방식으로 fbx를 자식으로 배치하고 MeshFilter/MeshRenderer 교체 필요.
+2. **침대 확인 → 수면 처리 시 화면 페이드 인/아웃 연출 없음** — 같은 씬 내 암전 연출(`SceneFader`와는 별개, 씬 전환 없이 화면만 검게 덮었다 걷는 새 컴포넌트 필요, 가칭 `ScreenFader`). `BedInteraction.Sleep()`을 코루틴화해서 페이드아웃 → 회복/슬롯소비 → 페이드인 순서로.
+3. **걷는 도중 상호작용하면 Walk 애니메이션이 멈추지 않고 계속 재생됨**: `PlayerMovement.Update()`가 `PlayerInputLock.IsLocked` 가드로 통째로 멈추면서, 그 직전 프레임에 세팅된 애니메이터 `IsMoving=true`가 그대로 남아있는 게 원인. 해결 방향 후보: `IsMoving`(bool) 파라미터를 `moveSpeed`(float)로 바꾸는 것 — 잠금 시 자연스럽게 0으로 떨어뜨리는 방식이면 근본 해결 + 나중에 블렌딩(감속 애니메이션)도 가능해짐.
+4. **좀비가 플레이어와 완전히 겹치면 제자리에서 빙글빙글 회전**: `EnemyMovement.Update()`의 `if (direction.sqrMagnitude < 0.0001f) return;` 가드가 완전히 겹친 경우만 막아주는데, 물리적으로 완전히 안 겹치고 미세하게 밀리는 상태가 유지되면 아주 작은 방향 벡터를 향해 계속 회전+전진을 반복하며 빙글빙글 도는 것처럼 보임 — 근본 원인은 플레이어와 좀비가 서로를 밀어내지 못하고 겹칠 수 있는 물리 설정.
+5. **Base 씬 카메라가 벽을 뚫고 나감**: `CameraFollow.cs`는 순수 추적 로직만 있고 씬 경계(벽)를 인식하는 카메라 바운드/클램프 로직이 전혀 없음 — 플레이어가 벽에 붙으면 카메라 시야가 벽 밖으로 나가버림. 카메라 위치를 맵 범위 내로 제한하는 로직 추가 필요.
+
+### 좀비 특색 설계 (가위바위보 상성)
+플레이어가 스스로 체감하는 암묵적 상성으로 시작하기로 확정 — 명시적 속성/저항 시스템은 지금 만들지 않음(좀비 3종·무기 계열 1개뿐인 지금 단계에 과함).
+- **헤비좀비**(구현됨): 고체력·저속, 구조물에 고데미지 → 단일 대상 고데미지 무기(저격/RPG류)로 상대하는 게 유리하도록 설계 의도.
+- **일반좀비**(2번째로 만들 좀비): 모든 면에서 평범 — 범용 무기(권총/소총류)로 무난하게 상대.
+- **러너좀비**(3번째로 만들 좀비): 작고 빠르지만 저체력 → 슬로우 또는 범위 공격으로 상대하는 게 유리하도록 설계 의도.
+- 나중에(시점 미정) 날씨/속성 시스템을 좀비와 무기 양쪽에 도입해 상성을 명시적으로 만들 가능성은 열어둠 — 지금은 아님.
+
+### 무기 트리 설계
+- **계열(무기 종류) × 등급(강화 단계)의 2차원 구조**로 이해 정리. 원래 계획(권총/소총/저격/RPG 등 계열마다 다른 모델 제작)은 제작 시간이 너무 많이 들어 축소 — **계열당 모델 하나만 만들고, 등급은 같은 모델에 색 오라 + 스탯 배율만 다르게 적용하는 강화판 방식으로 확정**. 디아블로류의 "색으로 희귀도 표현" 관습과 같은 방향이라 플레이어에게도 익숙함. 나중에 특정 등급 하나만 골라 별도 모델로 승격시키는 것도 가능한 유연한 구조.
+- 지금은 계열 1개(권총)만 우선 구현.
+
+### 설계도(무기 계열 해금) 시스템 설계 — 계열이 2개 이상이 되면 본격 도입, 지금은 기록만
+- **해금형으로 확정**: 설계도를 얻어야만 그 무기 계열이 상점에 뜸(안 얻으면 상점에 아예 안 보임). "설계도 있으면 할인, 없어도 구매 가능" 안은 기각 — 계열이 하나뿐인 지금 단계에서 체감이 안 되고, "이번 런은 이 무기로 가야 한다"는 방향성도 해금형이 더 강하게 줌. 밤 웨이브(GDD상 이미 위험-보상 구조)에서 설계도 획득 기회를 주는 것과도 자연스럽게 결합.
+- **영구 해금(메타 진행) 개념 도입**: 설계도 획득은 특정 런에서만 유효한 게 아니라 **런을 넘나드는 영구 기록**. `SaveData`(런 진행 상태, 런 종료 시 삭제됨)와는 완전히 별도로 "메타 진행 데이터"를 저장해야 함 — `SaveManager.DeleteSave()`가 지금은 파일 하나를 통째로 지우는데, 앞으로는 이 메타 데이터는 보존하고 런 진행 데이터만 지우도록 구조 변경 필요.
+- **런 시작 시 지급**: 권총(기본 해금, 항상 보유)에 더해, 그동안 영구 해금해온 설계도 중 하나를 무작위로 지급받아 이번 런의 시작 방향을 잡음.
+- **런 진행 중 추가 획득(드랍 테이블)**: 이미 해금된 설계도(확률 높음) + 아직 한 번도 못 본 미해금 설계도(확률 낮음) 중에서 뽑힘. 발견 즉시 그 자리에서 영구 해금되고, 동시에 이번 런에서도 바로 사용 가능. 미해금 설계도를 특정 웨이브/기믹으로 별도 획득하는 방식은 더 복잡해서 지금은 보류, 확률 기반 드랍만 우선 적용.
+- 첫 런(해금된 설계도가 하나도 없을 때)은 자연히 권총만 갖고 시작 — 튜토리얼성으로 자연스러움.
+
+### 유물 시스템 — 구현 시점 미정, 상점과 완전히 별개
+- 체력/속도/연사력/사거리/데미지 증가 등 패시브 능력치 보너스. 상점(장비)과는 다른 카테고리라 별도 시스템으로 취급.
+- 목적: 유물에 따른 무기 선택과 웨이브 선택(미래의 날씨/속성 시스템과도 연결됨)의 다양성을 주기 위함. 지금은 구현 안 함.
 
 ## 8. 코드 리팩토링 진행 상황 (폴더별로 하나씩 검토 중)
 

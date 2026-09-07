@@ -5,6 +5,7 @@ public class PlayerAim : MonoBehaviour
 {
     [SerializeField] private Camera mainCamera;
     [SerializeField] private Transform firePoint;
+    [SerializeField] private float rotationSpeed = 15f;
 
     public Vector3 AimPoint { get; private set; }
     public Transform FirePoint => firePoint;
@@ -32,7 +33,7 @@ public class PlayerAim : MonoBehaviour
         if (direction.sqrMagnitude < 0.0001f) return;
 
         Quaternion targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = targetRotation;
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 1 - Mathf.Exp(-rotationSpeed * Time.deltaTime));
     }
 
     public void SetCamera(Camera camera)

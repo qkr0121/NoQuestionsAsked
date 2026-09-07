@@ -27,5 +27,10 @@ public class PlayerManager : MonoBehaviour
         CurrentHealth = maxHealth;
     }
 
+    public void FillHealth()
+    {
+        SetCurrentHealth(maxHealth);
+    }
+
     public void SetCurrentHealth(int value) => CurrentHealth = Mathf.Clamp(value, 0, maxHealth);
 }

@@ -91,6 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAim
   mainCamera: {fileID: 0}
   firePoint: {fileID: 5178404587465499345}
+  rotationSpeed: 20
 --- !u!114 &927560397106520338
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -103,7 +104,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a97c8db420e519b4f8d1830f95e2ec6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShoot
-  firePoint: {fileID: 5178404587465499345}
   playerAim: {fileID: 1281207540894405453}
   fireCooldown: 0.2
 --- !u!114 &7364220199263705777

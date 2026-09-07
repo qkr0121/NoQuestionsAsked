@@ -483,6 +483,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   offset: {x: 0, y: 12, z: -8}
   followSpeed: 8
+  initialZoom: 1
+  zoomSpeed: 10
+  minZoom: 0.5
+  maxZoom: 1
 --- !u!1001 &361391935
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2125,6 +2129,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4039740037144729532, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4245263171365029678, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_fontMaterial
       value: 
@@ -2132,7 +2140,7 @@ PrefabInstance:
     - target: {fileID: 4245263171365029678, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: 1691090622}
+      objectReference: {fileID: -6885073326787540606, guid: da2b80a66898bae45832ec23420cc41e, type: 2}
     - target: {fileID: 4245263171365029678, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: 'm_fontMaterials.Array.data[0]'
       value: 
@@ -2141,6 +2149,14 @@ PrefabInstance:
       propertyPath: 'm_fontSharedMaterials.Array.data[0]'
       value: 
       objectReference: {fileID: 1691090622}
+    - target: {fileID: 5603149366270670728, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5603149366270670728, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -358
+      objectReference: {fileID: 0}
     - target: {fileID: 8344704222337046335, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_Name
       value: Canvas
