@@ -5,18 +5,24 @@ using TMPro;
 
 public class WaveSelectionUI : MonoBehaviour
 {
+    [Header("패널")]
     [SerializeField] private GameObject panel;
+
+    [Header("데이터")]
     [SerializeField] private WaveDefinition[] availableWaves;
     [SerializeField] private TimeOfDayModifier[] timeOfDayOptions;
 
+    [Header("웨이브 버튼 목록")]
     [SerializeField] private Transform waveButtonContainer;
     [SerializeField] private GameObject waveButtonPrefab;
 
+    [Header("웨이브 정보 표시")]
     [SerializeField] private TMP_Text valueEnemyCount;
     [SerializeField] private TMP_Text valueDirections;
     [SerializeField] private TMP_Text valueStrength;
     [SerializeField] private TMP_Text valueRareChance;
 
+    [Header("시간대 아이콘")]
     [SerializeField] private Image timeOfDayIcon;
     [SerializeField] private Sprite morningIcon;
     [SerializeField] private Sprite dayIcon;
@@ -41,6 +47,14 @@ public class WaveSelectionUI : MonoBehaviour
     public void Close()
     {
         panel.SetActive(false);
+    }
+
+    public void Confirm()
+    {
+        if (selectedWave == null || selectedTimeOfDay == null) return;
+
+        RunState.Instance.SelectWave(selectedWave, selectedTimeOfDay);
+        Close();
     }
 
     private TimeOfDayModifier GetTimeOfDayForCurrentSlot()
@@ -104,13 +118,5 @@ public class WaveSelectionUI : MonoBehaviour
             TimeSlot.Night => nightIcon,
             _ => dayIcon
         };
-    }
-
-    public void Confirm()
-    {
-        if (selectedWave == null || selectedTimeOfDay == null) return;
-
-        RunState.Instance.SelectWave(selectedWave, selectedTimeOfDay);
-        Close();
     }
 }

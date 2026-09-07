@@ -1,4 +1,3 @@
-using System.Threading;
 using UnityEngine;
 
 public class WaveSpawner : MonoBehaviour
@@ -17,6 +16,7 @@ public class WaveSpawner : MonoBehaviour
 
     public bool IsCleared { get; private set; }
     public bool CanExit => !spawningStarted || IsCleared;
+    // 아직 웨이브를 시작 안했거나(웨이브 미선택 상태), 이미 클리어했으면 나갈 수 있음
 
     public void BeginWave(WaveDefinition definition, TimeOfDayModifier modifier)
     {
@@ -39,11 +39,12 @@ public class WaveSpawner : MonoBehaviour
     private void Update()
     {
         if (!spawningStarted || IsCleared) return;
+        if (player == null) return; // 플레이어가 아직 준비 안됐으면 스폰 대기
 
         if(spawnedCount < totalToSpawn)
         {
             spawnTimer -= Time.deltaTime;
-            if(spawnTimer <= 0f)
+            if(spawnTimer <= 0f) // spawnTimer 가 0f 로 시작해서 첫 프레임에 바로 스폰될 수 있고, player 주입 시점과 경쟁할 수도 있음
             {
                 SpawnEnemy();
                 spawnTimer = waveDefinition.SpawnInterval;

@@ -1,6 +1,6 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-09-04
+마지막 업데이트: 2026-09-07
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다. Unity/에디터 작업은 전부 사용자가 직접 진행하고, Claude는 설명·코드 안내만 담당(직접 코드 수정 금지 — Unity MCP로 씬/에셋 조작만 허용)하는 방식으로 작업해왔습니다.
 
@@ -114,8 +114,8 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 
 **웨이브 선택 UI**
 - `WaveSelectionUI.cs`: 소환기 상호작용 시 열림. 웨이브 버튼 동적 생성(`Instantiate` 반복, `WaveButton.prefab`). 정보 표시는 `Label`/`Value` 두 컬럼(각각 `Vertical Layout Group` 개별 부착 필요 — 하나만 붙이면 정렬 안 맞음, 실제로 겪은 버그). 시간대는 `RunState.CurrentSlot` 인덱스로 `timeOfDayOptions` 배열에서 선택(배열 순서를 Morning/Day/Night로 맞춰 Inspector 등록 필요). `Confirm()`에서 `RunState.SelectWave()` 호출 후 `Close()`.
-- **미해결 항목**: `valueEnemyCount` 표시값에 `TimeOfDayModifier.SpawnCountMultiplier`를 반영하는 수정(`Mathf.Max(1, Mathf.RoundToInt(wave.TotalEnemyCount * multiplier))`, `WaveSpawner.BeginWave()`와 동일 계산식 사용)을 안내했으나 **사용자가 아직 반영 안 했다고 명시적으로 말함** — 다음 세션에서 확인/적용 필요.
-- 시간대 아이콘(`TimeOfDayIcon` Image + Morning/Day/Night 스프라이트 3개)도 설계는 했으나 실제 반영 여부 미확인.
+- **완료 확인(2026-09-07, 코드 리팩토링 중 재확인)**: `valueEnemyCount`에 `TimeOfDayModifier.SpawnCountMultiplier` 반영 — `WaveSelectionUI.ShowWaveInfo()`에 `WaveSpawner.BeginWave()`와 동일한 계산식(`Mathf.Max(1, Mathf.RoundToInt(wave.TotalEnemyCount * spawnMultiplier))`)으로 이미 구현되어 있음을 확인.
+- 시간대 아이콘: **코드 로직(`UpdateTimeOfDayIcon()`)은 완성되어 있음.** 다만 이건 "코드 구현 여부"와 "실제 아이콘 에셋 여부"가 별개 — `morningIcon`/`dayIcon`/`nightIcon`에 연결된 실제 스프라이트가 아직 `Icon_Sky.png` 등 단색 임시 이미지 상태(아래 스프라이트 섹션 참고). **실제 시간대 아이콘 이미지 제작이 남은 작업.**
 
 **HUD**
 - `GameUI.cs`: 크리스탈/체력/날짜/슬롯 텍스트를 한 곳에서 표시. `RunState.CurrentDay`, `RunState.CurrentSlot` 참조.
@@ -232,23 +232,42 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 - **겪은 버그**: 처음 구현 시 `Update()`에서 `zoomLevel` 값은 마우스 휠에 따라 정상적으로 계산되고 있었지만, 실제 카메라 위치를 계산하는 `LateUpdate()`의 `desirePosition = target.position + offset` 식에는 이 값이 곱해지지 않아 화면상 아무 변화가 없었음. `offset * zoomLevel`로 수정해 해결 — New Input System 입력 인식 문제가 아니라, 계산된 값을 실제로 사용하지 않은 단순 로직 누락이었음.
 - **씬별 기본 줌 차이**: Base(지하실)와 ZWD(전투)는 원하는 기본 카메라 거리가 다름. `zoomLevel`을 코드에서 고정값(`= 1f`)으로 초기화하면 Play 모드마다 항상 그 값으로 리셋되어, 씬마다 다른 기본값을 주기 어려웠음. 씬 이름으로 분기하는 조건문 대신, `initialZoom`이라는 별도 `[SerializeField]` 필드를 두고 `Awake()`에서 `zoomLevel = initialZoom`으로 초기화하는 방식을 택함 — Base/ZWD 각 씬의 카메라 오브젝트 인스펙터에서 값만 다르게 넣으면 되므로, 코드를 씬 이름에 의존시키지 않고 순수하게 데이터(인스펙터 값) 차이로 처리.
 
-남은 목록 (다음 목표: **웨이브 추가 → 프로토타입 v1**):
+남은 목록 (다음 목표: **리팩토링 완료 → 사망 처리 로그라이트화(1순위) → 프로토타입 v1**):
 
-1. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
-2. 상호작용 프롬프트 UI 구현 — 위에서 언급한 대로 모든 InteractableStructure의 `interactPrompt`가 비어 있어 상호작용 가능 여부가 화면에 안 보임. 별도 UI 오브젝트(예: "F" 아이콘 + 안내 텍스트) 제작 필요.
-3. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설(Store)/수면(Bed) 상호작용을 실제 기능으로 구현하며 슬롯 소비 흐름 전체 검증 — Store/Bed 모델은 이미 임포트되어 있으니 기능 구현 시 바로 배치 가능.
-4. **미션 시각적 피드백 (구체 계획 확정됨)**:
+1. **사망 처리 로그라이트화 — 설계 확정, 리팩토링 완료 직후 1순위로 구현** (`GameOverUI.cs`가 현재 필수 11단계 시절의 낡은 `Restart()` 로직을 그대로 갖고 있어 로그라이트 구조와 안 맞는 상태를 발견하고 재설계함):
+   - **UI**: 사망 시 뜨는 패널에 생존 일수(`RunState.CurrentDay`)와 최종 크리스탈(`CurrencyManager.Crystal`) 표시. 버튼은 "재시작"이 아니라 "메인메뉴로" 하나만.
+   - **메인메뉴 이동 시 처리**: `RunState.ResetForNewRun()`, `CurrencyManager.ResetCrystal()`, `PlayerManager.ResetHealth()` 호출 + `SaveManager.DeleteSave()`로 세이브 파일 삭제. 지금 시점엔 "다음 런에 넘길 저장 데이터"가 없음(유산 기록 시스템 미착수라서) — 전부 초기화 대상. 유산 기록 시스템이 생기면 그때 "저장할 것" 목록이 채워짐.
+   - **이어하기 버튼 자동 처리**: `MainMenuUI.Start()`의 `continueButton.SetActive(SaveManager.Instance.HasSave())`가 파일 존재 여부로 판단하므로, 위에서 `DeleteSave()`만 해두면 별도 코드 수정 없이 메인메뉴에 이어하기 버튼이 자동으로 안 뜸.
+   - **`Time.timeScale` 복구 시점**: `GameManager.GameOver()`가 멈춘 시간을, `GameOverUI`의 "메인메뉴로" 버튼을 누르는 시점(`OnReturnToMainMenuClicked()` 안)에 `Time.timeScale = 1f`로 되돌리기로 함 — 사망 UI가 떠 있는 동안은 배경이 정지된 채로 보이는 게 자연스럽고, 버튼 클릭이 "이 장면을 떠나겠다"는 의사표시이므로 그 시점에 되돌리는 게 논리적으로 맞음.
+   - **씬 전환 방식**: `SceneFader`(페이드)가 아니라 `SceneTransitioner.GoTo("MainMenu")`(Loading 씬 경유)로 결정 — 기존 원칙(Loading은 MainMenu↔Base급 무거운/저빈도 전환용, SceneFader는 Base↔ZWD급 가벼운/고빈도 전환용)을 그대로 적용하면 ZWD→MainMenu도 Loading 쪽이 맞음. `GameUI.OnReturnToMainMenuClicked()`가 이미 같은 패턴을 씀.
+   - **리셋 로직 공통화**: `MainMenuUI.OnNewGameClicked()`가 이미 `RunState.ResetForNewRun()` + `CurrencyManager.ResetCrystal()` + `PlayerManager.ResetHealth()`를 호출하고 있는데, `GameOverUI`가 필요로 하는 리셋도 정확히 이 세 줄과 동일함(코드 중복 발생 지점). `RunState.cs`에 이 셋을 한 번에 호출하는 조율 메서드 `ResetEntireRun()`을 추가해서 양쪽(`MainMenuUI.OnNewGameClicked`, `GameOverUI.OnReturnToMainMenuClicked`)이 이 메서드 하나만 호출하도록 통일 예정 — 나중에 리셋 대상이 늘어나도(희귀 크리스탈, 유물 등) `ResetEntireRun()` 한 곳만 고치면 되게.
+2. **다른 웨이브 추가** — 지금은 `WD_Wave01` 하나뿐, 프로토타입 v1을 위해 몇 개 더 필요.
+3. 상호작용 프롬프트 UI 구현 — 위에서 언급한 대로 모든 InteractableStructure의 `interactPrompt`가 비어 있어 상호작용 가능 여부가 화면에 안 보임. 별도 UI 오브젝트(예: "F" 아이콘 + 안내 텍스트) 제작 필요.
+4. 슬롯 소비 지점 확장 — 지금은 전투 복귀시(`CombatExitPoint`)에만 `AdvanceSlot()` 호출됨. 건설(Store)/수면(Bed) 상호작용을 실제 기능으로 구현하며 슬롯 소비 흐름 전체 검증 — Store/Bed 모델은 이미 임포트되어 있으니 기능 구현 시 바로 배치 가능.
+5. **미션 시각적 피드백 (구체 계획 확정됨)**:
    - 새 미션 발급 시 미션보드 오브젝트 위에 느낌표 표시(월드스페이스 UI 또는 3D 오브젝트) — `RunState.OnMissionIssued` 이벤트를 구독해서 구현 예정.
    - 미션을 처음 확인(패널 진입) 또는 수락 버튼 클릭 중 하나의 시점에 물음표로 전환 — 이건 이벤트가 아니라 `MissionBoardUI.Open()`/`OnSubmitClicked()`에서 표시기 오브젝트를 직접 호출하는 방식으로 구현 예정.
    - 실패 피드백은 별도로 만들 예정(성공/실패 공용 피드백 아님).
    - **현재 상태**: `RunState.OnMissionIssued`/`OnMissionResolved` 둘 다 구독자가 없는 상태(`MissionBoardUI`가 구독하던 걸 죽은 코드로 판단해 제거함 — `Open()`이 이미 강제 갱신하고 있어서 이벤트 구독이 중복이었음). 다만 이 이벤트들 자체는 위 느낌표/물음표 기능을 위해 의도적으로 남겨둠, 삭제 아님.
-5. "웨이브 미선택 상태로 지상 다녀오면 시간 흐르는 문제" 기획 결정 (3옵션 중 선택 필요).
-6. **전투 피드백 구현** — 설계는 위 6번 섹션에 완료, 실제 구현 착수. (총구화염/킥백/카메라셰이크 → 좀비 색상플래시/넉백/스턴 → 피 튀김 파티클 → 사운드 순서 추천)
-7. CrystalRock(채굴 기능) 구현 — 모델(Purple/Emerald Crystal 1~3)은 준비됨, 채굴 로직/재화 연결 미착수.
-8. **빌드 전 필수**: `SaveManager.SavePath`를 `Application.persistentDataPath`로 원복, `Assets/_Project/save.json` 정리.
-9. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 사망 처리 로그라이트화, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
-10. **좀비 종류 추가 시 같이 처리**: `CurrencyManager.crystalPerKill`(고정값)을 `EnemyHealth`(또는 향후 좀비 데이터)로 이동하고, `AddKillReward()`에 `int amount` 매개변수를 추가해 좀비 종류별로 다른 크리스탈 보상을 줄 수 있게 변경 예정. 지금은 좀비가 HeavyZombie 하나뿐이라 보류 중.
-11. **여러 미션 동시 진행(로그라이트 랜덤 미션) 도입 시 `RunState.cs`에서 같이 처리할 것**:
+6. **웨이브 클리어 결과창 (설계 방향 확정, 구현은 나중)**: 지금 `WaveClearUI.cs`는 `WaveSpawner.IsCleared`가 true가 되는 순간 그냥 빈 패널 하나를 띄우기만 하는 최소 골격 상태. 실제 목표는:
+   1. **1단계 — CLEAR! 이펙트**: 짧은 연출(텍스트/이펙트), 자동 재생 후 사라짐.
+   2. **2단계 — 결과창**: 이번 웨이브에서 획득한 크리스탈(일반/희귀), 획득한 설계도(나중에 추가) 등을 표시. 확인 버튼 클릭 시 패널이 닫힘.
+   3. **나갈 수 있는 조건 변경 필요**: 지금 `WaveSpawner.CanExit => !spawningStarted || IsCleared;`는 클리어 즉시 나갈 수 있게 하는데, 결과창을 반드시 확인해야 나갈 수 있도록 `ResultsConfirmed` bool을 추가해 `CanExit => !spawningStarted || (IsCleared && ResultsConfirmed);`로 변경 예정. 확인 버튼 클릭 시 `ResultsConfirmed = true` 처리.
+   4. **"이번 웨이브 획득량" 추적 필요**: `CurrencyManager.Crystal`은 누적 총량이라, 결과창에 표시할 "이번 웨이브에서만 얻은 양"은 웨이브 시작 시점 크리스탈량을 별도로 기록해뒀다가 클리어 시점과의 차이로 계산해야 함(`WaveSpawner.BeginWave()`에서 시작 시점 스냅샷 저장).
+   5. **선행 조건**: 희귀 크리스탈 재화 자체가 아직 `CurrencyManager`에 없음(SaveData에만 자리만 있음, 8번 섹션 참고), 설계도 시스템도 미착수 — 이 결과창을 온전히 구현하려면 두 시스템이 먼저 또는 함께 진행되어야 함.
+7. "웨이브 미선택 상태로 지상 다녀오면 시간 흐르는 문제" 기획 결정 (3옵션 중 선택 필요).
+8. **전투 피드백 구현** — 설계는 위 6번 섹션에 완료, 실제 구현 착수. (총구화염/킥백/카메라셰이크 → 좀비 색상플래시/넉백/스턴 → 피 튀김 파티클 → 사운드 순서 추천)
+9. CrystalRock(채굴 기능) 구현 — 모델(Purple/Emerald Crystal 1~3)은 준비됨, 채굴 로직/재화 연결 미착수.
+10. **빌드 전 필수**: `SaveManager.SavePath`를 `Application.persistentDataPath`로 원복, `Assets/_Project/save.json` 정리.
+10. 이후: 여러 미션이 이어지는 구조에서 실패 시 페널티(경고 누적/이월 등 GDD 원안) 재도입 여부 검토, 지원 동기/유산 기록 시스템, 파괴 가능 장애물, 적 종류 다양화.
+11. **좀비 종류 추가 시 같이 처리 (설계 방향 확정, 구현은 실제 종류 늘어날 때)**:
+    - `CurrencyManager.crystalPerKill`(고정값)을 `EnemyHealth`(또는 향후 좀비 데이터)로 이동하고, `AddKillReward()`에 `int amount` 매개변수를 추가해 좀비 종류별로 다른 크리스탈 보상을 줄 수 있게 변경.
+    - **웨이브 내 좀비 등장 순서 제어**: 지금 `WaveSpawner`는 "총 마릿수"만 세는 카운터 방식(`totalToSpawn`/`spawnedCount`)이고 `EnemyPool`도 프리팹 하나만 관리하는 싱글톤이라, 여러 종류를 정해진 순서로 등장시킬 수 없음. 확장 방향:
+      1. `WaveDefinition`에 `EnemySpawnEntry[] spawnSequence`(각 항목 = `{enemyPrefab, count}`) 배열 추가 — 배열 순서 자체가 등장 순서(예: [0]=정찰 5마리, [1]=중형 3마리, [2]=정예 1마리).
+      2. `WaveSpawner`의 카운터 로직을 "총 마릿수" 방식에서 "시퀀스 인덱스"(`sequenceIndex`, `countInCurrentEntry`) 방식으로 변경 — 현재 시퀀스 항목의 count를 다 채우면 다음 인덱스로 진행.
+      3. `EnemyPool`을 프리팹 하나만 관리하는 싱글톤에서, **프리팹별로 풀을 나눠 관리하는 매니저**(`Dictionary<GameObject, ObjectPool<EnemyMovement>>` 등)로 확장 — 가장 큰 변경 지점.
+    - 지금은 좀비가 HeavyZombie 하나뿐이라 전부 보류 중, 새 좀비 종류(3D 모델 포함) 추가하는 시점에 위 설계대로 함께 구현 예정.
+12. **여러 미션 동시 진행(로그라이트 랜덤 미션) 도입 시 `RunState.cs`에서 같이 처리할 것**:
     - `CurrentMission`(단일 `Mission`)을 `Mission[]`/`List<Mission>`으로 변경, 발급·제출·마감판정 로직(`IssueNewMission`, `TrySubmitMission`, `AdvanceDay`의 마감 체크)을 별도 `MissionManager` 클래스로 분리 검토.
     - **잠재 버그(지금은 발현 안 함, 반드시 같이 고칠 것)**: `RunState.AdvanceDay()`에서 미션 마감 실패 시(`OnMissionResolved?.Invoke(false)`) `CurrentMission`을 `null`로 비우지 않음. 지금은 `DueDay = 발급일 + missionInterval - 1` 공식 덕분에 "마감 실패 판정 나는 날 = 항상 다음 발급일"이 우연히 성립해서 `IssueNewMission()`이 실패한 미션을 바로 덮어써 문제가 안 보임. 랜덤 미션 도입으로 발급 간격/마감일이 불규칙해지면 이 전제가 깨져 실패한 미션이 `CurrentMission`에 계속 남을 수 있음 — 실패 판정 직후 명시적으로 `CurrentMission = null` 처리 추가 필요.
 
@@ -256,7 +275,7 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 
 방식: 폴더 순서(Core → Player → Enemy → Combat → Interaction → Wave → UI → Camera)로, 스크립트 하나씩 6가지 관점(①한 줄씩 설명 ②주석 필요 여부 ③더 효율적인 방법 ④확장 계획 ⑤멤버/메서드 순서 ⑥`[SerializeField]`인데 `[Header]` 없는 필드 분류)으로 검토. 코드 수정은 사용자가 직접 진행.
 
-**진행률 (2026-09-04 기준): 27/41 스크립트 완료.** Core·Player·Enemy·Combat·Interaction·Camera 폴더 전부 완료. **남은 것: Wave 폴더(4개: `CombatSceneEntry`, `TimeOfDayModifier`, `WaveDefinition`, `WaveSpawner`), UI 폴더(7개: `DayCycleUI`, `GameOverUI`, `GameUI`, `LoadingScreen`, `MainMenuUI`, `WaveClearUI`, `WaveSelectionUI`).**
+**진행률 (2026-09-07 기준): 전체 완료.** Core·Player·Enemy·Combat·Interaction·Camera·Wave·UI 폴더 전부 검토 완료. `DayCycleUI.cs`는 검토 중 완전한 미사용 파일(GameUI에 이미 흡수됨, 어떤 씬/프리팹에도 안 붙어있음)로 확인되어 삭제함 — 최종 39개 스크립트.
 
 ### Core 폴더 — 완료
 - `GlobalFlags.cs` — `PendingLoad`/`SceneTransitionRequest`를 `PlayerInputLock`과 같은 `{ get; private set; }` + 전용 메서드 패턴으로 통일(캡슐화), 각 클래스 역할 설명 주석 추가.
@@ -300,9 +319,20 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 ### Camera 폴더 — 완료
 - `CameraFollow.cs` — `[Header]` 2그룹(추적/줌) 분리. **줌 계산에서 `Time.deltaTime` 제거**: 마우스 스크롤 델타값이 이산적 입력(`scroll` ±1)이라 `Time.deltaTime`을 곱하면 프레임레이트에 따라 감도가 달라지는 문제가 있어, 고정 배율(`* 0.01f`)로 변경. `zoomSpeed`가 이제 정수 단위(1~25 등)로 직관적 조정 가능.
 
-### 남은 것
-- **Wave 폴더**: `CombatSceneEntry.cs`, `TimeOfDayModifier.cs`, `WaveDefinition.cs`, `WaveSpawner.cs`
-- **UI 폴더**: `DayCycleUI.cs`, `GameOverUI.cs`, `GameUI.cs`, `LoadingScreen.cs`, `MainMenuUI.cs`, `WaveClearUI.cs`, `WaveSelectionUI.cs`
+### Wave 폴더 — 완료
+- `CombatSceneEntry.cs` — 구조 견고. `SelectedWave == null`(웨이브 미선택 상태) 분기가 GDD 미정 사항("웨이브 미선택 시 시간 흐름 여부")과 연관된 지점이라는 주석 추가. `ScenePlayerSpawner`와 `Start()` 실행 순서가 보장 안 되는 잠재 이슈는 `WaveSpawner`쪽 가드로 해결(아래 참고).
+- `TimeOfDayModifier.cs` — `[Header]` 2그룹(식별/배율) 분리, `GetStrengthTier()` 임계값(0.9/1.1)이 확정값 아님을 주석으로 명시, `[CreateAssetMenu]` 메뉴명 오탈자(`Time Of DayModifier` → `Time Of Day Modifier`) 수정.
+- `WaveDefinition.cs` — `[Header]` 3그룹(식별/스폰 구성/보상) 분리, `SpawnDirectionPattern.Eight`가 아직 로직만 있고 실제 스폰포인트 미생성 상태임을 주석으로 명시.
+- `WaveSpawner.cs` — 안 쓰이는 `using System.Threading;` 제거. **실행 순서 방어 추가**: `player`가 아직 주입되기 전(첫 프레임 스폰 타이밍과 `ScenePlayerSpawner.Start()`가 경쟁할 수 있는 이론적 가능성)에도 안전하도록 `Update()`에 `if (player == null) return;` 가드 추가 — 지금까지 증상은 없었으나 실행 순서에 의존하지 않는 예방적 조치로 확정.
+
+### UI 폴더 — 완료
+- `GameOverUI.cs` — **로그라이트 사망 처리 재설계 확정, 구현은 리팩토링 완료 후 1순위**. 기존 `Restart()`(필수 11단계 시절 로직, 씬만 재로드하고 영속 매니저는 리셋 안 함)를 발견 후 폐기 결정. 새 설계: 사망 시 생존 일수+최종 크리스탈 표시, "메인메뉴로" 버튼 하나만, 클릭 시 런 전체 리셋(`RunState`/`CurrencyManager`/`PlayerManager`) + `SaveManager.DeleteSave()` + `SceneTransitioner.GoTo("MainMenu")`(Loading 경유) + 그 시점에 `Time.timeScale = 1f` 복구. 상세는 7번 목록 1번 항목.
+- `GameUI.cs` — 이미 죽은 코드(UIManager 등록) 제거된 상태라 추가 수정 없음. 매 프레임 폴링 방식(이벤트 대신) 유지가 지금 규모에 적합함을 확인.
+- `LoadingScreen.cs` — 구조 견고, `operation.progress`가 `allowSceneActivation=false`일 때 0.9(90%)에서 멈추는 Unity 사양 때문에 `/0.9f` 재정규화가 필요하다는 것과 `Mathf.Min(loadProgress, timeProgress)`로 최소 표시 시간을 보장하는 이유를 주석으로 남기는 것 권장(수정 안 함).
+- `MainMenuUI.cs` — 구조 견고. `GameOverUI`가 필요로 할 리셋 로직(`RunState.ResetForNewRun`+`CurrencyManager.ResetCrystal`+`PlayerManager.ResetHealth`)이 `OnNewGameClicked()`와 완전히 중복되는 걸 확인 — `RunState.cs`에 `ResetEntireRun()` 조율 메서드를 신설해 양쪽이 재사용하도록 구현 예정(7번 목록 1번 항목과 함께 진행).
+- `WaveClearUI.cs` — 지금은 클리어 시 빈 패널만 띄우는 최소 골격. **실제 목표(설계 확정, 구현은 나중)**: CLEAR! 이펙트 → 결과창(이번 웨이브 획득 크리스탈 일반/희귀, 설계도 등) → 확인 버튼 클릭 시 닫힘 + 그제서야 나갈 수 있는 상태로 전환. `WaveSpawner.CanExit`에 `ResultsConfirmed` 조건 추가 필요, "이번 웨이브 획득량"은 `BeginWave()` 시점 크리스탈 스냅샷과의 차이로 계산 필요. 상세는 7번 목록 6번 항목.
+- `WaveSelectionUI.cs` — `[Header]` 5그룹(패널/데이터/웨이브 버튼 목록/웨이브 정보 표시/시간대 아이콘) 분리. **SessionLog 미해결 항목 재확인 결과**: `valueEnemyCount`에 `SpawnCountMultiplier` 반영은 이미 완료 상태였음(코드 확인됨). 시간대 아이콘은 코드 로직(`UpdateTimeOfDayIcon()`)은 완성되어 있으나 실제 아이콘 스프라이트가 아직 단색 임시 이미지 상태 — 코드가 아니라 에셋 제작이 남은 작업. `foreach` 클로저로 버튼마다 웨이브를 캡처하는 부분은 C# 5.0+ 사양상 안전(반복마다 변수 새로 생성)하다는 것 확인.
+- `DayCycleUI.cs` — **완전한 미사용 파일로 확인 후 삭제**. `GameUI.cs`에 기능이 이미 흡수되어 있었고(dayText/slotText/GetSlotLabel 동일), 코드 어디서도 참조 안 되고 어떤 씬/프리팹에도 컴포넌트로 붙어있지 않음을 검증 후 제거.
 
 ---
 
