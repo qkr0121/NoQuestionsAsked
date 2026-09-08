@@ -329,6 +329,100 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 
 **⚠️ 상점 구현 시작 전 처리할 5가지 전부 완료 — 다음은 "2) 상점 구현" 단계로 진행.**
 
+### 2) 상점 구현 — 구조 설계 확정, 구현 진행 중 (2026-09-08)
+
+**전체 구조 설계 논의 결과 (구현 전 확정)**:
+- **재화/슬롯**: 크리스탈 소비, 슬롯 소비 없음(상점은 언제든 들를 수 있는 자유 행동). 단, "슬롯 소비 여부"는 상점이라는 장소 단위가 아니라 개별 품목 단위로 결정되는 구조로 설계 — 나중에 설계도 해금/최종무기 제작처럼 슬롯을 써야 하는 특수 품목이 추가돼도 상점 UI 자체는 안 건드리고 해당 품목 데이터에 플래그만 얹으면 되게 함.
+- **판매 품목 1차 범위**: ① 권총 스탯 강화(데미지/연사속도, 새 무기 교체 아님) ② 방어벽 설치/강화/수리(동서남북 4방향, 정해진 위치에 자동 배치).
+- **방어벽 상태 흐름**: `Empty(빈자리) → [설치] → Alive(내구도) → (좀비 공격으로 감소) → Destroyed(내구도 0) → [수리, 레벨 유지] → Alive`. 파괴돼도 그동안 투자한 등급(레벨)은 사라지지 않음 — 수리는 내구도만 복구.
+- **UI 흐름**: 소환기/침대와 동일 패턴(InteractableStructure로 상호작용 → 전용 패널 오픈) — `StoreUI`에서 "권총 강화"/"방어벽 관리" 두 진입점, 방어벽 관리는 하나의 항목으로 묶고 선택 시 4방향 서브 목록으로 전환, 방향별 상태(빈자리/정상/파손)에 따라 설치/강화/수리 버튼이 달라짐. 구매는 전부 `ConfirmationDialog` 재사용.
+- **무기 강화 vs 방어벽 강화 — 서로 다른 모델로 확정**:
+  - **무기(권총)**: 순차 레벨업 방식. 크리스탈로 현재 레벨에서 다음 레벨로 하나씩 올라감(설계도 해금 불필요, 계열이 하나뿐이라 항상 상점에 뜸).
+  - **방어벽**: 설계도(레벨) 해금 방식. 해금된 등급 중 하나를 골라 그 등급으로 바로 설치 가능(순차 레벨업 아님) — 예: 3단계까지 해금되어 있으면 설치 시 1/2/3단계 중 선택. 파괴 후 재설치도 해금된 등급 중 재선택 가능.
+  - 둘 다 **5단계**로 확정(방어벽도 나중에 단계 늘 수 있으나 무제한은 아님).
+  - 방어벽 강화(해금)는 **4방향 각자 독립 레벨** — 북쪽만 집중 해금하고 나머지는 낮게 둘 수 있음.
+- **설계도 해금 시스템은 무기 계열 해금과 완전히 같은 구조 공유**로 확정(SessionLog 위쪽에 이미 있던 "계열 2개 이상 시 도입" 설계를 방어벽에도 그대로 적용) — `BlueprintId` enum 하나에 무기 계열/방어벽 등급을 모두 등록.
+- **좀비의 구조물 공격 방식 확정** (구현은 "3) 좀비 종류 추가" 단계에서, 지금은 설계만): 콜라이더 기반 감지는 기각 — 좀비 옆/뒤에 벽이 있으면 실제로 경로가 안 막혔는데도 오인 공격하는 문제가 있어서. **Raycast 기반**으로 확정: 좀비→플레이어 방향으로 벽 레이어만 감지하는 Raycast를 쏴서, 벽에 먼저 맞으면 그 벽을 공격 대상으로 전환하고 이동 정지, 안 맞으면 그대로 플레이어를 향해 이동(기존 EnemyMovement의 "플레이어를 target으로 직진" 로직은 그대로 유지, 벽을 능동적으로 스캔하지 않음). **성능 최적화**: 매 프레임 Raycast 대신, 좀비에 넓은 트리거 콜라이더(벽 레이어 감지용)를 추가해 그 트리거가 벽과 접촉했을 때만(`OnTriggerEnter`/`OnTriggerExit`로 `isNearWall` 플래그 관리) Raycast 검사를 시작하는 "트리거 게이팅" 방식 채택 — 이 규모에서 필수는 아니지만 공짜로 얻는 최적화이자 로직도 명확해져서 채택.
+
+**A. 영구 메타 저장 시스템 — 구현 완료 (2026-09-08)**:
+방어벽 등급 해금을 위해, 무기 계열 해금 도입 시 필요할 거라 미뤄뒀던 "런 데이터(SaveData)와 분리된 영구 메타 데이터 저장"을 지금 단계에서 먼저 구현.
+- `BlueprintId.cs`(enum, `Assets/_Project/Scripts/Core/`): 지금은 `WallLevel2/3/4/5`만 등록, 나중에 무기 계열 추가 시 여기 확장.
+- `MetaSaveData.cs`(`[Serializable]` DTO): `string[] unlockedBlueprints` 하나만 보관. `SaveData.cs`와 완전히 분리된 별도 파일 — `SaveManager.DeleteSave()`(새 게임 시작 시 런 데이터 삭제)가 이 파일은 절대 건드리지 않음.
+- `BlueprintManager.cs`(MonoBehaviour, static Instance, `PersistentManagers`): `HashSet<BlueprintId> unlocked`으로 해금 상태 관리(순서 무의미 + 중복 자동 방지 + `Contains` 조회가 빠른 것 전부가 여기 맞아떨어져서 `List` 대신 `HashSet` 채택). `IsUnlocked(id)`/`Unlock(id)`(해금 즉시 `MetaSaveManager.Save()`까지 자동 호출) 제공. `GetUnlockedNames()`(LINQ `Select`+`ToArray()`로 enum을 `string[]`으로 변환)/`LoadFrom(string[])`(역방향 변환, `Enum.TryParse`로 방어적 파싱)로 `MetaSaveManager`와 데이터를 주고받음.
+- `MetaSaveManager.cs`(MonoBehaviour, static Instance, `PersistentManagers`): `SaveManager`와 동일한 패턴으로 `meta_save.json`에 `JsonUtility` 직렬화 저장/로드. `SavePath`도 `SaveManager`와 동일하게 지금은 디버그 편의상 `Application.dataPath` 기준(**빌드 전 `persistentDataPath`로 되돌릴 대상 목록에 `save.json`과 함께 추가됨**). `DeleteSave()` 메서드 자체가 없음 — "새로 시작"을 아무리 눌러도 영구 데이터가 안전한 이유.
+- `GameBootstrap.cs` 수정: `PersistentManagers` Instantiate 직후 `MetaSaveManager.Instance.LoadAndApply()` 호출 한 줄 추가 — Unity가 `Instantiate` 시 자식 포함 전체 계층의 `Awake()`를 동기적으로 먼저 실행하므로 이 시점에 `Instance` 참조가 이미 유효함.
+- **검증 완료**: 임시로 `BlueprintManager.Instance.Unlock(BlueprintId.WallLevel2)`를 호출해 `Assets/_Project/meta_save.json`이 정상 생성되고 `unlockedBlueprints`에 반영되는 것 확인 후 테스트 코드 제거.
+- **PersistentManagers 프리팹 Hierarchy 정리**: `BlueprintManager`/`MetaSaveManager` 배치를 계기로, 11개 자식 오브젝트를 성격별 빈 부모로 그룹핑(`Managers`/`Save`/`Pools`/`UI` 등)해 정리 진행.
+
+**남은 순서 (B~E, 아직 미착수)**:
+
+### C. 무기 강화 — 다음 세션(다른 PC)에서 이어서 구현 예정, 상세 설계 기록
+
+**배치 폴더**: `WeaponData.cs`/`WeaponUpgrade.cs`는 `Assets/_Project/Scripts/Player/`. SO 에셋(`WD_Pistol.asset`)은 `Assets/_Project/Data/`(새 폴더 불필요, 기존 `WD_Wave01.asset` 등과 함께).
+
+**1. `WeaponData.cs`(ScriptableObject, 정적 설계표 — `WaveDefinition`/`TimeOfDayModifier`와 동일한 결)**:
+```csharp
+[CreateAssetMenu(menuName = "Data/Weapon Data")]
+public class WeaponData : ScriptableObject
+{
+    [Header("레벨별 스탯 (인덱스 0 = 1레벨)")]
+    public int[] damageByLevel = new int[5];
+    public float[] fireCooldownByLevel = new float[5];
+    public int[] upgradeCostByLevel = new int[5]; // 마지막 값(5레벨)은 미사용(더 이상 강화 불가)
+
+    public int MaxLevel => damageByLevel.Length;
+}
+```
+`WD_Pistol.asset` 하나 생성 후 인스펙터에서 5칸 배열 값 채우기.
+
+**2. `WeaponUpgrade.cs`(MonoBehaviour, static Instance, `PersistentManagers` — 런타임 진행 상태, 세이브 대상)**:
+```csharp
+public class WeaponUpgrade : MonoBehaviour
+{
+    public static WeaponUpgrade Instance { get; private set; }
+
+    [SerializeField] private WeaponData pistolData;
+
+    public int CurrentLevel { get; private set; } = 1;
+
+    public int CurrentDamage => pistolData.damageByLevel[CurrentLevel - 1];
+    public float CurrentFireCooldown => pistolData.fireCooldownByLevel[CurrentLevel - 1];
+    public bool IsMaxLevel => CurrentLevel >= pistolData.MaxLevel;
+    public int NextUpgradeCost => pistolData.upgradeCostByLevel[CurrentLevel - 1];
+
+    private void Awake() { Instance = this; }
+
+    public bool TryUpgrade()
+    {
+        if (IsMaxLevel) return false;
+        if (!CurrencyManager.Instance.TrySpend(NextUpgradeCost)) return false;
+
+        CurrentLevel++;
+        return true;
+    }
+
+    public void LoadLevel(int level) => CurrentLevel = level;
+    public void ResetLevel() => CurrentLevel = 1;
+}
+```
+`TryUpgrade()` 하나에 "비용 확인+차감+레벨업"을 캡슐화 — `RunState.TrySubmitMission()`이 `CurrencyManager.TrySpend()`를 쓰는 것과 동일한 결.
+
+**3. 기존 코드 수정 지점**:
+- `PlayerShoot.cs`: 현재 `[SerializeField] private float fireCooldown = 0.2f;` 필드를 삭제하고, `cooldownTimer = fireCooldown;` 사용 지점을 `cooldownTimer = WeaponUpgrade.Instance.CurrentFireCooldown;`으로 교체.
+- `Projectile.cs`: 현재 `[SerializeField] private int damage = 10;` 필드가 프리팹 고정값이라 강화가 반영 안 됨. `public void SetDamage(int amount) => damage = amount;` 메서드를 추가하고, `OnTriggerEnter`의 `enemyHealth.TakeDamage(damage)`는 그대로 이 필드를 씀.
+- `PlayerShoot.Fire()`: `ProjectilePool.Instance.Get(fp.position, fp.rotation)` 호출 직후 반환값을 받아 `SetDamage(WeaponUpgrade.Instance.CurrentDamage)` 호출 — `WaveSpawner.SpawnEnemy()`가 `EnemyPool.Get()` 직후 `EnemyHealth.Initialize()`를 호출하는 기존 패턴과 정확히 동일한 형태(풀링 오브젝트는 꺼내진 직후 호출자가 즉시 초기화 데이터를 주입).
+- `RunState.ResetEntireRun()`에 `WeaponUpgrade.Instance.ResetLevel()` 한 줄 추가(런 리셋 시 강화도 초기화 — 로그라이트 규칙과 일치, `CurrencyManager.ResetCrystal()`/`PlayerManager.ResetHealth()`와 같은 자리에 나란히 추가).
+- `SaveData.cs`에 `public int weaponLevel;` 필드 추가, `SaveManager.Save()`가 `weaponLevel = WeaponUpgrade.Instance.CurrentLevel`을 채우고, `SaveManager.TryLoadAndApply()`가 `WeaponUpgrade.Instance.LoadLevel(data.weaponLevel)` 호출하도록 배관 연결(기존 `crystal`/`player` 필드와 동일한 자리에 추가).
+
+**주의 — 무기 강화와 방어벽 강화는 서로 다른 모델임(혼동 방지)**:
+- 무기(권총)는 **순차 레벨업**(설계도 해금 불필요, 크리스탈만 있으면 다음 레벨로 즉시 이동) — 위 `WeaponUpgrade.TryUpgrade()`가 이 방식.
+- 방어벽은 **설계도 해금 후 원하는 등급 선택 설치**(순차 레벨업 아님, `BlueprintManager`/`BlueprintId` 시스템 사용) — 아래 B 항목 참고. 코드를 그대로 복사해서 방어벽에 적용하면 안 됨.
+
+- **B. 방어벽 데이터/슬롯**: `WallData.cs`(SO, `WD_Wall.asset` 하나, 4방향 공용 설계표 — 레벨별 maxDurability/installCost/repairCost 5단계 배열, 무기와 달리 순차 강화 비용 개념은 없음) + `WallSlot.cs`(ZWD 씬의 4개 오브젝트, 방향별 독립 `State`/`CurrentLevel`/`CurrentDurability`, `Install(int level)`/`Repair()`/`Upgrade()`/`TakeDamage()`) + `WallManager.cs`(ZWD 씬, static Instance, 4개 슬롯 참조) 신설 필요.
+- **D. 상점 UI**: `StoreInteraction.cs`(`Interaction` 폴더, 소환기/침대 패턴) + `StoreUI.cs`(`UI` 폴더, 권총 강화/방어벽 관리 두 진입점) 신설 필요.
+- **E. 디버그 해금 도구**: 드랍 테이블 미구현 상태이므로, 임시 디버그 버튼/코드로 `BlueprintManager.Unlock()`을 강제 호출하는 테스트 수단 필요(나중에 실제 드랍 로직 구현되면 제거 예정임을 주석으로 명시할 것).
+- **스크립트 배치 폴더 규칙 확정**: 새 스크립트는 각자 기능 폴더에 위치(예: 무기 관련은 `Player`, 저장/해금 관련은 `Core`, 상호작용은 `Interaction`, UI는 `UI`) — 방어구조물(벽) 스크립트는 `Combat`(투사체 전용이라 성격이 다름) 대신 새 폴더를 만들지 여부는 미정. SO 에셋 인스턴스(`WD_Pistol.asset`, `WD_Wall.asset`)는 기존 `Assets/_Project/Data/` 폴더 그대로 사용(새 폴더 불필요).
+
 ### 좀비 특색 설계 (가위바위보 상성)
 플레이어가 스스로 체감하는 암묵적 상성으로 시작하기로 확정 — 명시적 속성/저항 시스템은 지금 만들지 않음(좀비 3종·무기 계열 1개뿐인 지금 단계에 과함).
 - **헤비좀비**(구현됨): 고체력·저속, 구조물에 고데미지 → 단일 대상 고데미지 무기(저격/RPG류)로 상대하는 게 유리하도록 설계 의도.

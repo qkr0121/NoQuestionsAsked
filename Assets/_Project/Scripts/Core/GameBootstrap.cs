@@ -20,5 +20,6 @@ public class GameBootstrap : MonoBehaviour
 
         initialized = true;
         DontDestroyOnLoad(Instantiate(persistentManagersPrefab));
+        MetaSaveManager.Instance.LoadAndApply();
     }
 }
