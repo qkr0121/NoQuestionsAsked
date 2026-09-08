@@ -1,6 +1,6 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-09-07
+마지막 업데이트: 2026-09-08
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다. Unity/에디터 작업은 전부 사용자가 직접 진행하고, Claude는 설명·코드 안내만 담당(직접 코드 수정 금지 — Unity MCP로 씬/에셋 조작만 허용)하는 방식으로 작업해왔습니다.
 
@@ -232,7 +232,7 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 - **겪은 버그**: 처음 구현 시 `Update()`에서 `zoomLevel` 값은 마우스 휠에 따라 정상적으로 계산되고 있었지만, 실제 카메라 위치를 계산하는 `LateUpdate()`의 `desirePosition = target.position + offset` 식에는 이 값이 곱해지지 않아 화면상 아무 변화가 없었음. `offset * zoomLevel`로 수정해 해결 — New Input System 입력 인식 문제가 아니라, 계산된 값을 실제로 사용하지 않은 단순 로직 누락이었음.
 - **씬별 기본 줌 차이**: Base(지하실)와 ZWD(전투)는 원하는 기본 카메라 거리가 다름. `zoomLevel`을 코드에서 고정값(`= 1f`)으로 초기화하면 Play 모드마다 항상 그 값으로 리셋되어, 씬마다 다른 기본값을 주기 어려웠음. 씬 이름으로 분기하는 조건문 대신, `initialZoom`이라는 별도 `[SerializeField]` 필드를 두고 `Awake()`에서 `zoomLevel = initialZoom`으로 초기화하는 방식을 택함 — Base/ZWD 각 씬의 카메라 오브젝트 인스펙터에서 값만 다르게 넣으면 되므로, 코드를 씬 이름에 의존시키지 않고 순수하게 데이터(인스펙터 값) 차이로 처리.
 
-남은 목록 (다음 목표: **리팩토링 완료 → 사망 처리 로그라이트화(1순위) → 프로토타입 v1**):
+남은 목록 (다음 목표: **상점 구현 → 좀비 종류 추가 → 웨이브 추가 → 프로토타입 v1**):
 
 1. **사망 처리 로그라이트화 — 1차 마무리 완료 (2026-09-07)** (`GameOverUI.cs`가 필수 11단계 시절의 낡은 `Restart()` 로직을 그대로 갖고 있어 로그라이트 구조와 안 맞는 상태를 발견하고 재설계, 실제 구현까지 완료):
    - **UI**: 사망 시 뜨는 패널에 생존 일수(`RunState.CurrentDay`)와 최종 크리스탈(`CurrencyManager.Crystal`) 표시. 버튼은 "메인메뉴로" 하나만 — `survivedDaysText` 필드 추가, `Restart()` 삭제하고 `OnReturnToMainMenuClicked()`로 교체 완료.
@@ -310,15 +310,24 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 1. `Bed` 오브젝트에 아직 실제 3D 모델(fbx)이 안 들어가 있음(지금은 기본 Cube 형태) — **다음 단계(상점 구현) 시작하자마자 가장 먼저 Bed에 fbx 모델 배치할 것**.
 2. 침대 확인 → 수면 처리 시 화면 페이드 인/아웃 연출 추가 예정(같은 씬 내 암전, `SceneFader`와는 별개의 새 컴포넌트 필요 — 씬 전환이 없는 페이드).
 
-### ⚠️ 상점 구현 시작 전 먼저 처리할 5가지 (2026-09-07 발견, 지금은 기록만 — 상점 구현보다 우선)
+### ⚠️ 상점 구현 시작 전 먼저 처리할 5가지 — 전부 완료(2026-09-08)
 
-**다른 PC에서 이어서 작업 시 이 5개부터 처리하고 나서 "2) 상점 구현" 단계로 넘어갈 것.**
+**다른 PC에서 이어서 작업 시: 아래 5개는 모두 완료됨. 다음은 "2) 상점 구현"(권총 계열 + 방어구조물(벽) 판매) 단계로 바로 진행하면 됨.**
 
-1. **`Bed`에 아직 3D 모델(fbx)이 없음** — 지금은 기본 Cube 형태로 콜라이더/상호작용만 연결된 상태. 다른 구조물(소환기, 미션보드) 때와 같은 방식으로 fbx를 자식으로 배치하고 MeshFilter/MeshRenderer 교체 필요.
-2. **침대 확인 → 수면 처리 시 화면 페이드 인/아웃 연출 없음** — 같은 씬 내 암전 연출(`SceneFader`와는 별개, 씬 전환 없이 화면만 검게 덮었다 걷는 새 컴포넌트 필요, 가칭 `ScreenFader`). `BedInteraction.Sleep()`을 코루틴화해서 페이드아웃 → 회복/슬롯소비 → 페이드인 순서로.
-3. **걷는 도중 상호작용하면 Walk 애니메이션이 멈추지 않고 계속 재생됨**: `PlayerMovement.Update()`가 `PlayerInputLock.IsLocked` 가드로 통째로 멈추면서, 그 직전 프레임에 세팅된 애니메이터 `IsMoving=true`가 그대로 남아있는 게 원인. 해결 방향 후보: `IsMoving`(bool) 파라미터를 `moveSpeed`(float)로 바꾸는 것 — 잠금 시 자연스럽게 0으로 떨어뜨리는 방식이면 근본 해결 + 나중에 블렌딩(감속 애니메이션)도 가능해짐.
-4. **좀비가 플레이어와 완전히 겹치면 제자리에서 빙글빙글 회전**: `EnemyMovement.Update()`의 `if (direction.sqrMagnitude < 0.0001f) return;` 가드가 완전히 겹친 경우만 막아주는데, 물리적으로 완전히 안 겹치고 미세하게 밀리는 상태가 유지되면 아주 작은 방향 벡터를 향해 계속 회전+전진을 반복하며 빙글빙글 도는 것처럼 보임 — 근본 원인은 플레이어와 좀비가 서로를 밀어내지 못하고 겹칠 수 있는 물리 설정.
-5. **Base 씬 카메라가 벽을 뚫고 나감**: `CameraFollow.cs`는 순수 추적 로직만 있고 씬 경계(벽)를 인식하는 카메라 바운드/클램프 로직이 전혀 없음 — 플레이어가 벽에 붙으면 카메라 시야가 벽 밖으로 나가버림. 카메라 위치를 맵 범위 내로 제한하는 로직 추가 필요.
+1. ~~`Bed`에 아직 3D 모델(fbx)이 없음~~ — **완료(2026-09-08)**: `Bed.fbx`를 자식으로 배치, 부모(콜라이더/InteractableStructure/BedInteraction 보유)의 MeshFilter/MeshRenderer는 제거. 소환기/미션보드와 동일한 패턴.
+2. ~~침대 확인 → 수면 처리 시 화면 페이드 인/아웃 연출 없음~~ — **완료(2026-09-08), 겸사겸사 SceneFader/ScreenFader 아키텍처 통합**:
+   - 처음엔 `SceneFader`(씬 전환용)와 별개로 `ScreenFader`(같은 씬 내 암전용)를 새로 만들려 했으나, 두 클래스의 핵심 로직(페이드 계산)이 완전히 중복되는 걸 발견하고 설계를 재검토.
+   - **최종 구조**: `ScreenFader` 하나가 페이드 연출 + `PlayerInputLock` 잠금/해제 + "그 사이 원하는 동작 실행"까지 전부 캡슐화하는 단일 공용 유틸리티로 확정 — `public void FadeAction(Action action)` 메서드 하나로, 호출부는 "무엇을 할지"만 델리게이트로 넘기면 됨(`yield return Fade(0,1) → action?.Invoke() → yield return Fade(1,0)`, 그 앞뒤로 `PlayerInputLock.Lock()/Unlock()`).
+   - **`SceneFader.cs`는 완전히 삭제**: 씬 전환 로직(`SceneManager.LoadScene`)까지도 그냥 `ScreenFader.Instance.FadeAction(() => SceneManager.LoadScene(sceneName))`처럼 액션으로 넘기면 충분해서, 별도 클래스로 존재할 이유가 없었음. `BaseExitPoint.cs`/`CombatExitPoint.cs`도 이 방식으로 수정, `BedInteraction.cs`도 동일하게 `ScreenFader.FadeAction()` 사용.
+   - **이 구조의 핵심 이점**: `PlayerInputLock.Lock()/Unlock()`을 호출하는 코드가 프로젝트 전체에서 정확히 `ScreenFader.FadeActionRoutine` 한 곳(두 줄)에만 존재하게 됨 — 지난 세션에 겪었던 "여러 곳에서 같은 잠금 스위치를 건드리다 순서가 꼬여 영구 잠김" 버그 유형이 구조적으로 재발할 수 없음. 호출부(ExitPoint, BedInteraction)는 각자 고유 로직(씬 전환, 회복+슬롯소비)만 신경 쓰면 됨.
+   - **겪은 문제 — Missing Script로 프리팹 저장 불가**: `SceneFader.cs` 파일을 삭제하자, 그 컴포넌트가 붙어있던 `PersistentManagers` 프리팹의 `FadeCanvas` 오브젝트에 "Missing Script"(빈 컴포넌트 껍데기)가 남아 `Error while saving Prefab... missing script`로 저장 자체가 막힘. Unity는 스크립트 파일이 사라져도 인스펙터에 저장된 값을 보존하려고 컴포넌트 껍데기를 자동 삭제하지 않고 남겨두기 때문 — **해결**: Missing Script 컴포넌트 영역 우클릭 → Remove Component(⋮ 메뉴가 없는 경우 컴포넌트 본문 우클릭으로 대체 가능)로 제거 후, `ScreenFader` 컴포넌트를 새로 추가하고 `Fade Image` 필드 연결. **교훈**: 프리팹/씬에 이미 부착된 컴포넌트의 스크립트 파일을 삭제/개명할 때는, 반드시 그 컴포넌트가 붙어있던 모든 오브젝트에서 Missing Script를 수동 정리해야 함.
+   - **부수 작업 — `ConfirmationDialog` 팝업 크기 수정**: 처음에 `ConfirmationPanel`의 RectTransform이 anchorMin(0,0)~anchorMax(1,1)(화면 전체를 채우는 설정)로 되어 있어 확인창이 화면 전체를 뒤덮던 문제 발견. **"게임 월드가 계속 흘러가는 상황(좀비도 계속 움직임)에서 뜨는 확인창이라, 설정창처럼 화면 전체를 딤(배경을 어둡게 죽이는 것) 처리하면 안 된다"**는 원칙을 정리 — 딤 처리는 게임이 완전히 멈추는 메뉴류(일시정지 등)에만 어울리고, 지금처럼 캐릭터 입력만 잠그고 월드는 계속 흘러가는 상황에는 안 어울림. `ConfirmationPanel`의 anchor를 Middle-Center(0.5,0.5 고정점)로 바꾸고 `sizeDelta`를 고정 크기(600×360)로 지정해 화면 중앙의 작은 팝업창으로 수정, 배경 이미지 알파도 0.392(딤용으로 흐릿했던 값)에서 0.902(팝업 배경으로 적절)로 조정.
+3. ~~걷는 도중 상호작용하면 Walk 애니메이션이 멈추지 않고 계속 재생됨~~ — **완료(2026-09-08)**: 원인은 `PlayerMovement.Update()`가 `PlayerInputLock.IsLocked` 가드로 통째로 멈추면서, 그 직전 프레임에 세팅된 애니메이터 값이 그대로 남는 것. `IsMoving`(bool) 파라미터를 `MoveSpeed`(float)로 교체 — 잠금 시 `SetFloat("MoveSpeed", 0f)`를 명시적으로 호출한 뒤 return, 평소엔 `input.magnitude`(0 또는 1)를 그대로 넘김. Animator Controller의 Idle↔Walk 전환 조건도 `IsMoving == true/false`에서 `MoveSpeed > 0.1` / `MoveSpeed < 0.1`로 변경. float 파라미터로 바꿔둬서 나중에 걷기/뛰기 등 속도 단계가 추가돼도 코드 수정 없이 확장 가능.
+4. ~~좀비가 플레이어와 완전히 겹치면 제자리에서 빙글빙글 회전~~ — **완료(2026-09-08)**: 원인은 `EnemyMovement.Update()`가 "목표까지의 거리"를 전혀 고려하지 않고, 방향이 0에 아주 가깝지만 않으면 항상 최고 속도로 전진하던 것 — 콜라이더가 겹쳐서 물리적으로 밀려나는 것과 계속 전진하려는 힘이 충돌해 빙글빙글 도는 것처럼 보임. `stoppingDistance`(기본값 0.4) 필드를 추가해 `distance > stoppingDistance`일 때만 전진하도록 변경 — 이 거리 안으로 들어오면 회전(플레이어 바라보기)은 계속하되 더 이상 다가가지 않음, `EnemyAttack`의 근접 공격 판정 범위와 자연스럽게 맞물리는 "다가와서 멈추고 공격" 동작 완성. 좀비 여러 마리가 한 지점에 몰릴 때 서로 밀려 겹치는 경우까지 완전히 막아주진 않을 수 있음(별도의 물리 충돌 해석 이슈) — 필요시 추가 확인.
+5. ~~Base 씬 카메라가 벽을 뚫고 나감~~ — **완료(2026-09-08)**: `CameraFollow.cs`의 `LateUpdate()`에서 `desirePosition`(추적+줌 반영된 목표 위치) 계산 직후, x/z를 `Mathf.Clamp`로 제한하는 방식 채택. `useBounds`(bool) + `minBounds`/`maxBounds`(`Vector2`, x=월드 x, y=월드 z) 필드 추가 — 씬 이름으로 분기하지 않고 인스펙터 값 차이로 처리(기존 `initialZoom` 패턴과 동일한 방향). Base 씬은 `useBounds` 켜고 실제 방 크기에 맞는 경계값 입력, ZWD처럼 트인 맵은 꺼두면 됨.
+   - **Cinemachine Confiner 대안 검토**: Unity 2D의 `CompositeCollider2D`+`CinemachineConfiner2D`(3D는 `CinemachineConfiner3D`)가 정확히 이 문제(카메라를 경계 안에 가두기)를 위한 공식 기능이지만, Cinemachine 패키지 설치 + 기존 커스텀 `CameraFollow.cs` 체계를 통째로 교체해야 하는 비용 대비, 지금처럼 사각형 벽으로 막힌 단순한 방에는 오버엔지니어링이라 판단해 기각. 나중에 맵이 비정형/복잡해지거나 카메라 연출(블렌딩 등)이 정교해져야 할 때 재고려 가능.
+
+**⚠️ 상점 구현 시작 전 처리할 5가지 전부 완료 — 다음은 "2) 상점 구현" 단계로 진행.**
 
 ### 좀비 특색 설계 (가위바위보 상성)
 플레이어가 스스로 체감하는 암묵적 상성으로 시작하기로 확정 — 명시적 속성/저항 시스템은 지금 만들지 않음(좀비 3종·무기 계열 1개뿐인 지금 단계에 과함).

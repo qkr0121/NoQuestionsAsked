@@ -13,6 +13,11 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private float minZoom = 0.5f;
     [SerializeField] private float maxZoom = 1.0f;
 
+    [Header("맵 경계 제한")]
+    [SerializeField] private bool useBounds = false;
+    [SerializeField] private Vector2 minBounds;
+    [SerializeField] private Vector2 maxBounds;
+
     private Transform target;
     private float zoomLevel = 1f;
 
@@ -46,6 +51,12 @@ public class CameraFollow : MonoBehaviour
         if (target == null) return;
 
         Vector3 desirePosition = target.position + offset * zoomLevel;
+
+        if(useBounds)
+        {
+            desirePosition.x = Mathf.Clamp(desirePosition.x, minBounds.x, maxBounds.x);
+            desirePosition.z = Mathf.Clamp(desirePosition.z, minBounds.y, maxBounds.y);
+        }
         transform.position = Vector3.Lerp(transform.position, desirePosition, followSpeed * Time.deltaTime);
     }
 }

@@ -17,7 +17,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if (PlayerInputLock.IsLocked) return;
+        if (PlayerInputLock.IsLocked)
+        {
+            if(playerCharacterAnimator != null)
+            {
+                playerCharacterAnimator.SetFloat("MoveSpeed", 0f);
+            }
+            return;
+        }
 
         Vector2 input = ReadMoveInput();
         Vector3 moveDir = new Vector3(input.x, 0f, input.y);
@@ -26,7 +33,7 @@ public class PlayerMovement : MonoBehaviour
         
         if(playerCharacterAnimator != null)
         {
-            playerCharacterAnimator.SetBool("IsMoving", input.magnitude > 0f);
+            playerCharacterAnimator.SetFloat("MoveSpeed", input.magnitude);
         }
         
     }

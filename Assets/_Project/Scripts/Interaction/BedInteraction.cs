@@ -10,7 +10,10 @@ public class BedInteraction : MonoBehaviour
 
     private void Sleep()
     {
-        PlayerManager.Instance.FillHealth();
-        RunState.Instance.AdvanceSlot();
+        ScreenFader.Instance.FadeAction(() =>
+        {
+            PlayerManager.Instance.FillHealth();
+            RunState.Instance.AdvanceSlot();
+        });
     }
 }
