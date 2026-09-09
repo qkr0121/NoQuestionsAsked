@@ -1,6 +1,6 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-09-08
+마지막 업데이트: 2026-09-09
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다. Unity/에디터 작업은 전부 사용자가 직접 진행하고, Claude는 설명·코드 안내만 담당(직접 코드 수정 금지 — Unity MCP로 씬/에셋 조작만 허용)하는 방식으로 작업해왔습니다.
 
@@ -356,41 +356,71 @@ Wave/     CombatSceneEntry.cs, TimeOfDayModifier.cs, WaveDefinition.cs, WaveSpaw
 
 **남은 순서 (B~E, 아직 미착수)**:
 
-### C. 무기 강화 — 다음 세션(다른 PC)에서 이어서 구현 예정, 상세 설계 기록
+### C. 무기 강화 + 탄약/재장전 — 구현 완료 (2026-09-09)
 
-**배치 폴더**: `WeaponData.cs`/`WeaponUpgrade.cs`는 `Assets/_Project/Scripts/Player/`. SO 에셋(`WD_Pistol.asset`)은 `Assets/_Project/Data/`(새 폴더 불필요, 기존 `WD_Wave01.asset` 등과 함께).
+당초 계획은 "무기 강화(데미지/연사속도)"만이었으나, 구현 착수 전 사용자가 재장전/탄약 제한을 먼저 설계하자고 제안 — 로그라이트 자가생존 컨셉과 맞물려 대대적으로 재설계됨. 이후 클래스 설계를 두고 여러 차례 논의 끝에 최종적으로 `WeaponData`(SO) + `PlayerWeapon`(MonoBehaviour, static Instance) 2개로 확정. **아래는 실제로 구현되고 검증까지 끝난 최종 구조** — 이전 세션에서 기록했던 `WeaponUpgrade`/`AmmoManager`/`WeaponManager` 분리안은 전부 폐기됨.
 
-**1. `WeaponData.cs`(ScriptableObject, 정적 설계표 — `WaveDefinition`/`TimeOfDayModifier`와 동일한 결)**:
+**탄약/재장전 설계 확정 사항**:
+- **탄약 2계층**: `MagazineAmmo`(마거진, 장전된 탄) + `ReserveAmmo`(예비 탄약, 상점에서 크리스탈로 구매 예정 — 아직 구매 UI는 미구현). 예비 탄약 상한 없음(로그라이트 웨이브 난이도 조절 자유도를 위해 의도적으로 무제한 — 크리스탈 가격으로 리스크 조절 가능).
+- **재장전은 R키 수동만**(자동 재장전 없음, 탄창 남아있어도 선제적 재장전 가능 — 전략적 선택). 재장전 소요시간 있음(그 동안 발사 불가), 예비 탄약이 0이면 재장전 자체가 안 됨(그 자리에서 총알 없이 대기하는 위기 상황이 실제로 존재).
+- **무기 강화 vs 유물 시스템 역할 분담 확정**: 데미지만 상점에서 크리스탈로 5단계 순차 강화. **연사속도/마거진 용량/사거리는 강화 대상에서 제외** — 이미 SessionLog에 있던 "유물 시스템"(패시브 능력치 보너스) 설계와 역할이 겹치지 않도록, 이런 부가 수치들은 유물 몫으로 남겨둠(나중 구현). 대신 "무기 계열마다 이 수치들이 원래 다르다"는 특성은 살려야 해서, `fireCooldown`/`magazineSize`/`reloadTime`/`startingReserveAmmo`는 `WeaponData`에 강화 대상과 별개로(계열 고유 특성으로) 유지.
+- **런 시작 시 탄약 리셋**: 기본값(마거진 가득, 예비탄 60발)으로 리셋 — 로그라이트 관례.
+
+**클래스 설계 논의 — 왜 결국 하나(`PlayerWeapon`)로 합쳤는가**:
+- 처음엔 "탄약 관리"(`AmmoManager`)와 "강화 관리"(`WeaponUpgrade`)를 서로 다른 관심사로 보고 분리했으나, `WD_Pistol.asset`(`WeaponData`) 참조를 두 클래스가 각각 따로 가져야 해서 "같은 에셋을 여러 곳에 연결해야 하는 문제"가 생김.
+- 1차 통합: `WeaponManager`(WeaponData 소유 + 탄약 상태/로직) + `WeaponUpgrade`(WeaponManager.Data를 참조해 강화 계산)로 재편 — `WeaponData` 참조는 한 곳으로 줄었으나, 여전히 두 클래스로 분리된 상태.
+- **최종 통합 근거**: "게임 전체 무기 정보(불변 스펙)"는 이미 `WeaponData`(ScriptableObject)가 전담하고 있고, `WeaponManager`가 실제로 갖는 상태(탄약)와 로직은 전부 "플레이어가 지금 이 무기를 얼마나 썼는지"에 관한 것 — 즉 게임 전체 정보가 아니라 **플레이어 개인의 무기 사용 상태**였음. `WeaponUpgrade.CurrentLevel`(강화 진행 상태)도 마찬가지로 플레이어 개인 상태. 탄약도 레벨도 결국 "플레이어가 지금 장착한 무기 하나의 상태"를 나눠 가진 것에 불과해 독립된 두 시스템이 아니었음 → `PlayerWeapon` 하나로 통합.
+- **네이밍**: `~Manager`(CurrencyManager, SaveManager 등 — 여러 대상을 조율/관장하는 존재)가 아니라 `PlayerHealth`/`PlayerAim`처럼 "그 자체가 곧 그 개념의 인스턴스/상태"인 이름이 맞다고 판단해 `PlayerWeapon`으로 확정.
+- **싱글톤 유지 여부**: 설계도로 무기 계열이 여러 개가 되면 지금의 static Instance 싱글톤 구조로는 "장착 무기 하나의 상태"만 담을 수 있어 확장이 안 된다는 문제 제기가 있었음 — 다만 호출부(`PlayerShoot` 등)가 전부 `PlayerWeapon.Instance.TryConsumeShot()`처럼 캡슐화된 메서드/프로퍼티로만 접근하고 있어, 나중에 "여러 무기 인스턴스 중 장착된 것을 찾아 처리"하는 내부 구조로 바뀌어도 호출부는 수정 불필요 — 전환 비용이 낮다고 판단해 **지금은 싱글톤 유지, 무기 계열이 실제로 늘어나는 시점에 재설계**하기로 함.
+- **강화 로직을 별도 클래스로 분리할 시점**: 지금처럼 `TryUpgrade()` 하나뿐일 땐 분리하면 오히려 두 클래스가 서로의 상태(CurrentLevel, Data)를 주고받아야 해서 결합도만 높아짐 — "로직이 여러 단계/조건/부수효과로 복잡해져서 그 자체로 완결된 책임이 될 때"가 분리 시점이라는 기준으로 정리, 지금은 미해당.
+
+**`Fire()`(PlayerShoot 소속)와 `Reload()`(PlayerWeapon 소속)가 서로 다른 클래스에 있는 이유**: "자기 클래스가 이미 가진 상태만 바꾸고 끝나는 동작"(Reload — MagazineAmmo/ReserveAmmo만 주고받음)은 그 클래스 내부에 두고, "여러 다른 컴포넌트/시스템(PlayerAim.FirePoint, ProjectilePool, PlayerWeapon)을 조합해야 하는 동작"(Fire)은 그 행동의 주체(쏘는 사람 = PlayerShoot) 쪽에 둔다는 기준 — `WaveSpawner.SpawnEnemy()`가 `EnemyPool`/`EnemyHealth`를 조합하면서도 `WaveSpawner`(스폰 주체)에 있는 기존 패턴과 동일.
+
+**1. `WeaponData.cs`(ScriptableObject, `Assets/_Project/Scripts/Player/`, 에셋은 `Assets/_Project/Data/WD_Pistol.asset`)**:
 ```csharp
 [CreateAssetMenu(menuName = "Data/Weapon Data")]
 public class WeaponData : ScriptableObject
 {
-    [Header("레벨별 스탯 (인덱스 0 = 1레벨)")]
+    [Header("계열 고유 특성(강화 대상 아님, 무기 계열마다 다름)")]
+    public float fireCooldown = 0.2f;
+    public int magazineSize = 12;
+    public float reloadTime = 1.5f;
+    public int startingReserveAmmo = 60;
+    // 사거리는 아직 코드에 사거리 개념 자체가 없음(Projectile 이 lifeTime 으로만 판정) - 필요해지면 여기 추가
+
+    [Header("레벨별 데미지(인덱스 0 =1 레벨, 강화 대상")]
     public int[] damageByLevel = new int[5];
-    public float[] fireCooldownByLevel = new float[5];
-    public int[] upgradeCostByLevel = new int[5]; // 마지막 값(5레벨)은 미사용(더 이상 강화 불가)
+    public int[] upgradeCostByLevel = new int[5];
 
     public int MaxLevel => damageByLevel.Length;
 }
 ```
-`WD_Pistol.asset` 하나 생성 후 인스펙터에서 5칸 배열 값 채우기.
+`WD_Pistol.asset` 값: fireCooldown 0.2 / magazineSize 12 / reloadTime 1.5 / startingReserveAmmo 60 / damageByLevel [1,2,3,4,5] / upgradeCostByLevel [100,200,300,400,500].
 
-**2. `WeaponUpgrade.cs`(MonoBehaviour, static Instance, `PersistentManagers` — 런타임 진행 상태, 세이브 대상)**:
+**2. `PlayerWeapon.cs`(MonoBehaviour, static Instance, `Assets/_Project/Scripts/Player/`, `PersistentManagers/Managers`에 배치 — 강화+탄약 통합 관리, 유일한 `WeaponData` 참조 지점)**:
 ```csharp
-public class WeaponUpgrade : MonoBehaviour
+public class PlayerWeapon : MonoBehaviour
 {
-    public static WeaponUpgrade Instance { get; private set; }
+    public static PlayerWeapon Instance { get; private set; }
 
-    [SerializeField] private WeaponData pistolData;
+    [SerializeField] private WeaponData weaponData;
+    public WeaponData Data => weaponData;
 
     public int CurrentLevel { get; private set; } = 1;
+    public int CurrentDamage => weaponData.damageByLevel[CurrentLevel - 1];
+    public bool IsMaxLevel => CurrentLevel >= weaponData.MaxLevel;
+    public int NextUpgradeCost => weaponData.upgradeCostByLevel[CurrentLevel - 1];
 
-    public int CurrentDamage => pistolData.damageByLevel[CurrentLevel - 1];
-    public float CurrentFireCooldown => pistolData.fireCooldownByLevel[CurrentLevel - 1];
-    public bool IsMaxLevel => CurrentLevel >= pistolData.MaxLevel;
-    public int NextUpgradeCost => pistolData.upgradeCostByLevel[CurrentLevel - 1];
+    public int MagazineAmmo { get; private set; }
+    public int ReserveAmmo { get; private set; }
+    public bool CanReload => MagazineAmmo < weaponData.magazineSize && ReserveAmmo > 0;
 
-    private void Awake() { Instance = this; }
+    private void Awake()
+    {
+        Instance = this;
+        MagazineAmmo = weaponData.magazineSize;
+        ReserveAmmo = weaponData.startingReserveAmmo;
+    }
 
     public bool TryUpgrade()
     {
@@ -401,27 +431,211 @@ public class WeaponUpgrade : MonoBehaviour
         return true;
     }
 
-    public void LoadLevel(int level) => CurrentLevel = level;
-    public void ResetLevel() => CurrentLevel = 1;
+    public bool TryConsumeShot()
+    {
+        if (MagazineAmmo <= 0) return false;
+
+        MagazineAmmo--;
+        return true;
+    }
+
+    public void Reload()
+    {
+        int needed = weaponData.magazineSize - MagazineAmmo;
+        int actual = Mathf.Min(needed, ReserveAmmo);
+
+        MagazineAmmo += actual;
+        ReserveAmmo -= actual;
+    }
+
+    public void AddReserveAmmo(int amount)
+    {
+        ReserveAmmo += amount;
+    }
+
+    public void LoadFrom(int level, int magazin, int reserve)
+    {
+        CurrentLevel = level;
+        MagazineAmmo = magazin;
+        ReserveAmmo = reserve;
+    }
+
+    public void ResetWeapon()
+    {
+        CurrentLevel = 1;
+        MagazineAmmo = weaponData.magazineSize;
+        ReserveAmmo = weaponData.startingReserveAmmo;
+    }
 }
 ```
-`TryUpgrade()` 하나에 "비용 확인+차감+레벨업"을 캡슐화 — `RunState.TrySubmitMission()`이 `CurrencyManager.TrySpend()`를 쓰는 것과 동일한 결.
 
-**3. 기존 코드 수정 지점**:
-- `PlayerShoot.cs`: 현재 `[SerializeField] private float fireCooldown = 0.2f;` 필드를 삭제하고, `cooldownTimer = fireCooldown;` 사용 지점을 `cooldownTimer = WeaponUpgrade.Instance.CurrentFireCooldown;`으로 교체.
-- `Projectile.cs`: 현재 `[SerializeField] private int damage = 10;` 필드가 프리팹 고정값이라 강화가 반영 안 됨. `public void SetDamage(int amount) => damage = amount;` 메서드를 추가하고, `OnTriggerEnter`의 `enemyHealth.TakeDamage(damage)`는 그대로 이 필드를 씀.
-- `PlayerShoot.Fire()`: `ProjectilePool.Instance.Get(fp.position, fp.rotation)` 호출 직후 반환값을 받아 `SetDamage(WeaponUpgrade.Instance.CurrentDamage)` 호출 — `WaveSpawner.SpawnEnemy()`가 `EnemyPool.Get()` 직후 `EnemyHealth.Initialize()`를 호출하는 기존 패턴과 정확히 동일한 형태(풀링 오브젝트는 꺼내진 직후 호출자가 즉시 초기화 데이터를 주입).
-- `RunState.ResetEntireRun()`에 `WeaponUpgrade.Instance.ResetLevel()` 한 줄 추가(런 리셋 시 강화도 초기화 — 로그라이트 규칙과 일치, `CurrencyManager.ResetCrystal()`/`PlayerManager.ResetHealth()`와 같은 자리에 나란히 추가).
-- `SaveData.cs`에 `public int weaponLevel;` 필드 추가, `SaveManager.Save()`가 `weaponLevel = WeaponUpgrade.Instance.CurrentLevel`을 채우고, `SaveManager.TryLoadAndApply()`가 `WeaponUpgrade.Instance.LoadLevel(data.weaponLevel)` 호출하도록 배관 연결(기존 `crystal`/`player` 필드와 동일한 자리에 추가).
+**3. `PlayerShoot.cs` 최종본(전체 교체됨)** — R키 재장전 상태머신 추가:
+```csharp
+public class PlayerShoot : MonoBehaviour
+{
+    [SerializeField] private PlayerAim playerAim;
+
+    private float cooldownTimer;
+    private float reloadTimer;
+    private bool isReloading;
+
+    private void Update()
+    {
+        if (PlayerInputLock.IsLocked) return;
+
+        if(isReloading)
+        {
+            reloadTimer -= Time.deltaTime;
+            if(reloadTimer <= 0f)
+            {
+                PlayerWeapon.Instance.Reload();
+                isReloading = false;
+            }
+            return;
+        }
+
+        cooldownTimer -= Time.deltaTime;
+
+        Keyboard keyboard = Keyboard.current;
+        if(keyboard != null && keyboard.rKey.wasPressedThisFrame)
+        {
+            TryStartReload();
+            return;
+        }
+
+        Mouse mouse = Mouse.current;
+        if (mouse == null) return;
+
+        if(mouse.leftButton.isPressed && cooldownTimer <= 0f)
+        {
+            Fire();
+            cooldownTimer = PlayerWeapon.Instance.Data.fireCooldown;
+        }
+    }
+
+    private void TryStartReload()
+    {
+        if (!PlayerWeapon.Instance.CanReload) return;
+
+        isReloading = true;
+        reloadTimer = PlayerWeapon.Instance.Data.reloadTime;
+    }
+
+    private void Fire()
+    {
+        if (!InfiniteAmmoZone.IsActive && !PlayerWeapon.Instance.TryConsumeShot()) return;
+
+        Transform fp = playerAim.FirePoint;
+        Projectile projectile = ProjectilePool.Instance.Get(fp.position, fp.rotation);
+        projectile.SetDamage(PlayerWeapon.Instance.CurrentDamage);
+    }
+}
+```
+(위 `Fire()`는 아래 "Base 씬 무한탄 처리" 반영된 최종본 — `InfiniteAmmoZone.IsActive` 체크 추가됨)
+
+**4. 기존 코드 수정 완료 지점**:
+- `Projectile.cs`: `public void SetDamage(int amount) => damage = amount;` 추가. `OnTriggerEnter`의 `enemyHealth.TakeDamage(damage)`는 그대로.
+- `RunState.ResetEntireRun()`에 `PlayerWeapon.Instance.ResetWeapon();` 한 줄 추가(`CurrencyManager.ResetCrystal()`/`PlayerManager.ResetHealth()`/`GameManager.ResetGameOver()`와 나란히).
+- `SaveData.cs`에 `weaponLevel`/`magazineAmmo`/`reserveAmmo` 3개 필드 추가.
+- `SaveManager.Save()`에 `weaponLevel = PlayerWeapon.Instance.CurrentLevel`, `magazineAmmo = PlayerWeapon.Instance.MagazineAmmo`, `reserveAmmo = PlayerWeapon.Instance.ReserveAmmo` 추가.
+- `SaveManager.TryLoadAndApply()`에 `PlayerWeapon.Instance.LoadFrom(data.weaponLevel, data.magazineAmmo, data.reserveAmmo);` 추가.
+
+**배치 완료**: `WD_Pistol.asset` 생성 및 값 채움 완료. `PersistentManagers/Managers` 그룹에 `PlayerWeapon` 컴포넌트 추가, `Weapon Data` 필드에 `WD_Pistol.asset` 연결(한 곳만).
+
+**알려진 사소한 잔재(미해결, 급하지 않음)**: `Player.prefab`의 `PlayerShoot` 컴포넌트에 예전 설계(PlayerShoot이 직접 WeaponData를 참조하던 버전) 때 연결했던 `weaponData` 필드의 죽은 직렬화 데이터가 남아있음 — 지금 `PlayerShoot.cs` 소스에는 이 필드가 없어 실제 동작에는 전혀 지장 없음(인스펙터에도 안 보임). Unity 에디터에서 `Player.prefab`을 열었다가 저장하면 자동 정리됨.
+
+**검증 완료(2026-09-09)**: 플레이 모드에서 12발(마거진) 소진 → 발사 불가 확인 → R키 재장전(소요시간 동안 발사 안 됨) → 재장전 완료 후 재발사 정상 작동 확인. 인스펙터에서 `MagazineAmmo`/`ReserveAmmo` 등이 안 보이는 건 정상(자동 구현 프로퍼티 `{ get; private set; }`는 기본 인스펙터에 노출 안 됨 — Debug 모드로 전환하면 확인 가능, 다른 프로퍼티들도 전부 동일).
+
+**Base 씬 무한탄 처리 — 구현 완료 (2026-09-09)**: Base에 훈련장(사격 연습 공간) 설치가 계획되어 있어, "발사 자체는 막지 않되 탄약만 소모하지 않는" 구역이 필요해짐. 데미지/연사속도는 실전과 동일하게 체감되어야 훈련 의미가 있다는 요구사항.
+- `GlobalFlags.cs`에 `InfiniteAmmoZone`(static class) 추가 — 기존 `PlayerInputLock` 등과 동일한 `IsActive`/`Enter()`/`Exit()` 패턴.
+```csharp
+public static class InfiniteAmmoZone
+{
+    public static bool IsActive { get; private set; }
+    public static void Enter() => IsActive = true;
+    public static void Exit() => IsActive = false;
+}
+```
+- `InfiniteAmmoZoneMarker.cs`(신규, `Core` 폴더) — `Awake()`에서 `Enter()`, `OnDestroy()`에서 `Exit()`. Base 씬에만 존재하는 별도의 일반 GameObject(이름: `InfiniteAmmoZone`)에 부착.
+```csharp
+public class InfiniteAmmoZoneMarker : MonoBehaviour
+{
+    private void Awake() => InfiniteAmmoZone.Enter();
+    private void OnDestroy() => InfiniteAmmoZone.Exit();
+}
+```
+- **겪은 시행착오**: 처음엔 `Bootstrap`(GameBootstrap이 붙은 오브젝트) 위에 이 마커를 얹었으나, `GameBootstrap`은 "최초 1회만 살아남고 이후 씬 재진입 시 `Destroy(gameObject)`로 자기 자신을 파괴"하는 특수 생명주기(8번 섹션 참고)라, ZWD 갔다가 Base로 재진입하면 `Bootstrap` 오브젝트 자체가 없어서 `Awake()`가 다시 호출되지 않는 문제 발생. **해결**: `Bootstrap`과 무관한 순수 일반 GameObject를 Base 씬에 별도로 만들어 옮김 — 이러면 씬이 로드/언로드될 때마다(Base 재진입마다) 이 오브젝트도 매번 새로 생성/파괴되어 `Enter()`/`Exit()`가 정상적으로 반복 호출됨. **교훈**: "최초 1회만 사는 영속 초기화 오브젝트"와 "씬이 로드될 때마다 매번 새로 실행돼야 하는 로직"은 절대 같은 오브젝트에 두면 안 됨.
+- `PlayerShoot.Fire()` 수정: `if (!InfiniteAmmoZone.IsActive && !PlayerWeapon.Instance.TryConsumeShot()) return;` — 무한탄 구역이면 탄약 체크/차감 자체를 건너뛰고 바로 발사. `cooldownTimer`/`SetDamage`는 그대로라 데미지·연사속도는 실전과 동일하게 유지됨.
+- **배치**: `InfiniteAmmoZoneMarker` 컴포넌트를 Base 씬 전용 GameObject에 부착 완료(ZWD 씬에는 없음, 확인됨).
+- **검증 완료**: Base에서 발사해도 탄약 안 줄어드는 것 확인. **의도된 동작으로 확정**: ZWD에서 탄약을 소모한 채로 Base에 돌아와도 탄약 수치 자체는 그대로 유지됨(`InfiniteAmmoZone`은 소모만 막을 뿐 탄약 상태를 건드리지 않음) — 그 상태에서 Base에서 재장전(R키)이 가능한 것도 그대로 두기로 확정(막지 않음).
+
+**⚠️ 미검증 — `PlayerWeapon.TryUpgrade()`(무기 강화) 자체는 아직 플레이테스트 못 함**: 탄약/재장전(발사·재장전 흐름)은 검증 완료했으나, 강화 쪽은 이걸 호출할 UI가 아직 없어서 "크리스탈 차감 → 레벨업 → 다음 발사부터 데미지 상승" 흐름 전체를 실제로 확인한 적이 없음. **D단계(상점 UI) 구현 시 권총 강화 버튼을 만들고 나면, 반드시 이 흐름을 플레이테스트로 검증할 것** — 특히 `NextUpgradeCost`가 올바른 레벨 인덱스를 참조하는지, `IsMaxLevel` 도달 시 버튼이 정상적으로 막히는지, 강화 후 `CurrentDamage`가 다음 발사에 실제로 반영되는지 확인 필요.
 
 **주의 — 무기 강화와 방어벽 강화는 서로 다른 모델임(혼동 방지)**:
-- 무기(권총)는 **순차 레벨업**(설계도 해금 불필요, 크리스탈만 있으면 다음 레벨로 즉시 이동) — 위 `WeaponUpgrade.TryUpgrade()`가 이 방식.
+- 무기(권총)는 **순차 레벨업**(설계도 해금 불필요, 크리스탈만 있으면 다음 레벨로 즉시 이동) — 위 `PlayerWeapon.TryUpgrade()`가 이 방식.
 - 방어벽은 **설계도 해금 후 원하는 등급 선택 설치**(순차 레벨업 아님, `BlueprintManager`/`BlueprintId` 시스템 사용) — 아래 B 항목 참고. 코드를 그대로 복사해서 방어벽에 적용하면 안 됨.
 
-- **B. 방어벽 데이터/슬롯**: `WallData.cs`(SO, `WD_Wall.asset` 하나, 4방향 공용 설계표 — 레벨별 maxDurability/installCost/repairCost 5단계 배열, 무기와 달리 순차 강화 비용 개념은 없음) + `WallSlot.cs`(ZWD 씬의 4개 오브젝트, 방향별 독립 `State`/`CurrentLevel`/`CurrentDurability`, `Install(int level)`/`Repair()`/`Upgrade()`/`TakeDamage()`) + `WallManager.cs`(ZWD 씬, static Instance, 4개 슬롯 참조) 신설 필요.
-- **D. 상점 UI**: `StoreInteraction.cs`(`Interaction` 폴더, 소환기/침대 패턴) + `StoreUI.cs`(`UI` 폴더, 권총 강화/방어벽 관리 두 진입점) 신설 필요.
+### B. 방어벽(Barricade) 데이터/슬롯 — 핵심 로직 구현 중 (2026-09-09), 배치 진행 중
+
+**배치 폴더 확정**: `Combat` 폴더 그대로 사용(투사체 전용 폴더라 성격이 다르지만, "많아지면 나누자"는 판단으로 지금은 함께 둠 — 나중에 방어구조물 종류가 늘면 `Structure` 폴더 분리 검토).
+
+**네이밍 확정 — `Wall` → `Barricade`로 전면 변경**: 처음엔 `WallData`/`WallSlot`/`WallManager`(오브젝트명도 `ProtectionWall(N/E/S/W)`)로 임시 작성했으나, "임시방편으로 급조해서 세우는 방벽"이라는 게임 톤(크리스탈로 소모품 취급받는 지원자가 만드는 방어시설)에 더 어울리는 이름으로 `Barricade` 확정. 파일명: `BarricadeData.cs`/`BarricadeSlot.cs`/`BarricadeManager.cs`, 오브젝트명: `Barricade(N/E/S/W)`/`BarricadeManager`. **enum도 함께 변경**: `WallDirection`→`BarricadeDirection`, `WallState`→`BarricadeState`(이 세션 시점 기준 아직 파일 내부 enum 선언 자체는 완전히 안 바뀐 상태 — 다음 세션에서 확인 필요, 아래 "남은 작업" 참고). `BlueprintId`의 `WallLevel2~5`도 `BarricadeLevel2~5`로 이미 변경 완료(세이브 파일에 문자열로 저장되는 값이지만, 아직 실제 유저 세이브가 쌓이기 전인 개발 단계라 지금 바꾸는 것으로 확정).
+
+**설치(TryInstall) 설계 — 여러 차례 논의 끝에 확정**:
+1. 최초 설계: 무기처럼 "설치 비용 확인+차감+상태변경"을 `TryInstall(int level)` 하나로 캡슐화(`PlayerWeapon.TryUpgrade()`와 동일 패턴) — 이 원칙 자체는 유지.
+2. **버그 발견 1 — 이미 설치된 벽을 다른 레벨로 재설치할 수 없는 문제**: 처음엔 `TryInstall`이 `State != Empty`면 무조건 거부하도록 작성했었음 — 이러면 1레벨 설치 후 3레벨이 새로 해금돼도 교체 설치가 불가능(파괴될 때까지 기다렸다가 `Repair`로 레벨 유지한 채 복구하는 것만 가능). **해결**: "이미 설치된(Alive) 방어벽도 다른 레벨로 교체 설치 가능해야 한다"고 확정 — `TryInstall`에서 `State` 체크 자체를 제거, `Empty`/`Alive`/`Destroyed` 상관없이 해금된 레벨+크리스탈만 있으면 그 자리를 새 레벨로 덮어씀(기존 내구도/레벨은 버려지고 설치비용 전액 재지불). **다운그레이드 허용 여부는 아직 미확정**(막고 싶으면 나중에 `level > CurrentLevel` 체크 추가 가능) — 다음 세션에서 재확인 필요.
+3. **버그 발견 2 — `TryRepair()`의 조건이 반대로 작성됨**: 처음 구현 시 `if (State == WallState.Destroyed) return false;`로 되어 있어, 의도(A안: Alive든 Destroyed든 수리 가능, Empty만 거부)와 정반대로 정확히 Destroyed일 때만 수리를 막고 있었음. 게다가 `Empty` 상태(`CurrentLevel = 0`)에서 `TryRepair()`가 통과되면 `MaxDurability`(`maxDurabilityByLevel[CurrentLevel - 1]`) 계산에서 `[-1]` 인덱스 접근으로 크래시 발생 가능했음. **해결**: `if (State == WallState.Empty) return false;`로 수정 — 확인 완료.
+
+**수리 비용 계산식 확정 (A안)**: 처음엔 `WallData.repairCostByLevel`(레벨별 고정 배열)로 설계했으나, "내구도가 적게 남았을수록 수리비가 설치비에 근접해야 한다"는 방향으로 재설계 — 고정 배열 삭제하고 계산식으로 대체.
+```csharp
+public int RepairCost => Mathf.RoundToInt((1f - (float)CurrentDurability / MaxDurability) * InstallCost(CurrentLevel));
+```
+- 완전 파괴(내구도 0) 시 `RepairCost == InstallCost`(비율 1)로 자연스럽게 수렴 — 별도 분기 불필요.
+- **전제 조건**: 이 공식이 의미를 가지려면 `TryRepair()`가 완전 파괴 전(Alive, 부분 손상) 상태에서도 호출 가능해야 함 — 위 버그 발견 2와 연결되는 확정 사항.
+- **수리 가능 시점 확정(A안)**: `State == Empty`일 때만 거부, `Alive`(부분 손상)든 `Destroyed`(완전 파괴)든 수리 가능. 이미 풀피(`CurrentDurability >= MaxDurability`)면 수리할 것 없으므로 거부.
+- `BarricadeData.repairCostByLevel` 필드 삭제 완료.
+
+**최종 `TryInstall`/`TryRepair` (다음 세션에서 실제 반영 확인 필요)**:
+```csharp
+public bool TryInstall(int level)
+{
+    if (!IsLevelUnlocked(level)) return false;
+    if (!CurrencyManager.Instance.TrySpend(InstallCost(level))) return false;
+
+    State = BarricadeState.Alive;
+    CurrentLevel = level;
+    CurrentDurability = barricadeData.maxDurabilityByLevel[level - 1];
+    barricadeModel.SetActive(true);
+    return true;
+}
+
+public bool TryRepair()
+{
+    if (State == BarricadeState.Empty) return false;
+    if (CurrentDurability >= MaxDurability) return false;
+    if (!CurrencyManager.Instance.TrySpend(RepairCost)) return false;
+
+    State = BarricadeState.Alive;
+    CurrentDurability = MaxDurability;
+    return true;
+}
+```
+
+**콜라이더/이동방식 관련 중요 발견 — 지금 단계에서는 해결 대상 아님(계획대로)**: 좀비가 방어벽을 그냥 통과하는 문제 발견, 원인 진단 결과 "좀비 콜라이더가 Is Trigger라서"가 아니라 — `EnemyMovement.Update()`가 Rigidbody/물리 충돌이 아니라 `transform.position`을 직접 더하는 순수 Transform 이동 방식이라, 애초에 Unity 물리 엔진이 이 이동을 막을 방법 자체가 없음(콜라이더가 Solid든 Trigger든 무관). `EnemyAttack.OnTriggerStay`가 쓰는 좀비 자신의 트리거 콜라이더는 플레이어 공격 판정용으로 원래 트리거가 맞음 — 건드릴 필요 없음. **이 문제는 SessionLog 9번 섹션에 이미 설계된 대로, "3) 좀비 종류 추가" 단계에서 `EnemyMovement`에 Raycast 기반 벽 감지(트리거 게이팅 최적화 포함)를 추가할 때 함께 해결될 예정** — 지금(B단계)은 방어벽의 데이터/상태(설치/파괴/수리)만 완성하면 되고 범위 밖.
+
+**남은 작업 (다음 세션에서 이어서 확인/진행)**:
+1. `BarricadeManager.cs` 내부 클래스 선언이 아직 `public class WallManager`로 남아있을 수 있음(파일명은 `BarricadeManager.cs`인데 클래스명이 안 바뀜 — 파일명/클래스명 불일치 시 Unity가 컴포넌트 인식 못 함) — **다음 세션에서 반드시 확인**.
+2. `BarricadeSlot.cs` 내부 `WallDirection`/`WallState` enum 선언이 아직 안 바뀌었을 수 있음 — **다음 세션에서 반드시 확인**(enum 직렬화는 이름이 아니라 정수 인덱스 기준이라, 이름만 바꾸는 건 기존 씬 배치값에 영향 없음 — 안전하게 바꿔도 됨).
+3. `BarricadeData.cs`의 `[CreateAssetMenu(menuName = "Data/Wall Data")]` 메뉴명도 "Data/Barricade Data"로 변경 권장(사소함).
+4. `WD_Wall.asset` 파일명도 `BD_Barricade.asset` 등으로 리네임 권장(사소함, 안 해도 무방 — GUID 참조라 안전).
+5. **다운그레이드 설치 허용 여부 미확정** — 지금은 `TryInstall`이 막지 않음, 필요시 `level > CurrentLevel` 체크 추가 논의.
+6. 방어벽 모델(fbx)이 아직 없어 임시로 `BarricadeSlot`(로직+콜라이더+MeshFilter+MeshRenderer)과 `barricadeModel`(자기 자신 참조)이 하나의 오브젝트로 합쳐진 상태 — **실제 fbx 모델 준비되면 소환기/침대 패턴대로 부모(BarricadeSlot+BoxCollider, 항상 활성)/자식(순수 시각 모델, barricadeModel이 이 자식을 가리키도록) 구조로 재구성 필요**. 지금 구조로도 로직 검증에는 지장 없음.
+7. 세이브 연동(SaveData 필드 추가, RunState.ResetEntireRun()에 `BarricadeManager.Instance.ResetAllSlots()` 추가) — **D단계(상점 UI) 완성 후 실제 동작 흐름을 보며 함께 처리하기로 확정**(BarricadeManager가 ZWD 씬 로컬 오브젝트라 Base 씬에서 호출 시 null 체크 등 신중한 처리 필요하다는 이유).
+8. `IResettable` 같은 공통 인터페이스로 여러 매니저의 `LoadFrom`/`Reset~` 패턴을 통합할지 논의 — **지금 규모(6개 클래스)에서는 오버엔지니어링으로 판단, 도입 안 함**. 나중에 리셋 대상이 크게 늘어나면 재고려.
+
+- **D. 상점 UI**: `StoreInteraction.cs`(`Interaction` 폴더, 소환기/침대 패턴) + `StoreUI.cs`(`UI` 폴더, 권총 강화/방어벽 관리 두 진입점) 신설 필요. **주의**: 무기 강화(`PlayerWeapon.TryUpgrade()`)도 아직 상점 UI가 없어 플레이테스트 못 함 — 상점 UI 완성 시 반드시 함께 검증할 것(위 C단계 섹션의 "⚠️ 미검증" 항목 참고).
 - **E. 디버그 해금 도구**: 드랍 테이블 미구현 상태이므로, 임시 디버그 버튼/코드로 `BlueprintManager.Unlock()`을 강제 호출하는 테스트 수단 필요(나중에 실제 드랍 로직 구현되면 제거 예정임을 주석으로 명시할 것).
-- **스크립트 배치 폴더 규칙 확정**: 새 스크립트는 각자 기능 폴더에 위치(예: 무기 관련은 `Player`, 저장/해금 관련은 `Core`, 상호작용은 `Interaction`, UI는 `UI`) — 방어구조물(벽) 스크립트는 `Combat`(투사체 전용이라 성격이 다름) 대신 새 폴더를 만들지 여부는 미정. SO 에셋 인스턴스(`WD_Pistol.asset`, `WD_Wall.asset`)는 기존 `Assets/_Project/Data/` 폴더 그대로 사용(새 폴더 불필요).
+- **스크립트 배치 폴더 규칙 확정**: 새 스크립트는 각자 기능 폴더에 위치(예: 무기 관련은 `Player`, 저장/해금 관련은 `Core`, 상호작용은 `Interaction`, UI는 `UI`). SO 에셋 인스턴스(`WD_Pistol.asset`, `WD_Wall.asset`)는 기존 `Assets/_Project/Data/` 폴더 그대로 사용(새 폴더 불필요).
 
 ### 좀비 특색 설계 (가위바위보 상성)
 플레이어가 스스로 체감하는 암묵적 상성으로 시작하기로 확정 — 명시적 속성/저항 시스템은 지금 만들지 않음(좀비 3종·무기 계열 1개뿐인 지금 단계에 과함).

@@ -56,3 +56,11 @@ public static class SceneTransitionRequest
     public static string TargetSceneName { get; private set; }
     public static void Set(string targetSceneName) => TargetSceneName = targetSceneName;
 }
+
+public static class InfiniteAmmoZone
+{
+    public static bool IsActive { get; private set; }
+
+    public static void Enter() => IsActive = true;
+    public static void Exit() => IsActive = false;
+}

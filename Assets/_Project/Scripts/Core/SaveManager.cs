@@ -22,6 +22,9 @@ public class SaveManager : MonoBehaviour
             currentDay = RunState.Instance.CurrentDay,
             currentSlot = (int)RunState.Instance.CurrentSlot,
             crystal = CurrencyManager.Instance.Crystal,
+            weaponLevel = PlayerWeapon.Instance.CurrentLevel,
+            magazineAmmo = PlayerWeapon.Instance.MagazineAmmo,
+            reserveAmmo = PlayerWeapon.Instance.ReserveAmmo,
             missions = BuildMissionEntries(),
             player = new PlayerSaveData
             {
@@ -75,6 +78,7 @@ public class SaveManager : MonoBehaviour
 
         RunState.Instance.LoadFrom(data);
         CurrencyManager.Instance.LoadCrystal(data.crystal);
+        PlayerWeapon.Instance.LoadFrom(data.weaponLevel, data.magazineAmmo, data.reserveAmmo);
         if(data.player != null)
         {
             PlayerManager.Instance.LoadHealth(data.player.currentHealth, data.player.maxHealth);

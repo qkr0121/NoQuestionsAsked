@@ -105,7 +105,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShoot
   playerAim: {fileID: 1281207540894405453}
-  fireCooldown: 0.2
+  weaponData: {fileID: 11400000, guid: eda6f6dc3610c5c44a2f0f641f80a374, type: 2}
 --- !u!114 &7364220199263705777
 MonoBehaviour:
   m_ObjectHideFlags: 0

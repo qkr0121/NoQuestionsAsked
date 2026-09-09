@@ -28,6 +28,9 @@ public class SaveData
     public int currentSlot;
     public int crystal;
     public int rareCrystal; // TODO : CurrencyManager 에 희귀 크리스탈 재화 추가 시 Save/Load 배관 연결 필요(현재 미사용)
+    public int weaponLevel;
+    public int magazineAmmo;
+    public int reserveAmmo;
 
     public MissionSaveEntry[] missions;
     public PlayerSaveData player;

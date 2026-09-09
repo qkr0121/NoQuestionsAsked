@@ -110,6 +110,7 @@ public class RunState : MonoBehaviour
         CurrencyManager.Instance.ResetCrystal();
         PlayerManager.Instance.ResetHealth();
         GameManager.Instance.ResetGameOver();
+        PlayerWeapon.Instance.ResetWeapon();
     }
 
     public void LoadFrom(SaveData data)

@@ -15,6 +15,8 @@ public class Projectile : MonoBehaviour
         this.pool = pool;
     }
 
+    public void SetDamage(int amount) => damage = amount;
+
     private void OnEnable()
     {
         timer = lifeTime;
