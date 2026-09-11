@@ -671,7 +671,133 @@ StoreUI (패널, LocksInputWhileActive)
 - **색상 표시**: 내구도 비율(`CurrentDurability / MaxDurability`)에 따라 그 행의 배경색을 초록(100%)↔빨강(0%)으로 `Color.Lerp` 보간, 수치(텍스트)도 함께 표시(색만으로 판단하지 않게).
 - `BarricadeRowUI.cs`(신규, `UI` 폴더) 코드 설계까지 완료(아직 실제 작성/배치 전) — `BarricadeManager.GetSlotInfo(direction)`으로 상태 조회, `TryInstall`/`TryRepair` 호출 후 `ConfirmationDialog.Show(...)`로 확인창 경유.
 
-**주의**: 무기 강화(`PlayerWeapon.TryUpgrade()`)도 방어벽 설치/수리(`BarricadeManager.TryInstall/TryRepair`)도 전부 상점 UI가 있어야 실제 플레이테스트 가능 — 아직 미검증. **다음 세션에서 `StoreInteraction.cs`/`StoreUI.cs`/`BarricadeRowUI.cs` 실제 작성 및 UI 배치부터 시작**(Store 오브젝트에 `InteractableStructure`+`StoreInteraction` 부착, Layer를 `Interactable`로 설정하는 것 잊지 말 것 — 새 상호작용 구조물 만들 때마다 챙겨야 하는 항목).
+**주의**: 무기 강화(`PlayerWeapon.TryUpgrade()`)도 방어벽 설치/수리(`BarricadeManager.TryInstall/TryRepair`)도 전부 상점 UI가 있어야 실제 플레이테스트 가능 — 아직 미검증.
+
+### ⏸ 구현 중 중단 (2026-09-11) — 다음 세션은 여기서부터 이어서 작성
+
+**파일별 진행 상황**:
+- **`StoreUI.cs`**: 완성. `panel`/`mainMenuGroup`/`weaponUpgradeGroup`/`barricadeMenuGroup` 전환, `RefreshWeaponUpgrade()`(레벨/비용 텍스트+강화버튼 활성화 갱신), `OnWeaponUpgradeClicked()`(ConfirmationDialog 경유 강화)까지 코드 작성 완료. **사소한 누락**: `ShowWeaponUpgrade()` 안에서 `RefreshWeaponUpgrade()` 호출이 빠져 있음 — 지금 상태로는 화면 전환 시 최신 레벨/비용이 자동 갱신 안 될 수 있음, 다음 세션에서 한 줄 추가 필요.
+- **`BarricadeRowUI.cs`**: **뼈대만 있음(WIP)** — `Awake()`, `Refresh()`(디렉션 텍스트 표시만), `BuildLevelDropdown()`/`RefreshDurabilityDisplay()`/`RefreshActionButton()`/`OnActionClicked()` 전부 빈 메서드. `GetSelectedLevel()`도 임시로 `return 1;`만 있음. **다음 세션에서 이어서 작성할 실제 로직**(이전 세션에 이미 설계 완료, 코드도 준비되어 있음 — 아래 옮겨 적음):
+```csharp
+private void Awake()
+{
+    actionButton.onClick.AddListener(OnActionClicked);
+    levelDropdown.onValueChanged.AddListener(_ => RefreshActionButton());
+}
+
+public void Refresh()
+{
+    info = BarricadeManager.Instance.GetSlotInfo(direction);
+    directionText.text = direction.ToString();
+    BuildLevelDropdown();
+    RefreshDurabilityDisplay();
+    RefreshActionButton();
+}
+
+private void BuildLevelDropdown()
+{
+    levelDropdown.ClearOptions();
+    List<string> options = new List<string>();
+    int selectedIndex = 0;
+    int maxLevel = BarricadeManager.Instance.MaxLevel; // BarricadeManager에 아직 없음, 추가 필요(아래 참고)
+
+    for (int level = 1; level <= maxLevel; level++)
+    {
+        if (!BarricadeManager.Instance.IsLevelUnlocked(level)) continue;
+        if (level == info.CurrentLevel) selectedIndex = options.Count;
+        options.Add($"{level}단계");
+    }
+
+    levelDropdown.AddOptions(options);
+    levelDropdown.value = selectedIndex;
+    levelDropdown.RefreshShownValue();
+}
+
+private void RefreshDurabilityDisplay()
+{
+    if (info.State == BarricadeState.Empty)
+    {
+        durabilityText.text = "-/-";
+        levelText.text = "-";
+        rowBackground.color = Color.gray;
+        return;
+    }
+
+    durabilityText.text = $"{info.CurrentDurability}/{info.MaxDurability}";
+    levelText.text = $"{info.CurrentLevel}단계";
+
+    float ratio = (float)info.CurrentDurability / info.MaxDurability;
+    rowBackground.color = Color.Lerp(Color.red, Color.green, ratio);
+}
+
+private int GetSelectedLevel()
+{
+    string label = levelDropdown.options[levelDropdown.value].text;
+    return int.Parse(label.Replace("단계", ""));
+}
+
+private void RefreshActionButton()
+{
+    if (levelDropdown.options.Count == 0) return;
+
+    int selectedLevel = GetSelectedLevel();
+    bool isSameLevel = info.State != BarricadeState.Empty && selectedLevel == info.CurrentLevel;
+
+    if (isSameLevel)
+    {
+        int repairCost = BarricadeManager.Instance.GetRepairCost(direction);
+        actionButtonText.text = $"수리 ({repairCost})";
+        actionButton.interactable = info.CurrentDurability < info.MaxDurability;
+    }
+    else
+    {
+        actionButtonText.text = $"설치 ({BarricadeManager.Instance.InstallCost(selectedLevel)})";
+        actionButton.interactable = true;
+    }
+}
+
+private void OnActionClicked()
+{
+    int selectedLevel = GetSelectedLevel();
+    bool isSameLevel = info.State != BarricadeState.Empty && selectedLevel == info.CurrentLevel;
+
+    if (isSameLevel)
+    {
+        int repairCost = BarricadeManager.Instance.GetRepairCost(direction);
+        ConfirmationDialog.Instance.Show($"{repairCost} 크리스탈로 수리하시겠습니까?", () =>
+        {
+            BarricadeManager.Instance.TryRepair(direction);
+            Refresh();
+        });
+    }
+    else
+    {
+        int installCost = BarricadeManager.Instance.InstallCost(selectedLevel);
+        ConfirmationDialog.Instance.Show($"{installCost} 크리스탈로 설치하시겠습니까?", () =>
+        {
+            BarricadeManager.Instance.TryInstall(direction, selectedLevel);
+            Refresh();
+        });
+    }
+}
+```
+- **`BarricadeManager.cs`**: `MaxLevel` 프로퍼티가 아직 없음 — 위 `BuildLevelDropdown()`이 참조하므로 **다음 세션에서 반드시 먼저 추가**:
+```csharp
+public int MaxLevel => barricadeData.MaxLevel;
+```
+- **`StoreInteraction.cs`**: `OnInteract()` 안의 `StoreUI.Instance.Open();` 호출이 아직 주석 처리된 상태(`StoreUI`가 없던 시절 컴파일 에러 방지용) — `StoreUI.cs`가 이미 완성됐으니 **다음 세션에서 주석 해제 필요**.
+
+**커밋됨(2026-09-11, WIP 상태로 커밋)**: `StoreUI.cs`(완성), `BarricadeRowUI.cs`(뼈대만).
+
+**다음 세션 시작 순서**:
+1. `BarricadeManager.cs`에 `MaxLevel` 프로퍼티 추가
+2. `BarricadeRowUI.cs`의 빈 메서드들을 위 코드로 채움
+3. `StoreUI.ShowWeaponUpgrade()`에 `RefreshWeaponUpgrade()` 호출 추가
+4. `StoreInteraction.OnInteract()`의 주석 해제
+5. 컴파일 에러 없는지 확인 후, Unity 에디터에서 실제 UI 배치(Store 오브젝트에 `InteractableStructure`+`StoreInteraction` 부착 + Layer를 `Interactable`로 설정 잊지 말 것, Canvas 계층 구성, 각 필드 드래그 연결) — 에디터 UI 작업은 시간이 오래 걸릴 것으로 예상(기존 `WaveSelectionUI` 작업 규모의 2~3배로 추정됨).
+
+- **E. 디버그 해금 도구**: 드랍 테이블 미구현 상태이므로, 임시 디버그 버튼/코드로 `BlueprintManager.Unlock()`을 강제 호출하는 테스트 수단 필요(나중에 실제 드랍 로직 구현되면 제거 예정임을 주석으로 명시할 것).
+- **스크립트 배치 폴더 규칙 확정**: 새 스크립트는 각자 기능 폴더에 위치(예: 무기 관련은 `Player`, 저장/해금 관련은 `Core`, 상호작용은 `Interaction`, UI는 `UI`). SO 에셋 인스턴스(`WD_Pistol.asset`, `WD_Wall.asset`)는 기존 `Assets/_Project/Data/` 폴더 그대로 사용(새 폴더 불필요).
 - **E. 디버그 해금 도구**: 드랍 테이블 미구현 상태이므로, 임시 디버그 버튼/코드로 `BlueprintManager.Unlock()`을 강제 호출하는 테스트 수단 필요(나중에 실제 드랍 로직 구현되면 제거 예정임을 주석으로 명시할 것).
 - **스크립트 배치 폴더 규칙 확정**: 새 스크립트는 각자 기능 폴더에 위치(예: 무기 관련은 `Player`, 저장/해금 관련은 `Core`, 상호작용은 `Interaction`, UI는 `UI`). SO 에셋 인스턴스(`WD_Pistol.asset`, `WD_Wall.asset`)는 기존 `Assets/_Project/Data/` 폴더 그대로 사용(새 폴더 불필요).
 
