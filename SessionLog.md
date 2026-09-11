@@ -1,6 +1,6 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-09-09
+마지막 업데이트: 2026-09-11
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다. Unity/에디터 작업은 전부 사용자가 직접 진행하고, Claude는 설명·코드 안내만 담당(직접 코드 수정 금지 — Unity MCP로 씬/에셋 조작만 허용)하는 방식으로 작업해왔습니다.
 
@@ -623,17 +623,55 @@ public bool TryRepair()
 
 **콜라이더/이동방식 관련 중요 발견 — 지금 단계에서는 해결 대상 아님(계획대로)**: 좀비가 방어벽을 그냥 통과하는 문제 발견, 원인 진단 결과 "좀비 콜라이더가 Is Trigger라서"가 아니라 — `EnemyMovement.Update()`가 Rigidbody/물리 충돌이 아니라 `transform.position`을 직접 더하는 순수 Transform 이동 방식이라, 애초에 Unity 물리 엔진이 이 이동을 막을 방법 자체가 없음(콜라이더가 Solid든 Trigger든 무관). `EnemyAttack.OnTriggerStay`가 쓰는 좀비 자신의 트리거 콜라이더는 플레이어 공격 판정용으로 원래 트리거가 맞음 — 건드릴 필요 없음. **이 문제는 SessionLog 9번 섹션에 이미 설계된 대로, "3) 좀비 종류 추가" 단계에서 `EnemyMovement`에 Raycast 기반 벽 감지(트리거 게이팅 최적화 포함)를 추가할 때 함께 해결될 예정** — 지금(B단계)은 방어벽의 데이터/상태(설치/파괴/수리)만 완성하면 되고 범위 밖.
 
-**남은 작업 (다음 세션에서 이어서 확인/진행)**:
-1. `BarricadeManager.cs` 내부 클래스 선언이 아직 `public class WallManager`로 남아있을 수 있음(파일명은 `BarricadeManager.cs`인데 클래스명이 안 바뀜 — 파일명/클래스명 불일치 시 Unity가 컴포넌트 인식 못 함) — **다음 세션에서 반드시 확인**.
-2. `BarricadeSlot.cs` 내부 `WallDirection`/`WallState` enum 선언이 아직 안 바뀌었을 수 있음 — **다음 세션에서 반드시 확인**(enum 직렬화는 이름이 아니라 정수 인덱스 기준이라, 이름만 바꾸는 건 기존 씬 배치값에 영향 없음 — 안전하게 바꿔도 됨).
-3. `BarricadeData.cs`의 `[CreateAssetMenu(menuName = "Data/Wall Data")]` 메뉴명도 "Data/Barricade Data"로 변경 권장(사소함).
-4. `WD_Wall.asset` 파일명도 `BD_Barricade.asset` 등으로 리네임 권장(사소함, 안 해도 무방 — GUID 참조라 안전).
-5. **다운그레이드 설치 허용 여부 미확정** — 지금은 `TryInstall`이 막지 않음, 필요시 `level > CurrentLevel` 체크 추가 논의.
-6. 방어벽 모델(fbx)이 아직 없어 임시로 `BarricadeSlot`(로직+콜라이더+MeshFilter+MeshRenderer)과 `barricadeModel`(자기 자신 참조)이 하나의 오브젝트로 합쳐진 상태 — **실제 fbx 모델 준비되면 소환기/침대 패턴대로 부모(BarricadeSlot+BoxCollider, 항상 활성)/자식(순수 시각 모델, barricadeModel이 이 자식을 가리키도록) 구조로 재구성 필요**. 지금 구조로도 로직 검증에는 지장 없음.
-7. 세이브 연동(SaveData 필드 추가, RunState.ResetEntireRun()에 `BarricadeManager.Instance.ResetAllSlots()` 추가) — **D단계(상점 UI) 완성 후 실제 동작 흐름을 보며 함께 처리하기로 확정**(BarricadeManager가 ZWD 씬 로컬 오브젝트라 Base 씬에서 호출 시 null 체크 등 신중한 처리 필요하다는 이유).
-8. `IResettable` 같은 공통 인터페이스로 여러 매니저의 `LoadFrom`/`Reset~` 패턴을 통합할지 논의 — **지금 규모(6개 클래스)에서는 오버엔지니어링으로 판단, 도입 안 함**. 나중에 리셋 대상이 크게 늘어나면 재고려.
+**이전 세션 "남은 작업" 중 완료된 것 (2026-09-09~11)**:
+1. ~~클래스명/enum명 리네임~~ — **완료**: `BarricadeManager`, `BarricadeSlot` 전부 정확히 반영 확인.
+2. ~~다운그레이드 설치 허용 여부~~ — **확정: 허용**. "3레벨 방어벽 내구도가 얼마 안 남았는데 수리비도 부족하면, 저렴한 1/2레벨로라도 새로 세워 방어를 유지할 수 있어야 한다"는 실용적 이유로 다운그레이드도 막지 않기로 함(`TryInstall`에 레벨 비교 가드 없음, 의도된 것).
+3. ~~`IResettable` 인터페이스 도입 여부~~ — **도입 안 함으로 최종 확정**(오버엔지니어링 판단 유지).
+4. `[CreateAssetMenu]` 메뉴명, 에셋 파일명(`WD_Barricade.asset`)은 리네임 완료.
 
-- **D. 상점 UI**: `StoreInteraction.cs`(`Interaction` 폴더, 소환기/침대 패턴) + `StoreUI.cs`(`UI` 폴더, 권총 강화/방어벽 관리 두 진입점) 신설 필요. **주의**: 무기 강화(`PlayerWeapon.TryUpgrade()`)도 아직 상점 UI가 없어 플레이테스트 못 함 — 상점 UI 완성 시 반드시 함께 검증할 것(위 C단계 섹션의 "⚠️ 미검증" 항목 참고).
+### ⚠️ 중요 설계 재검토 — 방어벽 상태 저장 위치 (2026-09-11)
+
+**발견된 문제**: 상점(Store) 오브젝트는 **Base 씬**에 있는데, 방어벽 설치 대상은 **ZWD 씬**의 것 — 즉 Base에서 구매한 결과가 ZWD에도 반영되어야 함. 그런데 처음 설계한 `BarricadeManager`는 ZWD 씬 로컬 오브젝트였음(`GetSlot(direction)`으로 씬 안의 `BarricadeSlot` 배열을 참조하는 방식) — 이 상태로는 Base 씬에서 `BarricadeManager.Instance`가 아예 존재하지 않아 상점 UI가 작동할 수 없는 근본적 결함이었음.
+
+**해결 — A안(영속 매니저 이전) 채택, B안(임시 저장 후 반영)은 기각**:
+- B안(구매 결과를 임시 플래그/DTO에 적어뒀다가 ZWD 로드 시 반영)은 `PendingLoad`/`PendingRunReset` 같은 "1회성 이벤트 전달용 플래그" 패턴을 억지로 "계속 바뀌는 상태값 자체"에 쓰려는 것이라 부적합 — 결국 이 임시 저장소도 상시 최신 상태를 유지해야 해서 사실상 영속 매니저를 다시 만드는 것과 다를 바 없다고 판단.
+- **A안 확정**: `CurrencyManager`/`PlayerWeapon`과 동일한 패턴 — "상태는 영속 매니저가 소유, 씬 로컬 오브젝트는 그 상태를 반영하는 시각적 창구일 뿐"으로 전면 재설계.
+
+**최종 아키텍처**:
+- **`BarricadeManager`**: `PersistentManagers/Managers`로 이전(static Instance, DontDestroyOnLoad). 4방향 각각의 상태(`State`/`CurrentLevel`/`CurrentDurability`)를 `Dictionary<BarricadeDirection, SlotData>`(private 내부 클래스)로 직접 소유. `TryInstall`/`TryRepair`/`TakeDamage`/`GetSlotInfo`/`ResetAllSlots` 등 모든 판단/조작 로직 전담. 상태 변경 시 `event Action<BarricadeDirection> OnSlotChanged` 발행.
+- **`BarricadeSlot`**: ZWD 씬 전용으로 축소, **콜라이더+모델(시각 표현)만** 담당. `OnEnable`/`OnDisable`에서 `BarricadeManager.OnSlotChanged` 구독/해제, 자기 방향과 일치하는 변경에만 반응(`HandleSlotChanged`에서 `changedDirection != direction`이면 무시)해 `barricadeModel.SetActive()` 갱신. `TakeDamage(int amount)`는 얇은 위임 메서드로만 존재(`BarricadeManager.Instance.TakeDamage(direction, amount)` 호출) — 진입점은 ZWD의 물리적 충돌 지점(콜라이더)에 두되, 실제 상태 변경 권한은 여전히 `BarricadeManager` 하나에만 있음.
+- **`BarricadeSlotInfo`**(신규, 읽기 전용 DTO, `Assets/_Project/Scripts/Combat/`): `State`/`CurrentLevel`/`CurrentDurability`/`MaxDurability`를 `{ get; }`(세터 없음)으로만 노출 — 호출부(상점 UI)가 실수로 값을 직접 조작해 실제 상태와 어긋나는 사고를 원천 차단. 기존에 `GetState`/`GetCurrentLevel`/`GetCurrentDurability`/`GetMaxDurability` 4개로 나뉘어 있던 조회 메서드를 `GetSlotInfo(direction)` 하나로 통합(호출부가 항상 이 값들을 한 번에 묶어 쓰는 사용 패턴이라 DTO로 압축하는 게 실익 있다고 판단).
+- **`BarricadeEnum.cs`**(신규): `BarricadeDirection`/`BarricadeState`를 특정 클래스 파일에 종속시키지 않고 독립 파일로 분리 — 두 enum이 방어벽 시스템 전체(매니저+씬 오브젝트+UI)에서 대등하게 공유되는 "공용 어휘"라는 판단(`GlobalFlags.cs`/`SaveData.cs`가 관련 작은 타입을 한 파일에 모아두는 기존 관례와 일치).
+- **배치 완료**: ZWD 씬의 중복 `BarricadeManager` 오브젝트 삭제, `PersistentManagers/Managers/BarricadeManager`로 정상 이전(`Barricade Data` 필드에 `WD_Barricade.asset` 연결) 확인. `BarricadeSlot`의 죽은 `barricadeData` 직렬화 필드도 씬 재저장으로 정리됨.
+- **부수 발견**: `BarricadeManager.cs`에 `using UnityEditor.Experimental.GraphView;`(에디터 전용 네임스페이스, 실수로 딸려온 것 — 빌드 시 문제 될 수 있음) 발견 후 삭제.
+
+**아키텍처 원칙 논의 — "싱글톤에 역할이 너무 많은 것 아닌가" (기록 가치 있음)**:
+- 사용자가 "설치/수리 같은 행동은 다른 클래스가 하고, 매니저는 `Get~` 데이터 제공만 해야 하지 않냐"고 문제 제기.
+- 확인 결과 `RunState`도 이미 `TrySubmitMission()`/`IssueNewMission()`/`AdvanceDay()` 같은 판단/행동 로직을 자체적으로 갖고 있음 — 이 프로젝트의 기존 패턴과 일치.
+- **원칙 정리**: "매니저는 데이터만, 행동은 다른 클래스"는 정석이 아니며, 오히려 **"Tell, Don't Ask"** 원칙(정보를 캐물어 외부에서 판단하지 말고, 데이터를 가진 쪽에게 행동을 시켜라)과 **캡슐화**(데이터와 그 데이터를 안전하게 바꾸는 규칙은 분리하면 안 됨) 관점에서 지금 구조가 정석에 더 가까움.
+- 문제 삼아야 할 기준은 "메서드 개수"가 아니라 **"서로 무관한 여러 책임(도메인)이 한 클래스에 섞여 있는가"**(God Object 안티패턴) — `BarricadeManager`의 메서드들은 전부 "방어벽 상태"라는 하나의 응집된 주제에 속해 있어 문제없음. `RunState`가 스스로 "미션 로직 복잡해지면 MissionManager로 분리 예정"이라 예견해둔 것처럼, 실제로 서로 다른 소주제가 섞이기 시작하면 그때 분리하는 것이 맞는 판단 기준.
+
+**남은 작업**:
+1. 방어벽 모델(fbx)이 아직 없어 임시로 `BarricadeSlot`(콜라이더+MeshFilter+MeshRenderer)과 `barricadeModel`(자기 자신 참조)이 하나의 오브젝트로 합쳐진 상태 — 실제 fbx 모델 준비되면 소환기/침대 패턴대로 부모(콜라이더, 항상 활성)/자식(순수 시각 모델) 구조로 재구성 필요. 지금 구조로도 로직 검증에는 지장 없음.
+2. 세이브 연동(`SaveData` 필드 추가, `RunState.ResetEntireRun()`에 `BarricadeManager.Instance.ResetAllSlots()` 추가) — **D단계(상점 UI) 완성 후 실제 동작 흐름을 보며 함께 처리 예정**. `BarricadeManager`가 이제 영속 매니저로 바뀌었으므로 이 작업의 난이도/불확실성은 낮아짐(Base/ZWD 어디서 호출해도 항상 존재).
+
+### D. 상점 UI — 설계 확정, 구현 착수 전 (2026-09-11)
+
+**화면 전환 방식 확정**: 별도 패널 여러 개가 아니라, **하나의 `StoreUI` 패널 안에 화면 그룹(GameObject)을 여러 개 두고 SetActive로 전환**하는 방식(`MissionBoardUI`가 `hasMission` 여부로 그룹을 SetActive하던 것과 동일한 원리 확장). 패널이 하나뿐이라 `LocksInputWhileActive`도 한 번만 부착하면 됨.
+```
+StoreUI (패널, LocksInputWhileActive)
+ ├─ MainMenuGroup      [권총 강화] [방어벽 관리]
+ ├─ WeaponUpgradeGroup 현재레벨/다음비용 텍스트 + [강화] + [뒤로]
+ └─ BarricadeMenuGroup 4개 BarricadeRowUI 행을 한 화면에 동시 표시(별도 상세화면으로 안 들어감)
+```
+
+**방어벽 관리 화면(BarricadeMenuGroup) UI 확정**: 방향 선택 → 상세화면 이동의 2단계 대신, **4방향을 각각 한 행(row)으로 나열해 한 화면에서 전부 보여주고 조작**하는 방식으로 확정. 각 행 구성: [방향] · 내구도(현재/최대) · 단계 · 레벨 선택 드롭다운 · [설치/수리] 버튼.
+- **드롭다운 규칙**: 해금 안 된 레벨은 목록에 아예 안 뜸(해금된 것만 표시, 비활성화 표시 방식은 기각 — 더 직관적이고 실수 가능성 낮음). 상점 진입 시 드롭다운 기본값은 **현재 설치된 레벨**(= 수리가 기본으로 뜨는 것, 가장 자주 할 작업이 수리이므로).
+- **버튼 텍스트/동작 규칙**: 드롭다운에서 고른 레벨이 **현재 설치 레벨과 같으면** "수리"(내구도만 복구, 손상 비율 비례 비용) / **다르면**(위든 아래든) "설치"(완전 교체, 전액 비용). `Empty` 상태는 항상 "설치".
+- **색상 표시**: 내구도 비율(`CurrentDurability / MaxDurability`)에 따라 그 행의 배경색을 초록(100%)↔빨강(0%)으로 `Color.Lerp` 보간, 수치(텍스트)도 함께 표시(색만으로 판단하지 않게).
+- `BarricadeRowUI.cs`(신규, `UI` 폴더) 코드 설계까지 완료(아직 실제 작성/배치 전) — `BarricadeManager.GetSlotInfo(direction)`으로 상태 조회, `TryInstall`/`TryRepair` 호출 후 `ConfirmationDialog.Show(...)`로 확인창 경유.
+
+**주의**: 무기 강화(`PlayerWeapon.TryUpgrade()`)도 방어벽 설치/수리(`BarricadeManager.TryInstall/TryRepair`)도 전부 상점 UI가 있어야 실제 플레이테스트 가능 — 아직 미검증. **다음 세션에서 `StoreInteraction.cs`/`StoreUI.cs`/`BarricadeRowUI.cs` 실제 작성 및 UI 배치부터 시작**(Store 오브젝트에 `InteractableStructure`+`StoreInteraction` 부착, Layer를 `Interactable`로 설정하는 것 잊지 말 것 — 새 상호작용 구조물 만들 때마다 챙겨야 하는 항목).
 - **E. 디버그 해금 도구**: 드랍 테이블 미구현 상태이므로, 임시 디버그 버튼/코드로 `BlueprintManager.Unlock()`을 강제 호출하는 테스트 수단 필요(나중에 실제 드랍 로직 구현되면 제거 예정임을 주석으로 명시할 것).
 - **스크립트 배치 폴더 규칙 확정**: 새 스크립트는 각자 기능 폴더에 위치(예: 무기 관련은 `Player`, 저장/해금 관련은 `Core`, 상호작용은 `Interaction`, UI는 `UI`). SO 에셋 인스턴스(`WD_Pistol.asset`, `WD_Wall.asset`)는 기존 `Assets/_Project/Data/` 폴더 그대로 사용(새 폴더 불필요).
 

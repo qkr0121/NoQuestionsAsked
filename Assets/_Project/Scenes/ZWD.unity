@@ -856,7 +856,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WallSlot
   direction: 1
-  barricadeData: {fileID: 11400000, guid: 95279e803b6a8fe4a89ee9162670a3b5, type: 2}
   barricadeModel: {fileID: 410009873}
 --- !u!1001 &504101368
 PrefabInstance:
@@ -998,7 +997,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WallSlot
   direction: 3
-  barricadeData: {fileID: 11400000, guid: 95279e803b6a8fe4a89ee9162670a3b5, type: 2}
   barricadeModel: {fileID: 535898358}
 --- !u!65 &535898360
 BoxCollider:
@@ -1217,55 +1215,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 41495926bc1298e4187f337eb4b566f0, type: 3}
   m_PrefabInstance: {fileID: 655959560}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &668467604
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 668467606}
-  - component: {fileID: 668467607}
-  m_Layer: 0
-  m_Name: BarricadeManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &668467606
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 668467604}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &668467607
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 668467604}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fc93ba2c1c1475459f9d9590961c13a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WallManager
-  barricadeSlots:
-  - {fileID: 2135111471}
-  - {fileID: 410009878}
-  - {fileID: 1370905986}
-  - {fileID: 535898359}
 --- !u!1 &760862796
 GameObject:
   m_ObjectHideFlags: 0
@@ -1994,7 +1943,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WallSlot
   direction: 2
-  barricadeData: {fileID: 11400000, guid: 95279e803b6a8fe4a89ee9162670a3b5, type: 2}
   barricadeModel: {fileID: 1370905981}
 --- !u!1001 &1487257801
 PrefabInstance:
@@ -2635,7 +2583,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WallSlot
   direction: 0
-  barricadeData: {fileID: 11400000, guid: 95279e803b6a8fe4a89ee9162670a3b5, type: 2}
   barricadeModel: {fileID: 2135111466}
 --- !u!1001 &334706912781458727
 PrefabInstance:
@@ -2814,4 +2761,3 @@ SceneRoots:
   - {fileID: 2004477341}
   - {fileID: 209030924}
   - {fileID: 1776486061}
-  - {fileID: 668467606}
