@@ -1,0 +1,208 @@
+<title>MVP 일정 재배분 2차</title>
+<style>
+:root{
+  /* layout: header w/ budget stat strip, then a day-by-day list where each row is a fixed-width day/date column + a proportional-width hour bar + task text; weekday/weekend rows visually distinguished, model-making days flagged with a side tag */
+  --bg:#f6f4ef;--surface:#ffffff;--ink:#1c1b18;--sub:#716b5e;--line:#e3ddd0;
+  --accent:#b6552c;--accent-soft:#f0d9c8;
+  --weekend:#8a8272;--risk:#a23b2e;--risk-soft:#f7e4df;
+  --model-tag:#3d6b52;--model-tag-soft:#dcebe1;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15140f;--surface:#1e1c17;--ink:#f0eee5;--sub:#a39c8c;--line:#332f26;
+    --accent:#e2925f;--accent-soft:#3a2a1f;
+    --weekend:#8f8877;--risk:#e2725f;--risk-soft:#3a2420;
+    --model-tag:#7cc4a0;--model-tag-soft:#1f2f27;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15140f;--surface:#1e1c17;--ink:#f0eee5;--sub:#a39c8c;--line:#332f26;
+  --accent:#e2925f;--accent-soft:#3a2a1f;
+  --weekend:#8f8877;--risk:#e2725f;--risk-soft:#3a2420;
+  --model-tag:#7cc4a0;--model-tag-soft:#1f2f27;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.55;word-break:keep-all;padding:0 18px}
+main{max-width:920px;margin:0 auto;padding-block:44px 70px}
+
+.kicker{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin:0 0 10px}
+h1{font-family:var(--font-display);font-size:clamp(26px,4.8vw,38px);font-weight:600;letter-spacing:-.01em;margin:0 0 10px;text-wrap:balance}
+.sub{color:var(--sub);font-size:15px;max-width:620px;margin:0 0 28px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:32px}
+.stat{background:var(--surface);padding:16px 18px}
+.stat .n{font-family:var(--font-display);font-size:26px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.stat .l{font-size:12.5px;color:var(--sub);margin-top:2px}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:22px;font-size:12.5px;color:var(--sub)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+
+.timeline{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.day{display:grid;grid-template-columns:76px 46px 1fr;gap:0;border-bottom:1px solid var(--line);align-items:stretch}
+.day:last-child{border-bottom:none}
+.day.weekend{background:color-mix(in srgb, var(--weekend) 6%, var(--surface))}
+
+.d-date{padding:14px 4px 14px 16px;display:flex;flex-direction:column;justify-content:center;gap:2px;border-right:1px solid var(--line)}
+.d-date .date{font-family:var(--font-mono);font-size:13.5px;font-weight:600}
+.d-date .wd{font-size:11.5px;color:var(--sub)}
+.d-date .wd.weekend-label{color:var(--weekend)}
+
+.d-hours{display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line);font-family:var(--font-mono);font-size:12.5px;font-weight:600;color:var(--accent);background:var(--accent-soft)}
+.day.weekend .d-hours{color:var(--weekend);background:transparent;font-weight:500}
+
+.d-task{padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.d-task .txt{font-size:13.5px;min-width:0;flex:1 1 260px}
+.d-task .txt b{font-weight:600}
+
+.tag{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 7px;border-radius:5px;flex:none;white-space:nowrap}
+.tag.model{background:var(--model-tag-soft);color:var(--model-tag)}
+.tag.risk{background:var(--risk-soft);color:var(--risk)}
+
+.notes{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 24px}
+.notes h2{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0 0 12px}
+.notes ul{margin:0;padding-left:20px;font-size:14px}
+.notes li{margin:6px 0}
+.notes li b{color:var(--risk)}
+.notes code{font-family:var(--font-mono);font-size:12.5px;background:var(--bg);padding:1px 5px;border-radius:4px}
+
+footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-mono)}
+
+@media (max-width:560px){
+  .day{grid-template-columns:64px 40px 1fr}
+  .d-date{padding-left:12px}
+}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<main>
+
+<p class="kicker">No Questions Asked · MVP 일정</p>
+<h1>MVP 일정 재배분 (2차 · 최신 확정본)</h1>
+<p class="sub">9/30 ~ 10/13, 코딩 92시간 예산. Issue 17(맵 확장) · Issue 18(GameUI 재작성) 반영해 1차 일정표를 재배분한 버전.</p>
+
+<div class="stats">
+  <div class="stat"><div class="n">92h</div><div class="l">코딩 예산 (9/30~10/13)</div></div>
+  <div class="stat"><div class="n">14</div><div class="l">일</div></div>
+  <div class="stat"><div class="n">9</div><div class="l">평일 · 8h</div></div>
+  <div class="stat"><div class="n">5</div><div class="l">주말·공휴일 · 4h</div></div>
+</div>
+
+<div class="legend">
+  <span><i style="background:var(--accent)"></i>평일 (8h)</span>
+  <span><i style="background:var(--weekend)"></i>주말·공휴일 (4h)</span>
+  <span><i style="background:var(--model-tag)"></i>모델 제작 병행일</span>
+  <span><i style="background:var(--risk)"></i>지연 위험 구간</span>
+</div>
+
+<div class="timeline">
+
+  <div class="day">
+    <div class="d-date"><span class="date">9/30</span><span class="wd">수</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt">상점 UI 마무리 — <b>BarricadeRowUI</b> 완성, StoreInteraction 연결, 에디터 배치</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/1</span><span class="wd">목</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt">상점 UI에 <b>탄약 구매 · 회복약 구매</b> 로직/UI 추가, 전체 플레이테스트</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/2</span><span class="wd">금</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt"><b>좀비 2종째</b> 로직 — 스탯 설계, EnemyPool 다중화, WaveDefinition 마릿수 배열</span></div>
+  </div>
+
+  <div class="day weekend">
+    <div class="d-date"><span class="date">10/3</span><span class="wd weekend-label">토 · 공휴일</span></div>
+    <div class="d-hours">4h</div>
+    <div class="d-task"><span class="txt">좀비 2종째 마무리</span><span class="tag model">모델 병행</span></div>
+  </div>
+
+  <div class="day weekend">
+    <div class="d-date"><span class="date">10/4</span><span class="wd weekend-label">일</span></div>
+    <div class="d-hours">4h</div>
+    <div class="d-task"><span class="txt">좀비의 <b>방어벽 공격 로직</b> (Raycast + 트리거 게이팅)</span><span class="tag model">모델 병행</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/5</span><span class="wd">월</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt"><b>무기 다중화 아키텍처 재설계</b> (PlayerWeapon 구조 전환)</span><span class="tag risk">위험 구간 시작</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/6</span><span class="wd">화</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt">저격총 WeaponData 작성 + <b>반동 시스템</b>(연사 누적) 구현</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/7</span><span class="wd">수</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt">반동 수치 튜닝 + <b>수류탄 시스템</b> 신설 (곡사·범위판정·우클릭입력)</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/8</span><span class="wd">목</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt"><b>회복약 시스템</b>(PotionCount) + <b>전투 핫바 UI</b>(1/2/3/4/Q 슬롯)</span></div>
+  </div>
+
+  <div class="day weekend">
+    <div class="d-date"><span class="date">10/9</span><span class="wd weekend-label">금 · 공휴일</span></div>
+    <div class="d-hours">4h</div>
+    <div class="d-task"><span class="txt">1/2/3/4키 전환 로직 마무리 + <b>ZWD 맵 확장</b>(2~3배)</span></div>
+  </div>
+
+  <div class="day weekend">
+    <div class="d-date"><span class="date">10/10</span><span class="wd weekend-label">토</span></div>
+    <div class="d-hours">4h</div>
+    <div class="d-task"><span class="txt"><b>8방향 스폰포인트</b> 배치 + 스폰 방향 인디케이터 UI</span><span class="tag model">모델 병행</span></div>
+  </div>
+
+  <div class="day weekend">
+    <div class="d-date"><span class="date">10/11</span><span class="wd weekend-label">일</span></div>
+    <div class="d-hours">4h</div>
+    <div class="d-task"><span class="txt">지원 동기 질문 UI + <b>미션 시스템 조정</b>(7일 주기)</span><span class="tag model">모델 병행</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/12</span><span class="wd">월</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt"><b>GameUI 재작성</b>(레이아웃, 주차/요일 표시, 체력바) + 전투 피드백(총구화염, 데미지 숫자, 재장전 게이지)</span><span class="tag risk">지연 가능</span></div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/13</span><span class="wd">화</span></div>
+    <div class="d-hours">8h</div>
+    <div class="d-task"><span class="txt"><b>런 28일 엔딩</b> + 전투/기지 튜토리얼 구현</span><span class="tag risk">지연 가능</span></div>
+  </div>
+
+</div>
+
+<div class="notes">
+<h2>읽는 법 · 위험 평가</h2>
+<ul>
+<li>진행 순서는 이슈 번호(1~18) 순이 아니라 <b>작업 흐름 기준</b>으로 재배열: 상점 → 좀비+방어벽(연관) → 무기 다중화·반동·수류탄(가장 무거운 작업, 중간에 몰아서) → 회복약+핫바(슬롯 연동 자연스러움) → 맵 확장+스폰인디케이터 → 지원동기+미션조정 → GameUI 재작성+전투피드백(데이터가 갖춰진 뒤에 레이아웃) → 엔딩+튜토리얼(맨 마지막).</li>
+<li><b>10/5~10/9</b>: 무기 다중화 아키텍처 재설계 + 반동 + 수류탄 신설이 겹치는 구간이라 지연 가능성이 가장 높다.</li>
+<li><b>10/12~10/13</b>: GameUI 재작성 · 전투 피드백 · 엔딩 · 튜토리얼 2개가 마지막 이틀에 몰려 있어, 실제로는 <code>10/14~15</code>로 자연 연장될 가능성이 가장 높은 지점.</li>
+<li>92시간 예산은 그대로 유지하고 새 작업을 최대한 욱여넣어 시도하되, 안 되면 10/14~15로 연장하는 것을 허용 — 칼같이 맞춰야 한다는 강박은 없음.</li>
+<li>3D 모델 제작(좀비 2종·무기 2종·수류탄 1종·방어벽)은 이 표와 별개로 <b>주말</b>(10/3~4, 10/10~11)에 병행 진행하는 별도 예산.</li>
+</ul>
+</div>
+
+<footer>No Questions Asked · SessionLog.md "MVP 일정 재배분 2차" 기준 · 2026-09-29 확정</footer>
+
+</main>
