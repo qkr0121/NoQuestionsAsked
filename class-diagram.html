@@ -1,0 +1,259 @@
+<title>NQA 클래스 다이어그램</title>
+<style>
+:root{
+  /* layout: intro + legend at top, single large mermaid diagram below, notes at bottom */
+  --bg:#f5f4f1;--card:#ffffff;--ink:#1d1b18;--sub:#6b6459;--line:#e0ddd5;
+  --accent:#3d6b52;
+  --font-display:'Space Grotesk',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15140f;--card:#1e1c17;--ink:#f0eee8;--sub:#9c9689;--line:#33302a;
+    --accent:#6fb896;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15140f;--card:#1e1c17;--ink:#f0eee8;--sub:#9c9689;--line:#33302a;
+  --accent:#6fb896;
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.6;word-break:keep-all;padding:0 18px}
+main{max-width:1100px;margin:0 auto;padding-block:44px 70px}
+
+h1{font-family:var(--font-display);font-size:clamp(24px,4.5vw,34px);font-weight:700;letter-spacing:-.01em;margin:0 0 8px}
+.sub{color:var(--sub);font-size:15px;max-width:640px;margin:0 0 28px}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+.legend span{font-family:var(--font-mono);font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--sub)}
+.legend b{color:var(--ink)}
+
+.diagram-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:24px;overflow-x:auto}
+.diagram-card pre.mermaid{margin:0;min-width:900px}
+
+.notes{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 24px}
+.notes h2{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0 0 12px}
+.notes ul{margin:0;padding-left:20px;font-size:14px}
+.notes li{margin:5px 0}
+.notes code{font-family:var(--font-mono);font-size:13px;background:var(--bg);padding:1px 5px;border-radius:4px}
+
+footer{margin-top:36px;color:var(--sub);font-size:12.5px;font-family:var(--font-mono)}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<main>
+
+<h1>No Questions Asked — 클래스 다이어그램</h1>
+<p class="sub">지금까지 구현 완료된 핵심 클래스만 추려서 정리했습니다. UI 표시 전용 클래스(GameOverUI, LoadingScreen 등)와 세이브 DTO는 생략했습니다.</p>
+
+<div class="legend">
+  <span><b>실선 화살표</b> = 참조/호출 (A가 B를 사용)</span>
+  <span><b>채워진 마름모</b> = 소유 (A가 B를 필드로 가짐)</span>
+  <span><b>&lt;&lt;Singleton&gt;&gt;</b> = static Instance 싱글톤</span>
+</div>
+
+<div class="diagram-card">
+<pre class="mermaid">
+classDiagram
+    direction LR
+
+    class GameManager {
+        <<Singleton>>
+        +bool IsGameOver
+        +GameOver()
+        +ResetGameOver()
+    }
+
+    class RunState {
+        <<Singleton>>
+        +int CurrentDay
+        +TimeSlot CurrentSlot
+        +Mission CurrentMission
+        +AdvanceSlot()
+        +ResetEntireRun()
+    }
+
+    class CurrencyManager {
+        <<Singleton>>
+        +int Crystal
+        +AddKillReward()
+        +TrySpend(amount) bool
+    }
+
+    class PlayerManager {
+        <<Singleton>>
+        +int CurrentHealth
+        +int MaxHealth
+        +SetCurrentHealth(value)
+        +FillHealth()
+    }
+
+    class PlayerWeapon {
+        <<Singleton>>
+        +int CurrentLevel
+        +int MagazineAmmo
+        +int ReserveAmmo
+        +TryUpgrade() bool
+        +TryConsumeShot() bool
+        +Reload()
+    }
+
+    class BarricadeManager {
+        <<Singleton>>
+        +GetSlotInfo(direction) BarricadeSlotInfo
+        +TryInstall(direction, level) bool
+        +TryRepair(direction) bool
+        +TakeDamage(direction, amount)
+    }
+
+    class SaveManager {
+        <<Singleton>>
+        +Save()
+        +TryLoadAndApply() bool
+    }
+
+    class BlueprintManager {
+        <<Singleton>>
+        +IsUnlocked(id) bool
+        +Unlock(id)
+    }
+
+    class PlayerHealth {
+        +TakeDamage(amount)
+        +Heal(amount)
+    }
+
+    class PlayerShoot {
+        +Fire()
+        +TryStartReload()
+    }
+
+    class PlayerAim {
+        +Vector3 AimPoint
+        +Transform FirePoint
+    }
+
+    class PlayerMovement {
+        +Move(input)
+    }
+
+    class PlayerInteractor {
+        +OnTriggerEnter(other)
+    }
+
+    class EnemyHealth {
+        +Initialize(strengthMultiplier, onDeath)
+        +TakeDamage(amount)
+    }
+
+    class EnemyMovement {
+        +SetTarget(target)
+        +ReturnToPool()
+    }
+
+    class EnemyAttack {
+        +OnTriggerStay(other)
+    }
+
+    class EnemyPool {
+        <<Singleton>>
+        +Get(position, rotation) EnemyMovement
+        +Release(enemy)
+    }
+
+    class Projectile {
+        +SetDamage(amount)
+        +OnTriggerEnter(other)
+    }
+
+    class ProjectilePool {
+        <<Singleton>>
+        +Get(position, rotation) Projectile
+    }
+
+    class BarricadeSlot {
+        +BarricadeDirection Direction
+        +TakeDamage(amount)
+    }
+
+    class WaveSpawner {
+        +BeginWave(definition, modifier)
+        +bool IsCleared
+    }
+
+    class WeaponData {
+        <<ScriptableObject>>
+        +float fireCooldown
+        +int[] damageByLevel
+    }
+
+    class BarricadeData {
+        <<ScriptableObject>>
+        +int[] maxDurabilityByLevel
+        +int[] installCostByLevel
+    }
+
+    class WaveDefinition {
+        <<ScriptableObject>>
+        +int totalEnemyCount
+        +float spawnInterval
+    }
+
+    class TimeOfDayModifier {
+        <<ScriptableObject>>
+        +float SpawnCountMultiplier
+        +float EnemyStrengthMultiplier
+    }
+
+    PlayerHealth ..> PlayerManager : 참조
+    PlayerHealth ..> GameManager : 사망 시 호출
+    PlayerShoot ..> PlayerWeapon : 발사/재장전
+    PlayerShoot ..> PlayerAim : FirePoint 참조
+    PlayerShoot ..> ProjectilePool : 투사체 생성
+    PlayerInteractor ..> BarricadeManager : 상점 상호작용
+    PlayerWeapon *-- WeaponData : 소유
+
+    EnemyHealth ..> CurrencyManager : 처치 보상
+    EnemyMovement ..> EnemyPool : 반납 요청
+    EnemyMovement ..> PlayerHealth : 접근 대상
+
+    Projectile ..> EnemyHealth : 피격 판정
+    Projectile --* ProjectilePool : 풀 관리 대상
+    EnemyMovement --* EnemyPool : 풀 관리 대상
+
+    BarricadeManager *-- BarricadeData : 소유
+    BarricadeManager ..> BlueprintManager : 등급 해금 확인
+    BarricadeManager ..> CurrencyManager : 설치/수리 비용
+
+    WaveSpawner ..> EnemyPool : 좀비 스폰
+    WaveSpawner *-- WaveDefinition : 웨이브 데이터
+    WaveSpawner *-- TimeOfDayModifier : 시간대 배율
+
+    RunState ..> SaveManager : 슬롯 진행 시 저장
+    RunState ..> CurrencyManager : 미션 제출
+    SaveManager ..> RunState : 로드
+    SaveManager ..> PlayerManager : 로드
+    SaveManager ..> PlayerWeapon : 로드
+</pre>
+</div>
+
+<div class="notes">
+<h2>읽는 법</h2>
+<ul>
+<li><code>&lt;&lt;Singleton&gt;&gt;</code> 표시가 붙은 클래스는 <code>static Instance</code> 싱글톤으로, <code>PersistentManagers</code> 프리팹에 상주하며 씬 전환에도 유지됩니다.</li>
+<li>점선 화살표(<code>..&gt;</code>)는 "이 클래스가 저 클래스의 메서드/프로퍼티를 호출한다"는 뜻입니다. 예: <code>PlayerHealth</code>가 <code>PlayerManager.Instance.SetCurrentHealth()</code>를 호출.</li>
+<li>실선 마름모(<code>*--</code>)는 소유 관계입니다. 예: <code>PlayerWeapon</code>이 <code>WeaponData</code>(ScriptableObject)를 필드로 들고 참조.</li>
+<li><code>&lt;&lt;ScriptableObject&gt;&gt;</code> 표시가 붙은 클래스는 씬에 배치되는 컴포넌트가 아니라, 값만 담은 데이터 에셋입니다.</li>
+</ul>
+</div>
+
+<footer>No Questions Asked · 2026-09-29 · 구현 완료 범위 기준(예정 항목 제외)</footer>
+
+</main>

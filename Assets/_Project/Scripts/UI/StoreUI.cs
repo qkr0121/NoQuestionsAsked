@@ -52,6 +52,8 @@ public class StoreUI : MonoBehaviour
         mainMenuGroup.SetActive(false);
         weaponUpgradeGroup.SetActive(true);
         barricadeMenuGroup.SetActive(false);
+
+        RefreshWeaponUpgrade();
     }
 
     public void ShowBarricadeMenu()

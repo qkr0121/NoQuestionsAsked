@@ -1,0 +1,166 @@
+<title>No Questions Asked 로드맵</title>
+<style>
+:root{
+  /* layout: vertical journey timeline down the left spine, each stage a milestone node with a detail panel to its right */
+  --bg:#0f1210;--panel:#171b18;--ink:#eef0ec;--sub:#8d968c;--line:#2a2f28;
+  --spine:#3c463c;
+  --mvp:#e0b64a;--cbt:#5aa8a0;--obt:#6690c9;--launch:#b785d6;--demo:#e0e0e0;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f7f6f2;--panel:#ffffff;--ink:#181a17;--sub:#5f6659;--line:#e2e0d8;
+  --spine:#c9c6ba;
+  --mvp:#a8781c;--cbt:#2c7d74;--obt:#3a5f9e;--launch:#7d4fa8;--demo:#6b6b6b;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#f7f6f2;--panel:#ffffff;--ink:#181a17;--sub:#5f6659;--line:#e2e0d8;
+    --spine:#c9c6ba;
+    --mvp:#a8781c;--cbt:#2c7d74;--obt:#3a5f9e;--launch:#7d4fa8;--demo:#6b6b6b;
+    color-scheme:light;
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.6;word-break:keep-all;padding:0 18px}
+main{max-width:760px;margin:0 auto;padding-block:56px 90px}
+
+.kicker{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--sub);margin:0 0 10px}
+h1{font-family:var(--font-display);font-size:clamp(32px,6vw,50px);font-weight:600;letter-spacing:-.01em;margin:0 0 14px;text-wrap:balance}
+.sub{color:var(--sub);font-size:16px;max-width:560px;margin:0 0 12px}
+.meta-row{display:flex;flex-wrap:wrap;gap:18px;font-family:var(--font-mono);font-size:12.5px;color:var(--sub);margin:22px 0 60px;padding-top:18px;border-top:1px solid var(--line)}
+.meta-row span b{color:var(--ink);font-weight:600}
+
+.journey{position:relative;padding-left:38px}
+.journey::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;background:var(--spine)}
+
+.stop{position:relative;padding-bottom:52px}
+.stop:last-child{padding-bottom:0}
+.node{position:absolute;left:-38px;top:2px;width:20px;height:20px;border-radius:50%;background:var(--panel);border:3px solid var(--c);z-index:1}
+.node::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--c)}
+
+.stop-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.stop-head h2{font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--c);margin:0}
+.stop-head .when{font-family:var(--font-mono);font-size:12.5px;color:var(--sub)}
+.stop-goal{font-size:15px;margin:8px 0 16px;max-width:600px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.panel + .panel{margin-top:10px}
+.panel-label{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c);margin:0 0 9px}
+.panel ul{margin:0;padding-left:18px;font-size:14px;line-height:1.65}
+.panel li{margin:3px 0}
+.panel p{margin:0;font-size:14px}
+
+.mode-panel{opacity:.72}
+.mode-panel .panel-label{color:var(--sub)}
+
+.done-line{margin-top:16px;font-size:14px;padding-top:14px;border-top:1px solid var(--line)}
+.done-line b{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c);display:block;margin-bottom:4px}
+
+.milestone{font-family:var(--font-display);font-size:15px;font-style:italic;color:var(--sub);margin:14px 0 0;padding-left:2px}
+
+footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);color:var(--sub);font-size:12px;font-family:var(--font-mono)}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<main>
+
+<p class="kicker">개인 프로젝트 로드맵</p>
+<h1>No Questions Asked</h1>
+<p class="sub">생존 웨이브 디펜스. 한 달 안에 기획서 아이디어를 완결된 런 하나로 만든다.</p>
+<div class="meta-row">
+  <span>기간 <b>9/29 → 10/29</b></span>
+  <span>개발 <b>1인</b></span>
+  <span>가용 시간 <b>MVP 96h</b></span>
+  <span>런 구조 <b>28일 · 7일 주기 미션</b></span>
+</div>
+
+<div class="journey">
+
+  <div class="stop" style="--c:var(--mvp)">
+    <div class="node"></div>
+    <div class="stop-head"><h2>MVP</h2><span class="when">9/29 → 10/13 · 15일</span></div>
+    <p class="stop-goal">28일 런 하나가 처음부터 끝까지 완주 가능한 상태를 만든다. 전투 → 상점 → 강화 → 재도전이 막힘없이 돈다.</p>
+
+    <div class="panel">
+      <p class="panel-label">이미 구현 완료된 것</p>
+      <p>씬 4개 구조(메인메뉴·로딩·기지·전투장), 영속 매니저·세이브 아키텍처, 웨이브·좀비·무기 시스템 뼈대, 무기 강화·탄약·재장전, 방어벽 설치·수리 로직, 3D 모델(플레이어·좀비·구조물)</p>
+    </div>
+    <div class="panel">
+      <p class="panel-label">무조건 완성</p>
+      <ul>
+        <li>상점 UI — 무기 강화, 방어벽 설치·수리</li>
+        <li>지원 동기 질문 — 9종 중 선택, 순수 연출</li>
+        <li>좀비 2종, 무기 2종 + 수류탄 1종</li>
+        <li>좀비의 방어벽 공격 로직</li>
+        <li>전투 피드백 — 총구 화염, 피격 플래시, 재장전 게이지바</li>
+        <li>28일 엔딩 — 최종 크리스탈량 + 선택한 동기별 결과 텍스트 1개</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <p class="panel-label">순서대로, 되는 데까지</p>
+      <p>좀비 3종째 + 웨이브 10개 다양화(구성 비율·스폰 방향·간격) → 무기 3종째 → 수류탄 2·3종째. 중간 어디서든 멈춰도 된다.</p>
+    </div>
+    <div class="panel mode-panel">
+      <p class="panel-label">CBT·OBT로 미룸</p>
+      <p>카메라 셰이크·피 파티클, 신규 콘텐츠 실제 3D 모델, 방어벽 실제 모델, 사운드, 엔딩 텍스트 확장, HUD 비주얼</p>
+    </div>
+
+    <p class="done-line"><b>완료 기준</b>동기 선택부터 28일 엔딩까지 한 번 끊기지 않고 돌 수 있는가.</p>
+  </div>
+
+  <div class="stop" style="--c:var(--cbt)">
+    <div class="node"></div>
+    <div class="stop-head"><h2>CBT</h2><span class="when">10/14 → 10/18 · 5일</span></div>
+    <p class="stop-goal">지인 3~5명에게 맡긴다. 설명 없이 이해되는지가 유일한 기준.</p>
+    <div class="panel">
+      <ul>
+        <li>빌드 배포, 피드백 수집, 치명적 문제(진행 불가·이해도) 우선 수정</li>
+        <li>여유 생기면: 무기·수류탄 3종째, 타격 피드백 디테일</li>
+      </ul>
+    </div>
+    <p class="milestone">"뭘 해야 할지 모르겠다"는 피드백이 사라지는 순간이 이 단계의 끝이다.</p>
+  </div>
+
+  <div class="stop" style="--c:var(--obt)">
+    <div class="node"></div>
+    <div class="stop-head"><h2>OBT</h2><span class="when">10/19 → 10/24 · 6일</span></div>
+    <p class="stop-goal">새 기능은 멈춘다. 낯선 사람과 낯선 사양 앞에 세운다.</p>
+    <div class="panel">
+      <ul>
+        <li>사운드·이펙트 보강, UI 정리, 성능 최적화</li>
+        <li>공개 범위 확대 — 커뮤니티·SNS</li>
+      </ul>
+    </div>
+    <p class="milestone">치명적 버그 제보가 이틀 연속 없으면, 이 게임은 남에게 보여줄 준비가 된 것이다.</p>
+  </div>
+
+  <div class="stop" style="--c:var(--launch)">
+    <div class="node"></div>
+    <div class="stop-head"><h2>출시</h2><span class="when">10/25 → 10/28 · 4일</span></div>
+    <p class="stop-goal">더는 손대지 않는다. 확정하고, 준비한다.</p>
+    <div class="panel">
+      <ul>
+        <li>최종 빌드, 배포 페이지, 스크린샷, 발표 자료</li>
+        <li>10/26 이후 신기능 금지 — 버그 수정만</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stop" style="--c:var(--demo);padding-bottom:0">
+    <div class="node"></div>
+    <div class="stop-head"><h2>발표</h2><span class="when">10/29</span></div>
+    <p class="stop-goal">한 달의 결과물을 직접 보여주고, 직접 답한다.</p>
+  </div>
+
+</div>
+
+<footer>No Questions Asked · 2026-09-29 확정 · SessionLog(NQA).md 기준</footer>
+
+</main>

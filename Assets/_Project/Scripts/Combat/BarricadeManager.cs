@@ -37,6 +37,8 @@ public class BarricadeManager : MonoBehaviour
         return new BarricadeSlotInfo(data.State, data.CurrentLevel, data.CurrentDurability, maxDurability);
     }
 
+    public int MaxLevel => barricadeData.MaxLevel;
+
     public int InstallCost(int level) => barricadeData.installCostByLevel[level - 1];
 
     public int GetRepairCost(BarricadeDirection direction)
