@@ -12,6 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbb595f6ae5e2a04ea958a79e7997543, type: 3}
   m_Name: WD_Barricade
   m_EditorClassIdentifier: Assembly-CSharp::WallData
-  maxDurabilityByLevel: c8000000900100005802000020030000e8030000
-  installCostByLevel: c8000000900100005802000020030000e8030000
-  repairCostByLevel: 0100000001000000010000000100000001000000
+  maxDurabilityByLevel: c80000009001000058020000
+  installCostByLevel: c80000009001000058020000

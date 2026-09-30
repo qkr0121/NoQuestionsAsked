@@ -113,8 +113,6 @@ public class BarricadeManager : MonoBehaviour
         {
             case 2: return BlueprintId.BarricadeLevel2;
             case 3: return BlueprintId.BarricadeLevel3;
-            case 4: return BlueprintId.BarricadeLevel4;
-            case 5: return BlueprintId.BarricadeLevel5;
             default: throw new ArgumentOutOfRangeException(nameof(level));
         }
     }

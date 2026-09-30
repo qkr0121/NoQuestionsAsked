@@ -14,7 +14,11 @@ public class BarricadeRowUI : MonoBehaviour
     [SerializeField] private TMP_Text actionButtonText;
     [SerializeField] private Button actionButton;
 
+    private enum ActionType { None, Install, Repair }
+
     private BarricadeSlotInfo info;
+    private ActionType currentAction = ActionType.None;
+    private int currentCost;
 
     private void Awake()
     {
@@ -78,11 +82,70 @@ public class BarricadeRowUI : MonoBehaviour
 
     private void RefreshActionButton()
     {
+        int selectedLevel = GetSelectedLevel();
 
+        if(info.State != BarricadeState.Empty && selectedLevel == info.CurrentLevel)
+        {
+            // 같은 레벨 선택 중 -> 수리 또는 완전 상태
+            if (info.CurrentDurability >= info.MaxDurability)
+            {
+                currentAction = ActionType.None;
+                actionButtonText.text = "내구도 MAX";
+                actionButton.interactable = false;
+            }
+            else
+            {
+                currentAction = ActionType.Repair;
+                currentCost = BarricadeManager.Instance.GetRepairCost(direction);
+                actionButtonText.text = $"수리({currentCost})";
+                actionButton.interactable = true;
+            }
+        }
+        else
+        {
+            // 빈 슬롯이거나 다른 레벨 선택 중 -> 설치/재설치
+            if(!BarricadeManager.Instance.IsLevelUnlocked(selectedLevel))
+            {
+                currentAction = ActionType.None;
+                actionButtonText.text = "잠김";
+                actionButton.interactable = false;
+            }
+            else
+            {
+                currentAction = ActionType.Install;
+                currentCost = BarricadeManager.Instance.InstallCost(selectedLevel);
+                actionButtonText.text = $"설치({currentCost})";
+                actionButton.interactable = true;
+            }
+        }
     }
 
     private void OnActionClicked()
     {
-
+        if(currentAction == ActionType.Repair)
+        {
+            ConfirmationDialog.Instance.Show($"{currentCost} 크리스탈로 수리하시겠습니까?", () =>
+            {
+                if(!BarricadeManager.Instance.TryRepair(direction))
+                {
+                    ToastMessage.Instance.Show("크리스탈이 부족합니다");
+                    return;
+                }
+                Refresh();
+            });
+        }
+        else if(currentAction == ActionType.Install)
+        {
+            int level = GetSelectedLevel();
+            ConfirmationDialog.Instance.Show($"{currentCost} 크리스탈로 설치하시겠습니까?", () =>
+            {
+                if(!BarricadeManager.Instance.TryInstall(direction, level))
+                {
+                    ToastMessage.Instance.Show("크리스탈이 부족합니다");
+                    return;
+                }
+                Refresh();
+            });
+        }
     }
 }

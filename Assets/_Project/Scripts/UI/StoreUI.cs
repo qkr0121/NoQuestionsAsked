@@ -11,7 +11,6 @@ public class StoreUI : MonoBehaviour
     [SerializeField] private GameObject panel;
 
     [Header("화면 그룹")]
-    [SerializeField] private GameObject mainMenuGroup;
     [SerializeField] private GameObject weaponUpgradeGroup;
     [SerializeField] private GameObject barricadeMenuGroup;
 
@@ -32,7 +31,7 @@ public class StoreUI : MonoBehaviour
     public void Open()
     {
         panel.SetActive(true);
-        ShowMainMenu();
+        ShowWeaponUpgrade();
     }
 
     public void Close()
@@ -40,16 +39,8 @@ public class StoreUI : MonoBehaviour
         panel.SetActive(false);
     }
 
-    public void ShowMainMenu()
-    {
-        mainMenuGroup.SetActive(true);
-        weaponUpgradeGroup.SetActive(false);
-        barricadeMenuGroup.SetActive(false);
-    }
-
     public void ShowWeaponUpgrade()
     {
-        mainMenuGroup.SetActive(false);
         weaponUpgradeGroup.SetActive(true);
         barricadeMenuGroup.SetActive(false);
 
@@ -58,7 +49,6 @@ public class StoreUI : MonoBehaviour
 
     public void ShowBarricadeMenu()
     {
-        mainMenuGroup.SetActive(false);
         weaponUpgradeGroup.SetActive(false);
         barricadeMenuGroup.SetActive(true);
 
