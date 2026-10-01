@@ -2,18 +2,21 @@
  * static 필드로 "다음 씬이 읽을 값"을 임시 저장하는 용도의 클래스들을 모아둔 파일.*/
 
 // UI 패널이 열려있는 동안 플레이어 이동/조준/발사 입력을 막기 위한 전역 잠금 스위치
+using UnityEngine;
+
 public static class PlayerInputLock
-{ 
-    public static bool IsLocked { get; private set; }
+{
+    private static int lockCount;
+    public static bool IsLocked => lockCount > 0;
 
     public static void Lock()
     {
-        IsLocked = true;
+        lockCount++;
     }
 
     public static void Unlock()
     {
-        IsLocked = false;
+        lockCount = Mathf.Max(0, lockCount - 1);
     }
 }
 

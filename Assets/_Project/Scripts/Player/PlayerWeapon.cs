@@ -14,6 +14,7 @@ public class PlayerWeapon : MonoBehaviour
 
     public int MagazineAmmo { get; private set; }
     public int ReserveAmmo { get; private set; }
+    public int MaxReserveAmmo => weaponData.maxReserveAmmo;
     public bool CanReload => MagazineAmmo < weaponData.magazineSize && ReserveAmmo > 0;
 
     private void Awake()
@@ -52,6 +53,27 @@ public class PlayerWeapon : MonoBehaviour
     public void AddReserveAmmo(int amount)
     {
         ReserveAmmo += amount;
+    }
+
+
+    public int GetAmmoBundleCost(int bundleCount) => weaponData.ammoBundleCost * bundleCount;
+
+    public int GetMaxAffordableBundles()
+    {
+        int needed = weaponData.maxReserveAmmo - ReserveAmmo;
+        if (needed <= 0) return 0;
+        return Mathf.CeilToInt((float)needed / weaponData.magazineSize);
+    }
+
+    public bool TryBuyAmmo(int bundleCount)
+    {
+        int cost = GetAmmoBundleCost(bundleCount);
+        if (!CurrencyManager.Instance.TrySpend(cost)) return false;
+
+        int amount = Mathf.Min(bundleCount * weaponData.magazineSize, weaponData.maxReserveAmmo - ReserveAmmo);
+        ReserveAmmo += amount;
+        Debug.Log($"탄약 {amount}발 구매 완료. 현재 예비탄약: {ReserveAmmo}/{weaponData.maxReserveAmmo}");
+        return true;
     }
 
     public void LoadFrom(int level, int magazin, int reserve)

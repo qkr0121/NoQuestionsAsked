@@ -13,14 +13,19 @@ public class StoreUI : MonoBehaviour
     [Header("화면 그룹")]
     [SerializeField] private GameObject weaponUpgradeGroup;
     [SerializeField] private GameObject barricadeMenuGroup;
+    [SerializeField] private GameObject consumableGroup;
 
-    [Header("권총 강화")]
+    [Header("무기 강화")]
     [SerializeField] private TMP_Text weaponLevelText;
     [SerializeField] private TMP_Text weaponUpgradeCostText;
     [SerializeField] private Button weaponUpgradeButton;
 
     [Header("방어벽 행")]
     [SerializeField] private BarricadeRowUI[] barricadeRows;
+
+    [Header("소모품 행")]
+    [SerializeField] private AmmoRowUI ammoRow;
+    [SerializeField] private PotionRowUI potionRow;
 
     private void Awake()
     {
@@ -43,6 +48,7 @@ public class StoreUI : MonoBehaviour
     {
         weaponUpgradeGroup.SetActive(true);
         barricadeMenuGroup.SetActive(false);
+        consumableGroup.SetActive(false);
 
         RefreshWeaponUpgrade();
     }
@@ -51,11 +57,22 @@ public class StoreUI : MonoBehaviour
     {
         weaponUpgradeGroup.SetActive(false);
         barricadeMenuGroup.SetActive(true);
+        consumableGroup.SetActive(false);
 
-        foreach(BarricadeRowUI row in barricadeRows)
+        foreach (BarricadeRowUI row in barricadeRows)
         {
             row.Refresh();
         }
+    }
+
+    public void ShowConsumables()
+    {
+        weaponUpgradeGroup.SetActive(false);
+        barricadeMenuGroup.SetActive(false);
+        consumableGroup.SetActive(true);
+
+        ammoRow.Refresh();
+        potionRow.Refresh();
     }
 
     private void RefreshWeaponUpgrade()
