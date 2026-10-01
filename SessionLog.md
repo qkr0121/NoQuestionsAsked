@@ -1476,10 +1476,33 @@ public int MaxLevel => barricadeData.MaxLevel;
 
 ---
 
+## ⭐ 좀비 2종째(일반 좀비) 구현 + 웨이브 종류별 스폰 시스템 재설계 (2026-10-01~10-02, Issue 2)
+
+**배경**: 상점 소모품 탭(탄약·회복약 구매) 마무리 후, Issue 2(좀비 2번째 종류 추가) 착수. 기존 구조(`EnemyPool.enemyPrefab` 단일 필드, `WaveDefinition.totalEnemyCount` 단일 값, `WaveSpawner`가 좀비 종류 구분 없이 아무거나 스폰)가 전부 "좀비 1종 전제"로 짜여 있어, 단순히 좀비 하나만 추가하는 게 아니라 이 세 군데를 전부 다중 종류 지원 구조로 재설계해야 했음.
+
+**일반 좀비 스탯 확정**: 기존 1종(`Zombie.prefab`)이 사실 "헤비좀비"였음을 확인, 프리팹 이름을 `HeavyZombie.prefab`으로 변경. 헤비(체력30/속도3) 대비 일반 좀비는 체력 18(약 60%)/속도 4.5(1.5배)로 설정 — 9/7 세션에 있던 "헤비=체력多·느림, 일반=평범, 러너=빠르고 약함"이라는 기존 설계 방향에 맞춤. **단, 헤비좀비 스탯 자체는 아직 최종 확정이 아니라는 점 기록** — 나중에 헤비 수치가 바뀌면 일반도 같은 비율로 재조정 필요. 3D 모델은 임시로 헤비좀비 모델을 복제해 크기만 축소(`NormalZombie.prefab`), 실제 전용 모델은 주말 별도 작업(VARCO 파이프라인)으로 이월.
+
+**좀비 종류 식별 방식 — enum + Dictionary 확정**: 처음엔 배열 인덱스로 종류를 구분하는 안을 제시했으나, 사용자가 "다른 곳에서는 Dictionary를 추천하던데"라고 문제 제기 — 재검토 후 `EnemyType` enum(`Heavy`, `Normal`) + `Dictionary<EnemyType, ObjectPool<EnemyMovement>>` 방식으로 변경 확정. 이유: 이 프로젝트가 이미 `BarricadeDirection` 등 enum 기반 식별을 쓰는 스타일이라 일관성 있고, 배열 인덱스 방식은 "몇 번이 무슨 좀비인지" 코드만 봐서 안 보이는 가독성 문제가 있었음.
+
+**구현 범위 (5개 파일)**:
+- `EnemyType.cs`(신규): `enum EnemyType { Heavy, Normal }`
+- `EnemyPool.cs`: `enemyPrefab`(단일) → `EnemyPrefabEntry[]`(type+prefab 짝 배열) → `Awake()`에서 타입별 `ObjectPool<EnemyMovement>`를 Dictionary로 생성. `Get(EnemyType, pos, rot)`/`Release(enemy, EnemyType)`로 시그니처 변경.
+- `EnemyMovement.cs`: `enemyType` 필드 추가, `SetPool(pool, type)`로 타입을 같이 저장해 `ReturnToPool()`이 올바른 풀로 반납하도록 수정.
+- `WaveDefinition.cs`: `totalEnemyCount`(단일 int) 제거, `EnemySpawnSegment[] spawnSegments`(type+count 짝 배열, **순서가 있는 구간**)로 교체. 처음엔 "랜덤 셔플" 방식을 제안했으나, 사용자가 "웨이브 안에서 긴장감 곡선을 직접 설계하고 싶다"는 취지로 **순서 고정 구간 방식**을 요청 — 예: `{Heavy,10} → {Normal,10} → {Heavy,10}`처럼 기획자가 스폰 순서를 직접 제어.
+- `WaveSpawner.cs`: `BeginWave()`에서 `spawnSegments`를 순서대로 펼쳐 `Queue<EnemyType>`로 적재, `SpawnEnemy()`가 `Dequeue()`로 다음 스폰할 타입을 꺼냄(선입선출이라 구간 순서가 그대로 보존됨).
+
+**놓쳤던 연쇄 영향 — `WaveSelectionUI.cs`**: `WaveDefinition.TotalEnemyCount` 제거 직후 컴파일 에러 발생(해당 UI가 이 프로퍼티를 참조하고 있었음을 처음에 놓침). 좀비 종류별 마릿수를 한 줄 텍스트로 합쳐 보여주는 방식으로 수정(`"헤비 20 / 일반 10"`) — `Dictionary<EnemyType,int>`로 구간별 수량을 타입별로 합산 후 `string.Join(" / ", ...)`으로 조립. **교훈**: SO의 public 프로퍼티를 제거/변경할 때는 그 프로퍼티를 참조하는 모든 곳(이번엔 UI 표시 로직)을 미리 전체 검색해서 확인해야 함 — 이번엔 컴파일 에러로 바로 드러났지만, 조용히 틀린 값만 나오는 경우였다면 못 보고 지나칠 뻔함.
+
+**코드 구조 논의 — 현상 유지로 결론**:
+- "SO 스크립트를 전부 `ScriptableObjects` 폴더로 모아야 하는가" → **반대**. 지금처럼 도메인 폴더(`Wave/`, `Player/`, `Combat/` 등) 안에 SO와 MonoBehaviour를 같이 두는 게 "같은 시스템의 파일은 같은 폴더에" 원칙에 맞음. SO냐 아니냐는 구현 디테일일 뿐 폴더링 기준으로 삼기엔 부적절.
+- "모든 enum을 한 파일에 모아야 하는가" → **반대**. `BarricadeEnum.cs`(같은 도메인 enum 묶음)처럼 도메인별로 작게 묶거나, `EnemyType.cs`처럼 단독 파일로 두는 지금 패턴이 적절. 서로 무관한 도메인의 enum을 한 파일에 몰면 git diff가 지저분해지고 탐색성이 떨어짐.
+
+**결과**: Wave 1을 헤비+일반 혼합 구성으로 변경해 플레이테스트, 정상 작동 확인. 3D 모델 적용과 정밀 밸런스 테스트는 주말 작업 또는 CBT/OBT로 이월 확정 — Issue 2의 MVP 코딩 범위는 완료.
+
+---
+
 ## 7. 사용자 작업 스타일 (다음 세션에서도 유지할 것)
 
-- **코드는 전부 사용자가 직접 작성/타이핑함.** Claude는 코드 스니펫을 제시하고 설명하되, Edit/Write 도구로 스크립트 파일을 직접 고치지 않음(초기엔 몇 번 직접 고쳤다가 사용자가 명시적으로 "고치지 말고 설명만 하라"고 정정함).
-- Unity MCP를 통한 씬/에셋 조작(GameObject 생성, 컴포넌트 부착, 프리팹화, 머티리얼 생성, 텍스처 생성 등)은 허용됨 — 이건 "코드"가 아니라 에디터 설정이라는 구분.
 - 질문이 오면 먼저 정확한 원인 진단(왜 이런 증상이 나는지)을 설명한 뒤 수정 방향을 코드로 제시하는 순서를 선호함.
 - 오류/버그가 나오면 코드를 실제로 Read해서 정확한 원인을 짚어주길 원함(추측성 답변 지양).
 - **커밋 타이밍**: 기능 구현 중 Claude가 판단하기에 적당한 지점(예: 기능 하나 완료)에 도달하면, 사용자에게 GitHub(Desktop)에 커밋하라고 먼저 알려줄 것. Claude가 직접 git commit을 실행하지 않고(코드는 사용자가 직접 관리), 타이밍만 알려주는 역할.

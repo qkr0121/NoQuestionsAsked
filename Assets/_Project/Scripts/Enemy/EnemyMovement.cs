@@ -8,6 +8,7 @@ public class EnemyMovement : MonoBehaviour
 
     private Transform target;
     private EnemyPool pool;
+    private EnemyType enemyType;
     private bool isReleased;
 
     public void SetTarget(Transform target)
@@ -15,9 +16,10 @@ public class EnemyMovement : MonoBehaviour
         this.target = target;
     }
 
-    public void SetPool(EnemyPool pool)
+    public void SetPool(EnemyPool pool, EnemyType type)
     {
         this.pool = pool;
+        this.enemyType = type;
     }
 
     private void OnEnable()
@@ -29,7 +31,7 @@ public class EnemyMovement : MonoBehaviour
     {
         if (isReleased) return; // 중복 반납 방지 - 여러 경로로 반납이 중복 호출될 수 있는 것을 방지
         isReleased = true;
-        pool.Release(this);
+        pool.Release(this, enemyType);
     }
 
     private void Update()

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class WaveSpawner : MonoBehaviour
@@ -8,6 +9,7 @@ public class WaveSpawner : MonoBehaviour
     private WaveDefinition waveDefinition;
     private TimeOfDayModifier timeOfDayModifier;
 
+    private Queue<EnemyType> spawnQueue;
     private int totalToSpawn;
     private int spawnedCount;
     private int aliveCount;
@@ -23,7 +25,17 @@ public class WaveSpawner : MonoBehaviour
         waveDefinition = definition;
         timeOfDayModifier = modifier;
 
-        totalToSpawn = Mathf.Max(1, Mathf.RoundToInt(definition.TotalEnemyCount * modifier.SpawnCountMultiplier));
+        spawnQueue = new Queue<EnemyType>();
+        foreach (WaveDefinition.EnemySpawnSegment segment in definition.SpawnSegments)
+        {
+            int scaledCount = Mathf.Max(1, Mathf.RoundToInt(segment.count * modifier.SpawnCountMultiplier));
+            for (int i = 0; i < scaledCount; i++)
+            {
+                spawnQueue.Enqueue(segment.type);
+            }
+        }
+
+        totalToSpawn = spawnQueue.Count;
         spawnedCount = 0;
         aliveCount = 0;
         spawnTimer = 0f;
@@ -60,8 +72,9 @@ public class WaveSpawner : MonoBehaviour
     {
         if (spawnPoints.Length == 0) return;
 
+        EnemyType type = spawnQueue.Dequeue();
         Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-        EnemyMovement enemy = EnemyPool.Instance.Get(spawnPoint.position, spawnPoint.rotation);
+        EnemyMovement enemy = EnemyPool.Instance.Get(type, spawnPoint.position, spawnPoint.rotation);
         enemy.SetTarget(player);
 
         EnemyHealth health = enemy.GetComponent<EnemyHealth>();

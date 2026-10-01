@@ -8,8 +8,15 @@ public class WaveDefinition : ScriptableObject
     [Header("식별")]
     [SerializeField] private string waveName;
 
+    [System.Serializable]
+    public class EnemySpawnSegment
+    {
+        public EnemyType type;
+        public int count;
+    }
+
     [Header("스폰 구성")]
-    [SerializeField] private int totalEnemyCount = 20;
+    [SerializeField] private EnemySpawnSegment[] spawnSegments; // 순서대로 스폰됨 (예: Heavy 10 -> Normal 10 -> Heavy 10)
     [SerializeField] private float spawnInterval = 1.5f;
     [SerializeField] private SpawnDirectionPattern spawnDirections = SpawnDirectionPattern.Four;
 
@@ -17,7 +24,7 @@ public class WaveDefinition : ScriptableObject
     [SerializeField] private float rareCrystalDropChance = 0.05f;
 
     public string WaveName => waveName;
-    public int TotalEnemyCount => totalEnemyCount;
+    public EnemySpawnSegment[] SpawnSegments => spawnSegments;
     public float SpawnInterval => spawnInterval;
     public SpawnDirectionPattern SpawnDirections => spawnDirections;
     public float RareCrystalDropChance => rareCrystalDropChance;

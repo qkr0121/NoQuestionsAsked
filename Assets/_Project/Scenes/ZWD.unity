@@ -2439,7 +2439,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e035eed4c69c68b4cbda1c496a4fbc19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPool
-  enemyPrefab: {fileID: 8327412163514838340, guid: 4a3babc6d5ae27a46a1e8e8388cc792e, type: 3}
+  enemyPrefabs:
+  - type: 0
+    prefab: {fileID: 8327412163514838340, guid: 4a3babc6d5ae27a46a1e8e8388cc792e, type: 3}
+  - type: 1
+    prefab: {fileID: 8327412163514838340, guid: acc142ab8afa4cc45affcfab99fa336a, type: 3}
   defaultCapacity: 20
   maxSize: 200
 --- !u!4 &2123538833

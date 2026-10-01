@@ -13,7 +13,13 @@ MonoBehaviour:
   m_Name: WD_Wave01
   m_EditorClassIdentifier: Assembly-CSharp::WaveDefinition
   waveName: Wave1
-  totalEnemyCount: 20
+  spawnSegments:
+  - type: 1
+    count: 10
+  - type: 0
+    count: 6
+  - type: 1
+    count: 10
   spawnInterval: 1.5
   spawnDirections: 0
   rareCrystalDropChance: 0.05

@@ -86,15 +86,43 @@ public class WaveSelectionUI : MonoBehaviour
         selectedWave = wave;
 
         float spawnMultiplier = selectedTimeOfDay != null ? selectedTimeOfDay.SpawnCountMultiplier : 1f;
-        int scaledEnemyCount = Mathf.Max(1, Mathf.RoundToInt(wave.TotalEnemyCount * spawnMultiplier));
+        valueEnemyCount.text = BuildEnemyCountText(wave, spawnMultiplier);
+
         float rareMultiplier = selectedTimeOfDay != null ?
             selectedTimeOfDay.RareCrystalDropRateMultiplier : 1f;
         int rareChancePercent = Mathf.RoundToInt(wave.RareCrystalDropChance * rareMultiplier * 100);
 
-        valueEnemyCount.text = scaledEnemyCount.ToString();
         valueDirections.text = wave.SpawnDirections == SpawnDirectionPattern.Four ? "4방향" : "8방향";
         valueStrength.text = GetStrengthLabel();
         valueRareChance.text = $"{rareChancePercent}%";
+    }
+
+    private string BuildEnemyCountText(WaveDefinition wave, float spawnMultiplier)
+    {
+        Dictionary<EnemyType, int> countByType = new Dictionary<EnemyType, int>();
+        foreach (WaveDefinition.EnemySpawnSegment segment in wave.SpawnSegments)
+        {
+            int scaledCount = Mathf.Max(1, Mathf.RoundToInt(segment.count * spawnMultiplier));
+            if (!countByType.ContainsKey(segment.type)) countByType[segment.type] = 0;
+            countByType[segment.type] += scaledCount;
+        }
+
+        List<string> parts = new List<string>();
+        foreach (KeyValuePair<EnemyType, int> pair in countByType)
+        {
+            parts.Add($"{GetEnemyTypeLabel(pair.Key)} {pair.Value}");
+        }
+        return string.Join(" / ", parts);
+    }
+
+    private string GetEnemyTypeLabel(EnemyType type)
+    {
+        switch (type)
+        {
+            case EnemyType.Heavy: return "헤비";
+            case EnemyType.Normal: return "일반";
+            default: return type.ToString();
+        }
     }
 
     private string GetStrengthLabel()
