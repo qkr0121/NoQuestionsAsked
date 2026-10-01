@@ -90,9 +90,12 @@ public class BarricadeManager : MonoBehaviour
         if (data.State != BarricadeState.Alive) return;
 
         data.CurrentDurability -= amount;
+        Debug.Log($"[방어벽] {direction} 피격: {amount} 데미지, 남은 내구도 {data.CurrentDurability}/{GetSlotInfo(direction).MaxDurability}");
+
         if(data.CurrentDurability <=0)
         {
             data.State = BarricadeState.Destroyed;
+            Debug.Log($"[방어벽] {direction} 파괴됨");
         }
 
         OnSlotChanged?.Invoke(direction);

@@ -1787,6 +1787,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
   crystalPerKill: 10
+  startingCrystal: 1000
 --- !u!1 &8645406827600742721
 GameObject:
   m_ObjectHideFlags: 0

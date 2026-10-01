@@ -21,3 +21,7 @@
 
 ## 기타
 - 자세한 프로젝트 배경, 스코프, 일정, 아키텍처 결정은 SessionLog.md 참고.
+
+## 나중에 정리할 디버그 코드 (밸런싱 끝나면 삭제)
+- `EnemyAttack.cs`의 `OnDrawGizmos()` — SphereCast 범위 시각화(Scene 뷰 전용). 방어벽 공격 거리/간격 튜닝 끝나면 삭제.
+- `BarricadeManager.cs`의 `TakeDamage()` 안 `Debug.Log` 2줄(피격/파괴 로그) — 방어벽 내구도 UI(Issue 20) 구현되면 삭제.

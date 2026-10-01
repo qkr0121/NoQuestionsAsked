@@ -743,7 +743,7 @@ GameObject:
   - component: {fileID: 410009876}
   - component: {fileID: 410009875}
   - component: {fileID: 410009878}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Barricade(E)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -977,7 +977,7 @@ GameObject:
   - component: {fileID: 535898361}
   - component: {fileID: 535898360}
   - component: {fileID: 535898359}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Barricade(W)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1830,7 +1830,7 @@ GameObject:
   - component: {fileID: 1370905984}
   - component: {fileID: 1370905983}
   - component: {fileID: 1370905986}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Barricade(S)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2474,7 +2474,7 @@ GameObject:
   - component: {fileID: 2135111469}
   - component: {fileID: 2135111468}
   - component: {fileID: 2135111471}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Barricade(N)
   m_TagString: Untagged
   m_Icon: {fileID: 0}

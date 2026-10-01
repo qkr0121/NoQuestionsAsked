@@ -11,6 +11,8 @@ public class EnemyMovement : MonoBehaviour
     private EnemyType enemyType;
     private bool isReleased;
 
+    public bool IsBlocked { get; set; } // 방어벽에 막혀 공격 중일 때 EnemyAttack이 세팅
+
     public void SetTarget(Transform target)
     {
         this.target = target;
@@ -37,6 +39,7 @@ public class EnemyMovement : MonoBehaviour
     private void Update()
     {
         if (target == null) return;
+        if (IsBlocked) return;
 
         Vector3 direction = target.position - transform.position;
         direction.y = 0f;
