@@ -13,6 +13,8 @@ public class WaveDefinition : ScriptableObject
     {
         public EnemyType type;
         public int count;
+        public BarricadeDirection[] directions;
+        public int simultaneousCount = 1; // 방향당 한 번에 동시에 스폰할 마릿수
     }
 
     [Header("스폰 구성")]
