@@ -40,11 +40,374 @@
 
 ### 사격 확장 방향 확정 (2026-10-02) — 이슈 신규 3개
 
-- **사격/재장전 중 이동 감속**(필수, 다음 작업): 마지막 발사 후 `fireSlowDuration` 동안 `fireSlowMultiplier`, 재장전 중 `reloadSlowMultiplier` — 전부 무기별(WeaponData). 지속시간을 `fireCooldown`과 분리한 이유: 저격총(간격 2초)이 계속 느려지지 않게. 실제 탄이 나갔을 때만 감속(`PlayerShoot.LastFireTime`), 겹치면 곱하지 않고 더 느린 쪽(`Mathf.Min`). 코드 초안까지 확정, 사용자가 직접 작성 예정. 애니메이터 `MoveSpeed`는 일단 그대로(감속돼도 달리기 모션).
+- **사격/재장전 중 이동 감속**(✅ 구현·플레이테스트·커밋 완료, 사용자 직접 작성 / 수치: 권총 0.8·0.25초·0.7, 저격총 0.5·0.6초·0.6): 마지막 발사 후 `fireSlowDuration` 동안 `fireSlowMultiplier`, 재장전 중 `reloadSlowMultiplier` — 전부 무기별(WeaponData). 지속시간을 `fireCooldown`과 분리한 이유: 저격총(간격 2초)이 계속 느려지지 않게. 실제 탄이 나갔을 때만 감속(`PlayerShoot.LastFireTime`), 겹치면 곱하지 않고 더 느린 쪽(`Mathf.Min`). 코드 초안까지 확정, 사용자가 직접 작성 예정. 애니메이터 `MoveSpeed`는 일단 그대로(감속돼도 달리기 모션).
 - **Duckov 사격 방식 조사**(WebSearch, 커뮤니티 정보 — 소스 비공개라 정확한 공식은 불명): 히트스캔 아님(투사체, 비행시간 있음), 반동과 탄퍼짐은 별개(탄퍼짐은 hip/ADS 수치 따로), 치명타 = "클릭 순간 조준점이 머리 위 + 탄 실제 명중", 사거리 초과 시 데미지 감소, 방어구 관통. 사용자가 말한 "정확히 맞추면 100% 데미지"는 치명타를 가리킨 것.
 - **구현 결정**(사용자): **치명타, 거리별 데미지 감소는 제외**하고 나머지 구현 — ① 조준(ADS) + 탄퍼짐(hip/ADS별, 포인터 주변 원으로 퍼짐 범위 표시, 조준 중 이동 감속), ② 방어구 관통(좀비 방어력 vs 무기 관통력). 이전에 "무기당 변수 과다"로 보류했던 ADS를 재편입한 것. 예상 6~9시간 + 밸런스.
-  - **미결정**: 조준 키(핫바 설계상 우클릭=수류탄, Issue 6과 충돌 → 재배치 필요), 조준 전환 속도(즉시/서서히), 카메라 줌 여부, 방어력 보유 좀비, 관통 데미지 계산식, 관통력이 무기 고정인지 탄 종류별인지.
+  - **미결정**: ~~조준 키(우클릭=수류탄 충돌)~~ → **해결: 수류탄을 4키로 옮기고 우클릭은 ADS가 사용**(아래 수류탄 설계 참고), 조준 전환 속도(즉시/서서히), 카메라 줌 여부, 방어력 보유 좀비, 관통 데미지 계산식, 관통력이 무기 고정인지 탄 종류별인지.
   - 치명타를 넣는다면 탑다운에선 "조준점이 좀비 위 = 치명타"로 하면 정조준 탄이 전부 치명타가 돼 의미가 없어짐 → 머리 콜라이더 또는 중심 반경 등 판정 영역을 따로 정해야 함(나중에 재검토 시 참고).
+
+### 수류탄 시스템 설계 확정 (2026-10-02, Issue 3) — 코드 초안까지 확정, 사용자가 직접 작성 예정(아직 미착수)
+
+**작업 순서 결정**: 수류탄(약 5~7h, 코드 전무) vs ADS+탄퍼짐(약 3.5~5h + 밸런스, 기존 구조에 얹음) 비교 → 수류탄 먼저. 수류탄 키를 바꾸면서 ADS 우클릭 충돌도 같이 해결.
+
+**조작(사용자 결정)**:
+- **4키로 들기 → 좌클릭 투척**(기존 설계의 "우클릭 투척" 폐기). 들고 있을 때 4키를 다시 누르면 종류 변경(MVP는 1종이라 변화 없음). 마우스휠 변경안은 기각 — MVP는 1종뿐이고, 휠은 ADS 카메라 줌 후보로 비워둠(종류 3개 이상 되면 휠 방식 재검토, Issue 14).
+- **던진 뒤 수류탄을 든 채로 유지**. 던져서 0개가 되면 "빈 수류탄"을 든 상태(던지기 불가).
+- **총을 든 상태에서 0개면 4키를 눌러도 안 들림**.
+- 1/2키(무기)를 누르면 수류탄을 내려놓음 — 핫바(Issue 6)에서 입력 통합 예정.
+- 수류탄을 들 때 **재장전 취소**(Issue 6의 "무기 교체 시 재장전 취소" 규칙과 통일, 안 하면 재장전 감속이 계속 걸림). 수류탄을 든 동안 `PlayerShoot`은 사격·재장전 입력 무시.
+- **투척 쿨다운 1초, 인스펙터에서 수정 가능**(`PlayerGrenade.throwCooldown`) — 들고 있는 채로 유지되니 연타로 한꺼번에 소진되는 것 방지. 쿨다운은 수류탄 성질이 아니라 "던지는 동작"의 제한이라 GrenadeData가 아닌 PlayerGrenade에 둠. 좌클릭은 `wasPressedThisFrame`(누르고 있으면 자동 연속 투척되는 것 방지).
+
+**조준 표시**: 들고 있는 동안 **항상 착탄 원(폭발 반경) 표시, 좌클릭 즉시 투척**("좌클릭 누르는 동안 표시 → 떼면 투척" 방식은 4키로 드는 것 자체가 준비 동작이라 중복 + 취소 입력까지 필요해서 기각). 포물선 궤적 표시는 안 함(튕김 물리가 없어 정보량 없음). 수류탄을 든 동안 에임 포인터(반동용)는 숨김, OS 커서도 계속 숨김. 0개(빈 수류탄)면 원을 회색으로 — 숨기면 들고 있는 상태인지 헷갈려서.
+
+**충돌 규칙(사용자 결정)**: 수류탄은 **바닥(Ground)과 맵 끝 벽(지금은 없음)만 통과 못 하고 나머지(좀비, 방어벽 포함)는 전부 통과**.
+- → **Rigidbody 물리 없이 포물선을 직접 계산**: 던질 때 착탄 지점을 확정(커서 위치 → 최대 사거리로 clamp → 사이에 벽 있으면 벽 앞으로 clamp)하고, 비행 중엔 `Lerp(시작, 착탄, t)` + `arcHeight * 4t(1-t)`로 이동만. 충돌 판정이 없으니 전부 통과가 자연스럽고, 착탄 원 위치에 정확히 떨어짐(실제 물리면 초기속도·마찰·튕김 때문에 원과 어긋남). 비행 시간은 거리와 무관하게 고정.
+- 맵 끝 벽용 `LayerMask throwBlockLayer`만 만들어 두고 지금은 비워둠.
+- **바닥 높이 주의**: Player 프리팹 CharacterController가 높이 3·중심 (0,0,0)이라 `transform.position.y`는 발밑이 아니라 몸 중간 → 플레이어 아래로 Ground 레이어 Raycast해서 실제 바닥 높이를 구하고, 그 높이 평면에 마우스 투영. 이를 위해 `PlayerAim.GetMouseWorldPoint()`를 높이를 받는 public `GetMousePointOnPlane(float height)`로 변경(사격=총구 높이, 수류탄=바닥 높이).
+
+**폭발(사용자 결정)**: **착탄 후 신관 시간(`fuseTime`, 기본 1초, 에셋에서 수정 가능) 뒤 폭발**. 범위 안이면 **동일 데미지**(거리 감소 없음 — 사격에서 뺀 것과 같은 성격). **플레이어·방어벽 피해 없음**. `OverlapSphere` + `Enemy` 태그 + `HashSet<EnemyHealth>`로 좀비 한 마리당 한 번만 피해(콜라이더 여러 개면 중복으로 잡힘). 1초에 최대 1개라 풀링 없이 `Instantiate`/`Destroy`.
+
+**스크립트 구성**:
+- `GrenadeData`(SO, 신규): damage / explosionRadius / fuseTime / maxThrowRange / flightTime / arcHeight / bundleCost(1개당) / maxCount
+- `Grenade`(신규, Combat): 포물선 이동 → 착탄 → 신관 → 폭발 → Destroy. 임시 이펙트용 `explosionEffect`(비워둬도 동작)
+- `PlayerGrenade`(신규, Player): 들기·종류 변경·투척·쿨다운·착탄 지점 계산·착탄 원 표시, `IsHolding` 노출
+- `PlayerConsumables`(수정): 회복약과 같은 패턴으로 `GrenadeData[] grenadeTypes` + 개수 배열 + 구매/소모(`TryConsumeGrenade`) API
+- `PlayerShoot`(수정): `playerGrenade.IsHolding`이면 입력 무시 + `CancelReload()`
+- `AimPointerUI`(수정): 수류탄을 든 동안 포인터 숨김
+- `GrenadeRowUI`(신규) + `StoreUI`(수정): `PotionRowUI` 복제, 소모품 탭의 비워둔 수류탄 자리
+
+**시작 수치**(테스트하며 조정 예정): 데미지 30(일반 좀비 HP 18 한 방, 헤비는 절반쯤) / 반경 3 / 신관 1초 / 사거리 12 / 비행 0.8초 / 포물선 높이 3 / 1개 80 크리스탈 / 최대 5개.
+
+**에디터 작업(작성 후 사용자)**: GD_Basic 에셋 생성 → PersistentManagers의 PlayerConsumables에 연결 / Grenade 프리팹(작은 Sphere, **콜라이더 제거**) / Player 프리팹에 PlayerGrenade + 자식 `GrenadeIndicator`(원형 SpriteRenderer X축 90°, **스프라이트 1유닛 크기**여야 `반경×2` 스케일 공식이 맞음), Ground Layer=Ground·Throw Block Layer=Nothing / PlayerShoot·AimPointerUI의 `playerGrenade` 연결(비면 NRE) / 상점 소모품 탭에 GrenadeRowUI 배치. 수류탄은 0개로 시작하므로 테스트 시 상점에서 먼저 구매.
+
+**Issue 반영 필요(사용자 직접)**: Issue 3의 "우클릭 입력" → "4키 들기 + 좌클릭 투척"으로 수정, 완료 기준 문구("우클릭으로 수류탄") 수정. Issue 6은 "4: 수류탄 순환" 설계와 그대로 맞음(투척은 좌클릭이라는 점만 보강하면 됨).
+
+#### 수류탄 코드 초안 (승인된 초안 — 다른 PC에서 이어 작성할 때 참고, 구현 완료 후 이 하위 섹션은 삭제해도 됨)
+
+**1. `GrenadeData.cs`** (신규, `Scripts/Player`)
+```csharp
+using UnityEngine;
+
+[CreateAssetMenu(menuName = "Data/Grenade Data")]
+public class GrenadeData : ScriptableObject
+{
+    [Header("폭발")]
+    public int damage = 30;
+    public float explosionRadius = 3f;
+    public float fuseTime = 1f;       // 착탄 후 폭발까지 시간
+
+    [Header("투척")]
+    public float maxThrowRange = 12f;
+    public float flightTime = 0.8f;   // 거리와 무관하게 고정 — 멀리 던질수록 빠르게 날아감
+    public float arcHeight = 3f;      // 포물선 최고점 높이
+
+    [Header("구매")]
+    public int bundleCost = 80;       // 1개당 가격
+    public int maxCount = 5;
+}
+```
+
+**2. `Grenade.cs`** (신규, `Scripts/Combat`)
+```csharp
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Grenade : MonoBehaviour
+{
+    [SerializeField] private GameObject explosionEffect; // 비워둬도 동작 — 임시 이펙트 확인용
+
+    private GrenadeData data;
+    private Vector3 startPoint;
+    private Vector3 landPoint;
+    private float flightTimer;
+    private float fuseTimer;
+    private bool hasLanded;
+
+    public void Launch(Vector3 start, Vector3 land, GrenadeData grenadeData)
+    {
+        data = grenadeData;
+        startPoint = start;
+        landPoint = land;
+        transform.position = start;
+    }
+
+    private void Update()
+    {
+        if (!hasLanded)
+        {
+            flightTimer += Time.deltaTime;
+            float t = Mathf.Clamp01(flightTimer / data.flightTime);
+
+            // 물리 대신 포물선을 직접 계산 — 좀비·방어벽과 충돌하지 않고 착탄 원 위치에 정확히 떨어지게 하려고
+            Vector3 pos = Vector3.Lerp(startPoint, landPoint, t);
+            pos.y += data.arcHeight * 4f * t * (1f - t);
+            transform.position = pos;
+
+            if (t >= 1f) hasLanded = true;
+            return;
+        }
+
+        fuseTimer += Time.deltaTime;
+        if (fuseTimer >= data.fuseTime)
+        {
+            Explode();
+        }
+    }
+
+    private void Explode()
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, data.explosionRadius);
+
+        // 좀비 하나에 콜라이더가 여러 개면 중복으로 잡히므로 한 마리당 한 번만 피해
+        HashSet<EnemyHealth> damaged = new HashSet<EnemyHealth>();
+        foreach (Collider hit in hits)
+        {
+            if (!hit.CompareTag("Enemy")) continue;
+
+            EnemyHealth enemy = hit.GetComponent<EnemyHealth>();
+            if (enemy != null && damaged.Add(enemy))
+            {
+                enemy.TakeDamage(data.damage);
+            }
+        }
+
+        if (explosionEffect != null)
+        {
+            Destroy(Instantiate(explosionEffect, transform.position, Quaternion.identity), 2f);
+        }
+        Destroy(gameObject);
+    }
+}
+```
+- `4f * t * (1f - t)`: t=0·1일 때 0, t=0.5일 때 1 → 비행 중간에 정확히 `arcHeight`만큼 올라감.
+
+**3. `PlayerGrenade.cs`** (신규, `Scripts/Player`)
+```csharp
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class PlayerGrenade : MonoBehaviour
+{
+    [SerializeField] private PlayerAim playerAim;
+    [SerializeField] private PlayerShoot playerShoot;
+    [SerializeField] private Grenade grenadePrefab;
+    [SerializeField] private SpriteRenderer indicator;
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private LayerMask throwBlockLayer; // 맵 끝 벽 — 지금은 벽이 없어 비워둠
+    [SerializeField] private float throwCooldown = 1f;
+    [SerializeField] private Color readyColor = Color.white;
+    [SerializeField] private Color emptyColor = Color.gray;
+
+    private int selectedIndex;
+    private float cooldownTimer;
+
+    public bool IsHolding { get; private set; }
+
+    private void Awake()
+    {
+        indicator.gameObject.SetActive(false);
+    }
+
+    private void Update()
+    {
+        if (PlayerInputLock.IsLocked)
+        {
+            indicator.gameObject.SetActive(false);
+            return;
+        }
+
+        cooldownTimer -= Time.deltaTime;
+
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null)
+        {
+            if (keyboard.digit4Key.wasPressedThisFrame) OnGrenadeKey();
+            // 무기 키를 누르면 수류탄을 내려놓음 — 핫바(Issue 6)에서 입력 통합 예정
+            if (keyboard.digit1Key.wasPressedThisFrame || keyboard.digit2Key.wasPressedThisFrame) IsHolding = false;
+        }
+
+        if (!IsHolding || !TryGetLandPoint(out Vector3 landPoint))
+        {
+            indicator.gameObject.SetActive(false);
+            return;
+        }
+
+        GrenadeData data = PlayerConsumables.Instance.GetGrenadeData(selectedIndex);
+        bool hasGrenade = PlayerConsumables.Instance.GetGrenadeCount(selectedIndex) > 0;
+        UpdateIndicator(landPoint, data, hasGrenade);
+
+        Mouse mouse = Mouse.current;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame && cooldownTimer <= 0f)
+        {
+            Throw(landPoint, data);
+        }
+    }
+
+    private void OnGrenadeKey()
+    {
+        if (IsHolding)
+        {
+            // 들고 있을 때 다시 누르면 다음 종류로 — MVP는 1종이라 그대로 유지됨
+            selectedIndex = (selectedIndex + 1) % PlayerConsumables.Instance.GrenadeTypeCount;
+            return;
+        }
+
+        // 총을 든 상태에서 0개면 아예 들지 않음 (던져서 0개가 된 경우는 빈 손으로 계속 들고 있음)
+        if (PlayerConsumables.Instance.GetGrenadeCount(selectedIndex) <= 0) return;
+
+        IsHolding = true;
+        playerShoot.CancelReload();
+    }
+
+    private bool TryGetLandPoint(out Vector3 landPoint)
+    {
+        landPoint = Vector3.zero;
+
+        // 플레이어 pivot이 몸 중간이라 실제 바닥 높이를 따로 구해야 착탄 원이 바닥에 붙음
+        if (!Physics.Raycast(transform.position, Vector3.down, out RaycastHit groundHit, 10f, groundLayer)) return false;
+        float groundY = groundHit.point.y;
+
+        Vector3? mousePoint = playerAim.GetMousePointOnPlane(groundY);
+        if (mousePoint == null) return false;
+
+        Vector3 origin = new Vector3(transform.position.x, groundY, transform.position.z);
+        GrenadeData data = PlayerConsumables.Instance.GetGrenadeData(selectedIndex);
+        Vector3 offset = Vector3.ClampMagnitude(mousePoint.Value - origin, data.maxThrowRange);
+        landPoint = origin + offset;
+
+        // 맵 끝 벽 너머로는 못 던지게 벽 바로 앞에서 멈춤
+        if (offset.sqrMagnitude > 0.0001f &&
+            Physics.Raycast(origin + Vector3.up, offset.normalized, out RaycastHit wallHit, offset.magnitude, throwBlockLayer))
+        {
+            landPoint = origin + offset.normalized * Mathf.Max(0f, wallHit.distance - 0.1f);
+        }
+
+        return true;
+    }
+
+    private void UpdateIndicator(Vector3 landPoint, GrenadeData data, bool hasGrenade)
+    {
+        indicator.gameObject.SetActive(true);
+        indicator.transform.position = landPoint + Vector3.up * 0.05f; // 바닥과 겹쳐 깜빡이지 않게 살짝 띄움
+        float size = data.explosionRadius * 2f;
+        indicator.transform.localScale = new Vector3(size, size, 1f);
+        indicator.color = hasGrenade ? readyColor : emptyColor;
+    }
+
+    private void Throw(Vector3 landPoint, GrenadeData data)
+    {
+        if (!PlayerConsumables.Instance.TryConsumeGrenade(selectedIndex)) return;
+
+        cooldownTimer = throwCooldown;
+        Grenade grenade = Instantiate(grenadePrefab);
+        grenade.Launch(playerAim.FirePoint.position, landPoint, data);
+    }
+}
+```
+
+**4. `PlayerConsumables.cs`** (추가)
+```csharp
+[SerializeField] private GrenadeData[] grenadeTypes;  // 지금은 0번째(기본 수류탄)만 사용
+private int[] grenadeCounts;
+
+// Awake()에 한 줄 추가
+grenadeCounts = new int[grenadeTypes.Length];
+
+public int GrenadeTypeCount => grenadeTypes.Length;
+public GrenadeData GetGrenadeData(int grenadeIndex) => grenadeTypes[grenadeIndex];
+public int GetGrenadeCount(int grenadeIndex) => grenadeCounts[grenadeIndex];
+public int GetMaxGrenadeCount(int grenadeIndex) => grenadeTypes[grenadeIndex].maxCount;
+public int GetGrenadeBundleCost(int grenadeIndex, int count) => grenadeTypes[grenadeIndex].bundleCost * count;
+
+public int GetMaxAffordableGrenades(int grenadeIndex)
+{
+    int needed = grenadeTypes[grenadeIndex].maxCount - grenadeCounts[grenadeIndex];
+    return Mathf.Max(0, needed);
+}
+
+public bool TryBuyGrenade(int grenadeIndex, int count)
+{
+    GrenadeData data = grenadeTypes[grenadeIndex];
+    int cost = data.bundleCost * count;
+    if (!CurrencyManager.Instance.TrySpend(cost)) return false;
+
+    int amount = Mathf.Min(count, data.maxCount - grenadeCounts[grenadeIndex]);
+    grenadeCounts[grenadeIndex] += amount;
+    Debug.Log($"{data.name} {amount}개 구매 완료. 현재 보유: {grenadeCounts[grenadeIndex]}/{data.maxCount}");
+    return true;
+}
+
+public bool TryConsumeGrenade(int grenadeIndex)
+{
+    if (grenadeCounts[grenadeIndex] <= 0) return false;
+    grenadeCounts[grenadeIndex]--;
+    return true;
+}
+```
+
+**5. `PlayerAim.cs`** (수정 — 기존 `private Vector3? GetMouseWorldPoint()`를 대체)
+```csharp
+// Update() 안 호출부
+Vector3? rawAim = GetMousePointOnPlane(firePoint.position.y);
+
+public Vector3? GetMousePointOnPlane(float height)
+{
+    Mouse mouse = Mouse.current;
+    if (mouse == null) return null;
+
+    Vector2 mousePos = mouse.position.ReadValue();
+    Ray ray = mainCamera.ScreenPointToRay(mousePos);
+
+    // 바닥(Ground)에 직접 Raycast 하지 않고 가상 평면을 쓰는 이유 :
+    // 총구 높이와 바닥 높이가 다르면 화면상 마우스 위치와 실제 탄착점이 어긋나는 버그가 있었음
+    // 사격은 총구 높이, 수류탄 착탄은 바닥 높이를 넘겨서 같은 함수를 씀
+    Plane plane = new Plane(Vector3.up, new Vector3(0f, height, 0f));
+
+    if (plane.Raycast(ray, out float enter))
+    {
+        return ray.GetPoint(enter);
+    }
+
+    return null;
+}
+```
+
+**6. `PlayerShoot.cs`** (수정)
+```csharp
+[SerializeField] private PlayerGrenade playerGrenade;
+
+// Update() — 입력 잠금 체크 바로 아래
+if (PlayerInputLock.IsLocked) return;
+// 수류탄을 든 동안에는 좌클릭이 투척이므로 사격·재장전 입력을 받지 않음
+if (playerGrenade.IsHolding) return;
+
+// 메서드 추가
+public void CancelReload()
+{
+    isReloading = false;
+}
+```
+
+**7. `AimPointerUI.cs`** (수정)
+```csharp
+[SerializeField] private PlayerGrenade playerGrenade;
+
+private void LateUpdate()
+{
+    bool locked = PlayerInputLock.IsLocked;
+
+    // UI 가 열려 있으면 버튼을 클릭해야 하므로 OS 커서로 전환
+    Cursor.visible = locked;
+    // 수류탄을 든 동안에는 반동이 없으므로 포인터 대신 착탄 원으로 조준
+    bool showPointer = !locked && !playerGrenade.IsHolding;
+    pointer.gameObject.SetActive(showPointer);
+    if (!showPointer) return;
+
+    pointer.position = playerAim.AimScreenPoint;
+}
+```
+
+**8. `GrenadeRowUI.cs`(신규) + `StoreUI.cs`(수정)**: `PotionRowUI`를 그대로 복제하고 API만 Grenade 버전으로 교체(`GetMaxAffordableGrenades` / `GetGrenadeCount` / `GetMaxGrenadeCount` / `GetGrenadeBundleCost` / `TryBuyGrenade`, `const int GrenadeIndex = 0`, 확인창 문구 "수류탄을 구매하시겠습니까?"). `StoreUI`에 `[SerializeField] private GrenadeRowUI grenadeRow;` 추가 + `ShowConsumables()`에 `grenadeRow.Refresh();` 추가.
 
 ## ⭐ 협업 방식 변경 (2026-09-29부터 적용) — 반드시 먼저 읽을 것
 
