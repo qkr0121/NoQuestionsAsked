@@ -1741,7 +1741,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87d71c7770b93824ab3324c1830780c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
-  weaponData: {fileID: 11400000, guid: eda6f6dc3610c5c44a2f0f641f80a374, type: 2}
+  weaponSlots:
+  - data: {fileID: 11400000, guid: eda6f6dc3610c5c44a2f0f641f80a374, type: 2}
+  - data: {fileID: 11400000, guid: 8d49427aec718e84ba89983afa28509b, type: 2}
 --- !u!1 &8501717694925345473
 GameObject:
   m_ObjectHideFlags: 0

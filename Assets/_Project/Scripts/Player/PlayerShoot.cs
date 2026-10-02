@@ -11,6 +11,15 @@ public class PlayerShoot : MonoBehaviour
 
     private void Update()
     {
+        Keyboard keyboard = Keyboard.current;
+
+        // 테스트용 무기 교체 로직
+        if (keyboard != null)
+        {
+            if (keyboard.digit1Key.wasPressedThisFrame) PlayerWeapon.Instance.EquipWeapon(0);
+            if (keyboard.digit2Key.wasPressedThisFrame) PlayerWeapon.Instance.EquipWeapon(1);
+        }
+
         if (PlayerInputLock.IsLocked) return;
 
         if(isReloading)
@@ -26,7 +35,7 @@ public class PlayerShoot : MonoBehaviour
 
         cooldownTimer -= Time.deltaTime;
 
-        Keyboard keyboard = Keyboard.current;
+        //Keyboard keyboard = Keyboard.current;
         if(keyboard != null && keyboard.rKey.wasPressedThisFrame)
         {
             TryStartReload();

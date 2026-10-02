@@ -22,7 +22,7 @@ MonoBehaviour:
     count: 3
     directions: 0100000003000000
     simultaneousCount: 1
-  - type: 0
+  - type: 1
     count: 5
     directions: 0000000002000000
     simultaneousCount: 1
