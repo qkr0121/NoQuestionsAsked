@@ -20,6 +20,11 @@ public class WeaponData : ScriptableObject
     public float maxRecoilAngle = 8f;   // 좌우 각도 누적 상한
     public float recoveryRate = 3f;     // 지수 감쇠 속도
 
+    [Header("이동 감속")]
+    public float fireSlowMultiplier = 0.8f;
+    public float fireSlowDuration = 0.25f;  // 마지막 발사 후 감속 유지 시간 - fireCooldown과 분리해야 저격총처럼 발사 간격이 긴 무기가 계속 느려지지 않음
+    public float reloadSlowMultiplier = 0.7f;
+
     [Header("레벨별 데미지(인덱스 0 =1 레벨, 강화 대상")]
     public int[] damageByLevel = new int[5];
     public int[] upgradeCostByLevel = new int[5];

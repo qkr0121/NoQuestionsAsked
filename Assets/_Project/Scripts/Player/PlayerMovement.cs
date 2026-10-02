@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 6f;
+    [SerializeField] private PlayerShoot playerShoot;
 
     private Animator playerCharacterAnimator;
     private CharacterController controller;
@@ -29,7 +30,7 @@ public class PlayerMovement : MonoBehaviour
         Vector2 input = ReadMoveInput();
         Vector3 moveDir = new Vector3(input.x, 0f, input.y);
 
-        controller.Move(moveDir * moveSpeed * Time.deltaTime);
+        controller.Move(moveDir * moveSpeed * GetSpeedMultiplier() * Time.deltaTime);
         
         if(playerCharacterAnimator != null)
         {
@@ -51,5 +52,19 @@ public class PlayerMovement : MonoBehaviour
 
         // 대각선 이동 시 더 빠르게 이동하는 버그 방지
         return input.normalized;
+    }
+
+    private float GetSpeedMultiplier()
+    {
+        WeaponData data = PlayerWeapon.Instance.Data;
+        float multiplier = 1f;
+
+        // 발사와 재장전 감속이 겹치면 곱하지 않고 더 느린 쪽만 적용 - 곱하면 의도보다 과하게 느려짐
+        if (playerShoot.IsReloading)
+            multiplier = Mathf.Min(multiplier, data.reloadSlowMultiplier);
+        if (Time.time - playerShoot.LastFireTime < data.fireSlowDuration)
+            multiplier = Mathf.Min(multiplier, data.fireSlowMultiplier);
+
+        return multiplier;
     }
 }

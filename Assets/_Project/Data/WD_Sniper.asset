@@ -45,6 +45,9 @@ MonoBehaviour:
   maxRecoilPush: 3
   maxRecoilAngle: 6
   recoveryRate: 2
+  fireSlowMultiplier: 0.5
+  fireSlowDuration: 0.6
+  reloadSlowMultiplier: 0.6
   damageByLevel: 1e0000003c0000005a0000007800000096000000
   upgradeCostByLevel: c8000000900100005802000020030000e8030000
   ammoBundleCost: 100

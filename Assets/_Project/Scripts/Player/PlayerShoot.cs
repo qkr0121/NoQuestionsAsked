@@ -9,6 +9,9 @@ public class PlayerShoot : MonoBehaviour
     private float reloadTimer;
     private bool isReloading;
 
+    public bool IsReloading => isReloading;
+    public float LastFireTime { get; private set; } = -999f; // 시작하자마자 감속 상태로 판정되지 않도록 아주 과거 값 
+
     private void Update()
     {
         Keyboard keyboard = Keyboard.current;
@@ -63,6 +66,7 @@ public class PlayerShoot : MonoBehaviour
     private void Fire()
     {
         if (!InfiniteAmmoZone.IsActive && !PlayerWeapon.Instance.TryConsumeShot()) return;
+        LastFireTime = Time.time;
 
         Transform fp = playerAim.FirePoint;
         // 캐릭터 회전은 보간돼서 늦게 따라오므로, 탄 방향은 조준점으로 직접 계산

@@ -153,6 +153,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   moveSpeed: 6
+  playerShoot: {fileID: 927560397106520338}
 --- !u!114 &1281207540894405453
 MonoBehaviour:
   m_ObjectHideFlags: 0
