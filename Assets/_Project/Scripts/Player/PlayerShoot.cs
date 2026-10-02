@@ -65,7 +65,14 @@ public class PlayerShoot : MonoBehaviour
         if (!InfiniteAmmoZone.IsActive && !PlayerWeapon.Instance.TryConsumeShot()) return;
 
         Transform fp = playerAim.FirePoint;
-        Projectile projectile = ProjectilePool.Instance.Get(fp.position, fp.rotation);
+        // 캐릭터 회전은 보간돼서 늦게 따라오므로, 탄 방향은 조준점으로 직접 계산
+        Vector3 dir = playerAim.AimPoint - fp.position;
+        dir.y = 0f;
+        Quaternion rot = dir.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(dir) : fp.rotation;
+
+        Projectile projectile = ProjectilePool.Instance.Get(fp.position, rot);
         projectile.SetDamage(PlayerWeapon.Instance.CurrentDamage);
+
+        playerAim.ApplyRecoil(PlayerWeapon.Instance.Data);
     }
 }

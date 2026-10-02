@@ -16,5 +16,35 @@ MonoBehaviour:
   magazineSize: 12
   reloadTime: 1.5
   startingReserveAmmo: 60
+  maxReserveAmmo: 100
+  verticalKickByShot:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.25
+      inSlope: 0
+      outSlope: 0.025
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 6
+      value: 0.4
+      inSlope: 0.025
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  horizontalKick: 4
+  maxRecoilPush: 1.5
+  maxRecoilAngle: 8
+  recoveryRate: 3
   damageByLevel: 0a000000140000001e0000002800000032000000
   upgradeCostByLevel: 64000000c80000002c01000090010000f4010000
+  ammoBundleCost: 50

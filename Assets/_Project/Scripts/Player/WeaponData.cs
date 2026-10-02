@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(menuName = "Data/Weapon Data")]
 public class WeaponData : ScriptableObject
@@ -11,12 +12,20 @@ public class WeaponData : ScriptableObject
     public int maxReserveAmmo = 100;
     // 사거리는 아직 코드에 사거리 개념 자체가 없음(Projectile 이 lifeTime 으로만 판정) - 필요해지면 여기 추가
 
+    [Header("반동")]
+    public AnimationCurve verticalKickByShot = AnimationCurve.Linear(0f, 0.3f, 10f, 0.6f); // x: 연속발사 순번, y: 조준점이 앞으로 밀리는 거리(월드 단위) 탑다운이라 탄 방향은 안 바뀌는 연출용
+    public float horizontalKick = 4f;   // 좌우 흔들림 최대 각도(도). 실제 명중률에 영향을 주는 반동
+    [FormerlySerializedAs("maxRecoil")]
+    public float maxRecoilPush = 1.5f;  // 앞쪽 밀림 누적 상한
+    public float maxRecoilAngle = 8f;   // 좌우 각도 누적 상한
+    public float recoveryRate = 3f;     // 지수 감쇠 속도
+
     [Header("레벨별 데미지(인덱스 0 =1 레벨, 강화 대상")]
     public int[] damageByLevel = new int[5];
     public int[] upgradeCostByLevel = new int[5];
 
     [Header("탄약 구매")]
-    public int ammoBundleCost = 50;   // 마거진 크기(1묶음) 당 가격
+    public int ammoBundleCost = 50;   // 매거진 크기(1묶음) 당 가격
 
     public int MaxLevel => damageByLevel.Length;
 }
