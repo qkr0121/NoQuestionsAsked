@@ -26,6 +26,7 @@ public class StoreUI : MonoBehaviour
     [Header("소모품 행")]
     [SerializeField] private AmmoRowUI ammoRow;
     [SerializeField] private PotionRowUI potionRow;
+    [SerializeField] private GrenadeRowUI grenadeRow;
 
     private void Awake()
     {
@@ -73,6 +74,7 @@ public class StoreUI : MonoBehaviour
 
         ammoRow.Refresh();
         potionRow.Refresh();
+        grenadeRow.Refresh();
     }
 
     private void RefreshWeaponUpgrade()

@@ -29,7 +29,7 @@ public class PlayerAim : MonoBehaviour
     {
         if (PlayerInputLock.IsLocked) return;
 
-        Vector3? rawAim = GetMouseWorldPoint();
+        Vector3? rawAim = GetMousePointOnPlane(firePoint.position.y);
         if (rawAim == null) return;
 
         // 연사 중에도 계속 회복 - 튀는 양과 회복량이 맞는 지점에서 자연스럽게 수렴
@@ -79,7 +79,7 @@ public class PlayerAim : MonoBehaviour
         consecutiveShots++;
     }
 
-    private Vector3? GetMouseWorldPoint()
+    public Vector3? GetMousePointOnPlane(float height)
     {
         Mouse mouse = Mouse.current;
         if (mouse == null) return null;
@@ -89,13 +89,16 @@ public class PlayerAim : MonoBehaviour
 
         // 바닥(Ground)에 직접 Raycast 하지 않고 firePoint 높이의 가상 평면을 쓰는 이유 :
         // 총구 높이와 바닥 높이가 다르면 화면상 마우스 위치와 실제 탄착점이 어긋나는 버그가 있었음
-        Plane aimPlane = new Plane(Vector3.up, firePoint.position);
+        // 사격은 총구 높이, 수류탄 착탄은 바닥 높이를 넘겨서 같은 함수를 씀
+        Plane plane = new Plane(Vector3.up, new Vector3(0f, height, 0f));
 
-        if (aimPlane.Raycast(ray, out float enter))
+        if (plane.Raycast(ray, out float enter))
         {
             return ray.GetPoint(enter);
         }
 
         return null;
     }
+
+    public Vector2 WorldToScreen(Vector3 worldPoint) => mainCamera.WorldToScreenPoint(worldPoint);
 }

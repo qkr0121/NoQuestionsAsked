@@ -1219,6 +1219,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9176d5c7fc2e5d548b333da2861a83b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerConsumables
+  grenadeTypes:
+  - {fileID: 11400000, guid: b1642c2193173004fb2ac0d455e7cc99, type: 2}
   potionTypes:
   - {fileID: 11400000, guid: 37e0128db79517d41b386989296c1931, type: 2}
 --- !u!1 &6343497153187423661

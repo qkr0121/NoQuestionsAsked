@@ -46,7 +46,7 @@
   - **미결정**: ~~조준 키(우클릭=수류탄 충돌)~~ → **해결: 수류탄을 4키로 옮기고 우클릭은 ADS가 사용**(아래 수류탄 설계 참고), 조준 전환 속도(즉시/서서히), 카메라 줌 여부, 방어력 보유 좀비, 관통 데미지 계산식, 관통력이 무기 고정인지 탄 종류별인지.
   - 치명타를 넣는다면 탑다운에선 "조준점이 좀비 위 = 치명타"로 하면 정조준 탄이 전부 치명타가 돼 의미가 없어짐 → 머리 콜라이더 또는 중심 반경 등 판정 영역을 따로 정해야 함(나중에 재검토 시 참고).
 
-### 수류탄 시스템 설계 확정 (2026-10-02, Issue 3) — 코드 초안까지 확정, 사용자가 직접 작성 예정(아직 미착수)
+### 수류탄 시스템 설계 확정 (2026-10-02, Issue 3) — ✅ 구현·에디터 연결·플레이테스트 완료 (2026-10-06, 커밋 전). 아래 "구현 중 확정·발견 사항"에 설계 이후 바뀐 점 있음
 
 **작업 순서 결정**: 수류탄(약 5~7h, 코드 전무) vs ADS+탄퍼짐(약 3.5~5h + 밸런스, 기존 구조에 얹음) 비교 → 수류탄 먼저. 수류탄 키를 바꾸면서 ADS 우클릭 충돌도 같이 해결.
 
@@ -58,31 +58,45 @@
 - 수류탄을 들 때 **재장전 취소**(Issue 6의 "무기 교체 시 재장전 취소" 규칙과 통일, 안 하면 재장전 감속이 계속 걸림). 수류탄을 든 동안 `PlayerShoot`은 사격·재장전 입력 무시.
 - **투척 쿨다운 1초, 인스펙터에서 수정 가능**(`PlayerGrenade.throwCooldown`) — 들고 있는 채로 유지되니 연타로 한꺼번에 소진되는 것 방지. 쿨다운은 수류탄 성질이 아니라 "던지는 동작"의 제한이라 GrenadeData가 아닌 PlayerGrenade에 둠. 좌클릭은 `wasPressedThisFrame`(누르고 있으면 자동 연속 투척되는 것 방지).
 
-**조준 표시**: 들고 있는 동안 **항상 착탄 원(폭발 반경) 표시, 좌클릭 즉시 투척**("좌클릭 누르는 동안 표시 → 떼면 투척" 방식은 4키로 드는 것 자체가 준비 동작이라 중복 + 취소 입력까지 필요해서 기각). 포물선 궤적 표시는 안 함(튕김 물리가 없어 정보량 없음). 수류탄을 든 동안 에임 포인터(반동용)는 숨김, OS 커서도 계속 숨김. 0개(빈 수류탄)면 원을 회색으로 — 숨기면 들고 있는 상태인지 헷갈려서.
+**조준 표시**: 들고 있는 동안 **항상 착탄 원(폭발 반경) 표시, 좌클릭 즉시 투척**("좌클릭 누르는 동안 표시 → 떼면 투척" 방식은 4키로 드는 것 자체가 준비 동작이라 중복 + 취소 입력까지 필요해서 기각). 포물선 궤적 표시는 안 함(튕김 물리가 없어 정보량 없음). 수류탄을 든 동안 에임 포인터(반동용)는 숨김, OS 커서도 계속 숨김(사거리 밖으로 나간 마우스는 아래 "구현 중 확정·발견 사항"의 커서 되돌리기로 처리). 0개(빈 수류탄)면 원을 회색으로 — 숨기면 들고 있는 상태인지 헷갈려서.
 
 **충돌 규칙(사용자 결정)**: 수류탄은 **바닥(Ground)과 맵 끝 벽(지금은 없음)만 통과 못 하고 나머지(좀비, 방어벽 포함)는 전부 통과**.
 - → **Rigidbody 물리 없이 포물선을 직접 계산**: 던질 때 착탄 지점을 확정(커서 위치 → 최대 사거리로 clamp → 사이에 벽 있으면 벽 앞으로 clamp)하고, 비행 중엔 `Lerp(시작, 착탄, t)` + `arcHeight * 4t(1-t)`로 이동만. 충돌 판정이 없으니 전부 통과가 자연스럽고, 착탄 원 위치에 정확히 떨어짐(실제 물리면 초기속도·마찰·튕김 때문에 원과 어긋남). 비행 시간은 거리와 무관하게 고정.
 - 맵 끝 벽용 `LayerMask throwBlockLayer`만 만들어 두고 지금은 비워둠.
 - **바닥 높이 주의**: Player 프리팹 CharacterController가 높이 3·중심 (0,0,0)이라 `transform.position.y`는 발밑이 아니라 몸 중간 → 플레이어 아래로 Ground 레이어 Raycast해서 실제 바닥 높이를 구하고, 그 높이 평면에 마우스 투영. 이를 위해 `PlayerAim.GetMouseWorldPoint()`를 높이를 받는 public `GetMousePointOnPlane(float height)`로 변경(사격=총구 높이, 수류탄=바닥 높이).
 
-**폭발(사용자 결정)**: **착탄 후 신관 시간(`fuseTime`, 기본 1초, 에셋에서 수정 가능) 뒤 폭발**. 범위 안이면 **동일 데미지**(거리 감소 없음 — 사격에서 뺀 것과 같은 성격). **플레이어·방어벽 피해 없음**. `OverlapSphere` + `Enemy` 태그 + `HashSet<EnemyHealth>`로 좀비 한 마리당 한 번만 피해(콜라이더 여러 개면 중복으로 잡힘). 1초에 최대 1개라 풀링 없이 `Instantiate`/`Destroy`.
+**폭발(사용자 결정)**: **착탄 후 신관 시간(`fuseTime`, 기본 1초, 에셋에서 수정 가능) 뒤 폭발**. 범위 안이면 **동일 데미지**(거리 감소 없음 — 사격에서 뺀 것과 같은 성격). **플레이어·방어벽 피해 없음**. `OverlapSphere` + `Enemy` 태그 + `HashSet<EnemyHealth>`로 좀비 한 마리당 한 번만 피해(콜라이더 여러 개면 중복으로 잡힘). 1초에 최대 1개라 풀링 없이 `Instantiate`/`Destroy`(풀링 여부는 콜라이더가 아니라 **생성 빈도와 오브젝트 무게**로 판단 — 투사체·좀비처럼 초당 수십 개가 아니라서 불필요. 나중에 무거운 VFX나 한 번에 여러 개 던지는 수류탄이 생기면 그때 재검토). 폭발 이펙트는 `Destroy(Instantiate(...), 2f)`로 2초 뒤 삭제(2초는 임시값 — 실제 이펙트 넣을 때 ParticleSystem Stop Action=Destroy로 대체 권장).
 
 **스크립트 구성**:
-- `GrenadeData`(SO, 신규): damage / explosionRadius / fuseTime / maxThrowRange / flightTime / arcHeight / bundleCost(1개당) / maxCount
+- `GrenadeData`(SO, 신규): damage / explosionRadius / fuseTime / maxThrowRange / flightTime / arcHeight / bundleCost(1개당) / maxCount / **prefab**(종류마다 모델·이펙트가 다르므로 프리팹을 데이터가 들고 있음 — `PlayerGrenade`는 프리팹 필드 없이 `data.prefab`을 Instantiate)
 - `Grenade`(신규, Combat): 포물선 이동 → 착탄 → 신관 → 폭발 → Destroy. 임시 이펙트용 `explosionEffect`(비워둬도 동작)
-- `PlayerGrenade`(신규, Player): 들기·종류 변경·투척·쿨다운·착탄 지점 계산·착탄 원 표시, `IsHolding` 노출
+- `PlayerGrenade`(신규, Player): 들기·종류 변경·투척·쿨다운·착탄 지점 계산·착탄 원 표시, `IsHolding` 노출. 들 때는 `TrySelectAvailableType()`으로 선택 종류부터 순환하며 개수가 남은 첫 종류를 자동 선택(선택 종류가 0개여도 다른 종류를 들 수 있게 — 이게 없으면 0번이 0개일 때 1번을 영영 못 듦)
 - `PlayerConsumables`(수정): 회복약과 같은 패턴으로 `GrenadeData[] grenadeTypes` + 개수 배열 + 구매/소모(`TryConsumeGrenade`) API
 - `PlayerShoot`(수정): `playerGrenade.IsHolding`이면 입력 무시 + `CancelReload()`
 - `AimPointerUI`(수정): 수류탄을 든 동안 포인터 숨김
 - `GrenadeRowUI`(신규) + `StoreUI`(수정): `PotionRowUI` 복제, 소모품 탭의 비워둔 수류탄 자리
 
+**구매 로직 결정**: `TryBuyGrenade`에서 탄약용 `Mathf.Min(count, maxCount - 현재)` 클램프를 **삭제**(탄약은 묶음 단위 올림 때문에 필요하지만 수류탄·회복약은 1개 단위라 UI의 `buyCount` 제한으로 충분하고, 오히려 비용은 count 기준으로 차감되는데 받는 개수만 줄어드는 불일치가 생김). 상한 보장은 `GrenadeRowUI.Refresh()`의 `buyCount` 클램프 담당. **회복약 `TryBuyPotion`도 같은 방식으로 `Min` 줄 삭제 예정**(`potionCounts[potionIndex] += count;`, 로그도 `count`).
+
 **시작 수치**(테스트하며 조정 예정): 데미지 30(일반 좀비 HP 18 한 방, 헤비는 절반쯤) / 반경 3 / 신관 1초 / 사거리 12 / 비행 0.8초 / 포물선 높이 3 / 1개 80 크리스탈 / 최대 5개.
 
-**에디터 작업(작성 후 사용자)**: GD_Basic 에셋 생성 → PersistentManagers의 PlayerConsumables에 연결 / Grenade 프리팹(작은 Sphere, **콜라이더 제거**) / Player 프리팹에 PlayerGrenade + 자식 `GrenadeIndicator`(원형 SpriteRenderer X축 90°, **스프라이트 1유닛 크기**여야 `반경×2` 스케일 공식이 맞음), Ground Layer=Ground·Throw Block Layer=Nothing / PlayerShoot·AimPointerUI의 `playerGrenade` 연결(비면 NRE) / 상점 소모품 탭에 GrenadeRowUI 배치. 수류탄은 0개로 시작하므로 테스트 시 상점에서 먼저 구매.
+**에디터 작업(작성 후 사용자)**: Grenade 프리팹(작은 Sphere, **콜라이더 제거**) → GD_Basic 에셋 생성 후 **`Prefab` 칸에 Grenade 프리팹 연결** → PersistentManagers의 PlayerConsumables `Grenade Types`에 GD_Basic 연결 / Player 프리팹에 PlayerGrenade(프리팹 칸 없음) + 자식 `GrenadeIndicator`(원형 SpriteRenderer X축 90°, **스프라이트 1유닛 크기**여야 `반경×2` 스케일 공식이 맞음), Ground Layer=Ground·Throw Block Layer=Nothing / PlayerShoot·AimPointerUI의 `playerGrenade` 연결(비면 NRE) / 상점 소모품 탭에 GrenadeRowUI 배치. 수류탄은 0개로 시작하므로 테스트 시 상점에서 먼저 구매.
 
 **Issue 반영 필요(사용자 직접)**: Issue 3의 "우클릭 입력" → "4키 들기 + 좌클릭 투척"으로 수정, 완료 기준 문구("우클릭으로 수류탄") 수정. Issue 6은 "4: 수류탄 순환" 설계와 그대로 맞음(투척은 좌클릭이라는 점만 보강하면 됨).
 
-#### 수류탄 코드 초안 (승인된 초안 — 다른 PC에서 이어 작성할 때 참고, 구현 완료 후 이 하위 섹션은 삭제해도 됨)
+#### 수류탄 구현 중 확정·발견 사항 (2026-10-06)
+
+- **구현 상태**: 스크립트 8종 + 에디터 연결(GD_Basic 에셋, Grenade 프리팹, Player 프리팹의 PlayerGrenade·GrenadeIndicator, 상점 `Row_Grenade`→`StoreUI.grenadeRow`) 완료, Base·ZWD 양쪽에서 구매→들기→투척→폭발 플레이테스트 통과. Base 씬 바닥도 Ground 레이어로 변경함.
+- **착탄 원(`GrenadeIndicator`)은 Canvas UI가 아니라 월드 공간 오브젝트**: Player의 자식, `Transform`+`SpriteRenderer`, 바닥에 눕힘(Rotation X 90), `localScale`=반경×2(월드 유닛). 탑다운 카메라에선 평면 UI처럼 보일 뿐. 임시 스프라이트 `Sprites/GrenadeIndicator.png`(100×100 흰 원, PPU 100 = 정확히 1유닛, 파이썬으로 생성) 사용 — 투명도가 너무 선명한 건 나중에 제대로 된 이미지로 교체할 때 조절. **주의 사례**: 처음 임포트될 때 Texture Type이 Default라 SpriteRenderer에 못 넣었음 → `.meta`를 기존 `Icon_Navy.png`와 같은 Sprite 설정(textureType 8, spriteMode 1, alphaIsTransparency 1, 밉맵 끄기, Clamp)으로 수정해서 해결. (흰 원이라 흰 배경 미리보기에선 빈 이미지처럼 보임)
+- **착탄 후 폭발 범위 표시(2026-10-06)**: 던지면 조준 원은 그대로 두고, 날아간 수류탄(`Grenade`)이 **착탄 순간 자기 원(`landingIndicator`, 자식 SpriteRenderer, 프리팹에서 비활성으로 시작)을 켜서** 폭발까지 표시, 폭발 때 `Destroy(gameObject)`로 같이 삭제. 수류탄마다 따로 가지는 이유: 조준 원은 하나뿐이고 커서를 따라다니는데, 폭발 전(쿨다운 1초 < 비행 0.8초+신관 1초)에 여러 개를 던질 수 있어서. **쿨다운 중에도 조준 원은 숨기지 않기로 결정**(사용자). 두 원 모두 반투명 붉은색 `(1, 0.2, 0.2, 0.35)` — 조준 원 색은 `PlayerGrenade.readyColor`(코드가 SpriteRenderer.color를 매 프레임 덮어씀), 착탄 후 원 색은 `Grenade.prefab`의 SpriteRenderer. 크기는 `반경×2 / transform.lossyScale.x`로 부모 스케일 보정(Grenade 루트 스케일이 0.5라서 필요, 균등 스케일 전제). `Grenade.prefab` 구조: `Grenade`(루트, 스케일 0.5) ├ `Sphere`(콜라이더 없음) └ `LandingIndicator`(Rotation X 90). 같은 색이라 던져 둔 원 근처로 조준 원을 가져가면 구분이 안 됨 → 헷갈리면 조준 원 테두리/알파로 조절, 색을 한 곳에서 관리하고 싶으면 `GrenadeData.indicatorColor`로 통합.
+- **사거리 밖 마우스 처리 = 커서 되돌리기(B안) 채택**: 문제 — 수류탄을 들면 포인터·OS 커서가 모두 숨겨져서, 마우스가 사거리 밖으로 나가면 착탄 원은 경계에 멈춘 채 마우스만 멀어지고, 돌아올 때 마우스가 사거리 안으로 들어올 때까지 원이 안 움직이는 데드존이 생김. 해결 — `TryGetLandPoint()`에서 마우스 지점이 사거리/벽 밖이면 `Mouse.current.WarpCursorPosition(playerAim.WorldToScreen(landPoint))`로 커서를 착탄 지점으로 되돌림(`PlayerAim.WorldToScreen` 추가). 포인터는 숨김 유지(사용자 요청). 에디터에서는 Game 뷰에 포커스가 있어야 Warp 동작. **대안(보류)**: A안 = 수류탄 든 동안 포인터를 실제 마우스 위치에 표시(`AimPointerUI`에서 `Mouse.current.position` 사용, 몇 줄) — B가 어색하면 전환. 경계에서 커서가 떨리는 건 원이 안 흔들려서 무시, 스프라이트 교체 후 티가 나면 되돌리기 조건을 거리 기준(`wanted.magnitude > (landPoint-origin).magnitude + 0.05f`)으로 변경(지금은 제곱거리 +0.01f라 여유가 사실상 없음).
+- **Base 무제한 구역 규칙**: Base 씬의 `InfiniteAmmoZoneMarker`가 `InfiniteAmmoZone.IsActive`를 켬 → 총은 이미 탄약 소모를 건너뛰고 있었고, 수류탄에도 동일 적용 — `HasGrenade()`(무제한이면 true → 착탄 원이 회색이 안 됨), `OnGrenadeKey()`(무제한이면 개수 0이어도 듦), `Throw()`(소모 건너뜀). 클래스 이름에 "Ammo"가 들어가지만 그대로 둠. **회복약은 사용 로직 자체가 아직 없음(Issue 5, Q키)** → 구현할 때 같은 `InfiniteAmmoZone.IsActive` 확인을 반드시 넣을 것.
+- **⚠ 입력 잠금 규칙 — 새 UI 패널을 만들면 반드시 패널 오브젝트에 `LocksInputWhileActive`를 붙일 것**: 수류탄을 든 상태에서 입력 잠금 없는 UI가 열리면 (1) 커서 되돌리기가 계속 돌아서 커서가 갇히고(`PlayerGrenade.Update`는 `IsLocked`일 때만 일찍 빠져나감), (2) `AimPointerUI`가 입력이 안 잠긴 동안은 항상 OS 커서를 숨겨서 UI에서 커서가 안 보임(수류탄과 무관하게 이미 있던 문제). 패널은 꺼진 상태로 시작해야 `OnEnable`로 잠김. 현재 `LocksInputWhileActive` 사용처는 **`StorePanel`, `ConfirmationPanel` 둘뿐**.
+  - **적용 현황(2026-10-06, 저장된 파일·에디터 상태 모두 확인)**: 각 UI 루트가 아니라 **자식 Panel 오브젝트**에 붙임(루트는 항상 켜져 있어서 `OnEnable`이 시작하자마자 잠가버림). 적용됨 — Base: `StorePanel`, `MissionBoardPanel`, `WaveSelectionPanel` / `HUD.prefab`: `GameOverPanel`(`GameOverUI`는 HUD 프리팹 루트에 있음) / `PersistentManagers`: `ConfirmationPanel`. 전부 꺼진 상태로 시작.
+  - **아직 해야 함**: `WaveClearUI`(스크립트는 있으나 씬/프리팹에 아직 배치 안 함 — 배치할 때 Panel에 붙일 것), 일시정지 메뉴(ESC, 사용자가 만들 예정), 튜토리얼 팝업(Issue 15/16).
+- **불필요하다고 결정한 보강**: ① "ESC로 수류탄 내려놓기" — 일시정지 메뉴가 입력을 잠그면 되돌리기도 멈추고 커서도 보이므로 불필요. ② `Application.isFocused` 가드(창 포커스 없을 때 Warp 방지) — `ProjectSettings`의 `runInBackground: 0`이라 포커스를 잃으면 게임 루프가 멈춰 백그라운드에서 Warp가 돌 일이 없음. ③ 창 모드에서 가장자리/다른 모니터 못 나가는 문제도 일시정지 메뉴로 해결. 에디터에서 수류탄 때문에 커서가 갇혔을 땐 `Ctrl+P`로 Play 종료.
+
+#### 수류탄 코드 초안 (승인된 초안 — 구현 완료되어 실제 코드는 저장소 참고, 이 하위 섹션은 삭제해도 됨. 위 "구현 중 확정·발견 사항"이 초안 이후 바뀐 점)
 
 **1. `GrenadeData.cs`** (신규, `Scripts/Player`)
 ```csharp
@@ -104,6 +118,9 @@ public class GrenadeData : ScriptableObject
     [Header("구매")]
     public int bundleCost = 80;       // 1개당 가격
     public int maxCount = 5;
+
+    [Header("연출")]
+    public Grenade prefab;            // 종류마다 모델·이펙트가 다르므로 데이터가 프리팹을 들고 있음
 }
 ```
 
@@ -190,7 +207,6 @@ public class PlayerGrenade : MonoBehaviour
 {
     [SerializeField] private PlayerAim playerAim;
     [SerializeField] private PlayerShoot playerShoot;
-    [SerializeField] private Grenade grenadePrefab;
     [SerializeField] private SpriteRenderer indicator;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private LayerMask throwBlockLayer; // 맵 끝 벽 — 지금은 벽이 없어 비워둠
@@ -252,11 +268,27 @@ public class PlayerGrenade : MonoBehaviour
             return;
         }
 
-        // 총을 든 상태에서 0개면 아예 들지 않음 (던져서 0개가 된 경우는 빈 손으로 계속 들고 있음)
-        if (PlayerConsumables.Instance.GetGrenadeCount(selectedIndex) <= 0) return;
+        // 총을 든 상태에서 전 종류가 0개면 아예 들지 않음 (던져서 0개가 된 경우는 빈 손으로 계속 들고 있음)
+        if (!TrySelectAvailableType()) return;
 
         IsHolding = true;
         playerShoot.CancelReload();
+    }
+
+    // 현재 선택 종류부터 순환하며 개수가 남은 첫 종류를 고름 — 선택 종류가 0개여도 다른 종류를 들 수 있게
+    private bool TrySelectAvailableType()
+    {
+        int typeCount = PlayerConsumables.Instance.GrenadeTypeCount;
+        for (int i = 0; i < typeCount; i++)
+        {
+            int index = (selectedIndex + i) % typeCount;
+            if (PlayerConsumables.Instance.GetGrenadeCount(index) > 0)
+            {
+                selectedIndex = index;
+                return true;
+            }
+        }
+        return false;
     }
 
     private bool TryGetLandPoint(out Vector3 landPoint)
@@ -299,7 +331,7 @@ public class PlayerGrenade : MonoBehaviour
         if (!PlayerConsumables.Instance.TryConsumeGrenade(selectedIndex)) return;
 
         cooldownTimer = throwCooldown;
-        Grenade grenade = Instantiate(grenadePrefab);
+        Grenade grenade = Instantiate(data.prefab);
         grenade.Launch(playerAim.FirePoint.position, landPoint, data);
     }
 }
@@ -331,9 +363,8 @@ public bool TryBuyGrenade(int grenadeIndex, int count)
     int cost = data.bundleCost * count;
     if (!CurrencyManager.Instance.TrySpend(cost)) return false;
 
-    int amount = Mathf.Min(count, data.maxCount - grenadeCounts[grenadeIndex]);
-    grenadeCounts[grenadeIndex] += amount;
-    Debug.Log($"{data.name} {amount}개 구매 완료. 현재 보유: {grenadeCounts[grenadeIndex]}/{data.maxCount}");
+    grenadeCounts[grenadeIndex] += count;
+    Debug.Log($"{data.name} {count}개 구매 완료. 현재 보유: {grenadeCounts[grenadeIndex]}/{data.maxCount}");
     return true;
 }
 

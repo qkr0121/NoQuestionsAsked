@@ -65,7 +65,7 @@ public class PotionRowUI : MonoBehaviour
         {
             if (!PlayerConsumables.Instance.TryBuyPotion(PotionIndex, buyCount))
             {
-                ToastMessage.Instance.Show("크리스탈이 부족합니다");
+                ToastMessage.Instance.Show("크리스탈이 부족합니다.");
                 return;
             }
             buyCount = 1;

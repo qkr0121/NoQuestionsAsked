@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class PlayerShoot : MonoBehaviour
 {
     [SerializeField] private PlayerAim playerAim;
+    [SerializeField] private PlayerGrenade playerGrenade;
 
     private float cooldownTimer;
     private float reloadTimer;
@@ -24,6 +25,8 @@ public class PlayerShoot : MonoBehaviour
         }
 
         if (PlayerInputLock.IsLocked) return;
+        //수류탄을 든 동안에는 좌클릭이 투척이므로 사격,재장전 입력을 받지 않음
+        if (playerGrenade.IsHolding) return;
 
         if(isReloading)
         {
@@ -53,6 +56,11 @@ public class PlayerShoot : MonoBehaviour
             Fire();
             cooldownTimer = PlayerWeapon.Instance.Data.fireCooldown;
         }
+    }
+
+    public void CancelReload()
+    {
+        isReloading = false;
     }
 
     private void TryStartReload()
