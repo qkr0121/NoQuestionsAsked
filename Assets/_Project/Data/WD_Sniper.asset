@@ -12,27 +12,77 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b97a15de10434f499b5c3beed6785c3, type: 3}
   m_Name: WD_Sniper
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
-  fireCooldown: 2
-  magazineSize: 4
-  reloadTime: 3
+  levels:
+  - damage: 100
+    fireInterval: 2
+    recoilScale: 1
+    spreadScale: 1
+    reloadTime: 3
+    magazineSize: 4
+    maxReserveAmmo: 20
+    fireSlowMultiplier: 0.2
+    reloadSlowMultiplier: 0.6
+    upgradeCost: 0
+  - damage: 100
+    fireInterval: 2
+    recoilScale: 1
+    spreadScale: 1
+    reloadTime: 2.4
+    magazineSize: 4
+    maxReserveAmmo: 20
+    fireSlowMultiplier: 0.2
+    reloadSlowMultiplier: 0.8
+    upgradeCost: 200
+  - damage: 100
+    fireInterval: 2
+    recoilScale: 1
+    spreadScale: 1
+    reloadTime: 2.4
+    magazineSize: 5
+    maxReserveAmmo: 20
+    fireSlowMultiplier: 0.4
+    reloadSlowMultiplier: 0.8
+    upgradeCost: 400
+  - damage: 125
+    fireInterval: 2
+    recoilScale: 0.6
+    spreadScale: 1
+    reloadTime: 2.4
+    magazineSize: 5
+    maxReserveAmmo: 20
+    fireSlowMultiplier: 0.4
+    reloadSlowMultiplier: 0.8
+    upgradeCost: 600
+  - damage: 125
+    fireInterval: 1.6
+    recoilScale: 0.6
+    spreadScale: 0.6
+    reloadTime: 2.4
+    magazineSize: 5
+    maxReserveAmmo: 30
+    fireSlowMultiplier: 0.4
+    reloadSlowMultiplier: 0.8
+    upgradeCost: 800
   startingReserveAmmo: 12
-  maxReserveAmmo: 20
+  ammoCostPerRound: 25
+  bulletSpeed: 300
+  range: 80
   verticalKickByShot:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1.5
+      value: 0.8
       inSlope: 0
-      outSlope: 0.16666667
+      outSlope: 0.06666666
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
       time: 3
-      value: 2
-      inSlope: 0.16666667
+      value: 1
+      inSlope: 0.06666666
       outSlope: 0
       tangentMode: 0
       weightedMode: 0
@@ -41,13 +91,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  horizontalKick: 6
-  maxRecoilPush: 3
-  maxRecoilAngle: 6
-  recoveryRate: 2
-  fireSlowMultiplier: 0.5
+  horizontalKick: 0
+  maxRecoilPush: 1.5
+  maxRecoilAngle: 0
+  pushRecoveryRate: 1
+  angleRecoveryRate: 4
   fireSlowDuration: 0.6
-  reloadSlowMultiplier: 0.6
-  damageByLevel: 1e0000003c0000005a0000007800000096000000
-  upgradeCostByLevel: c8000000900100005802000020030000e8030000
-  ammoBundleCost: 100

@@ -34,11 +34,10 @@ public class AmmoRowUI : MonoBehaviour
         reserveText.text = $"{PlayerWeapon.Instance.ReserveAmmo} / {PlayerWeapon.Instance.MaxReserveAmmo}";
         bundleCountText.text = bundleCount.ToString();
 
-        int fillAmount = Mathf.Min(bundleCount * PlayerWeapon.Instance.Data.magazineSize,
-            PlayerWeapon.Instance.MaxReserveAmmo - PlayerWeapon.Instance.ReserveAmmo);
+        int fillAmount = PlayerWeapon.Instance.GetAmmoFillAmount(bundleCount);
         fillAmountText.text = $"+{fillAmount}발";
 
-        int cost = PlayerWeapon.Instance.GetAmmoBundleCost(bundleCount);
+        int cost = PlayerWeapon.Instance.GetAmmoCost(bundleCount);
         totalCostText.text = $"{cost} 크리스탈";
 
         bool canBuy = maxBundles > 0;
@@ -61,7 +60,7 @@ public class AmmoRowUI : MonoBehaviour
 
     private void OnBuyClicked()
     {
-        int cost = PlayerWeapon.Instance.GetAmmoBundleCost(bundleCount);
+        int cost = PlayerWeapon.Instance.GetAmmoCost(bundleCount);
         ConfirmationDialog.Instance.Show($"{cost} 크리스탈로 탄약을 구매하시겠습니까?", () =>
         {
             if (!PlayerWeapon.Instance.TryBuyAmmo(bundleCount))

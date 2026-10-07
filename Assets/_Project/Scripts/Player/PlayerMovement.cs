@@ -56,14 +56,14 @@ public class PlayerMovement : MonoBehaviour
 
     private float GetSpeedMultiplier()
     {
-        WeaponData data = PlayerWeapon.Instance.Data;
+        PlayerWeapon weapon = PlayerWeapon.Instance;
         float multiplier = 1f;
 
         // 발사와 재장전 감속이 겹치면 곱하지 않고 더 느린 쪽만 적용 - 곱하면 의도보다 과하게 느려짐
         if (playerShoot.IsReloading)
-            multiplier = Mathf.Min(multiplier, data.reloadSlowMultiplier);
-        if (Time.time - playerShoot.LastFireTime < data.fireSlowDuration)
-            multiplier = Mathf.Min(multiplier, data.fireSlowMultiplier);
+            multiplier = Mathf.Min(multiplier, weapon.ReloadSlowMultiplier);
+        if (Time.time - playerShoot.LastFireTime < weapon.Data.fireSlowDuration)
+            multiplier = Mathf.Min(multiplier, weapon.FireSlowMultiplier);
 
         return multiplier;
     }

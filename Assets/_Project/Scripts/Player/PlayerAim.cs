@@ -32,10 +32,10 @@ public class PlayerAim : MonoBehaviour
         Vector3? rawAim = GetMousePointOnPlane(firePoint.position.y);
         if (rawAim == null) return;
 
-        // 연사 중에도 계속 회복 - 튀는 양과 회복량이 맞는 지점에서 자연스럽게 수렴
-        float decay = Mathf.Exp(-PlayerWeapon.Instance.Data.recoveryRate * Time.deltaTime);
-        recoilAngle *= decay;
-        recoilPush *= decay;
+        // 연사 중에도 계속 회복 - 좌우는 빠르게, 밀림은 느리게 따로 줄어듦
+        WeaponData data = PlayerWeapon.Instance.Data;
+        recoilAngle *= Mathf.Exp(-data.angleRecoveryRate * Time.deltaTime);
+        recoilPush *= Mathf.Exp(-data.pushRecoveryRate * Time.deltaTime);
 
         // 회전 중심 높이를 조준 평면에 맞춰야 반동 0일 때 포인터가 OS 커서와 정확히 겹침
         Vector3 pivot = transform.position;
@@ -62,8 +62,10 @@ public class PlayerAim : MonoBehaviour
 
     public void ApplyRecoil(WeaponData data)
     {
+        float recoilScale = PlayerWeapon.Instance.RecoilScale;
+
         // 발사 간격보다 충분히 오래 쉬었으면 새 연사로 보고 커브를 처음부터 다시 탐
-        if(Time.time - lastShotTime > data.fireCooldown * 2f)
+        if(Time.time - lastShotTime > PlayerWeapon.Instance.FireInterval * 2f)
         {
             consecutiveShots = 0;
             noiseSeed = Random.value * 100f; // 연사마다 좌우 흔들림 패턴이 달라지도록
@@ -72,9 +74,11 @@ public class PlayerAim : MonoBehaviour
 
         float vertical = data.verticalKickByShot.Evaluate(consecutiveShots);
         // 발사 순번으로 샘플링해서 연속된 발끼리 좌우가 부드럽게 이어지게 함(-1~1)
-        float noise = Mathf.PerlinNoise(noiseSeed, consecutiveShots * 0.35f) * 2f - 1f;
+        // PerlinNoise는 0.5 근처에 몰려서 *2-1만 하면 실제 흔들림이 매우 작으므로, 0.5에서 벗어난 만큼을 4배로 펴서 -1~1 전체를 쓰게 함
+        float noise = Mathf.Clamp((Mathf.PerlinNoise(noiseSeed, consecutiveShots * 0.35f) - 0.5f) * 4f, -1f, 1f);
 
-        recoilPush = Mathf.Min(recoilPush + vertical, data.maxRecoilPush);
+        // 강화로 반동이 줄어들면 한 발의 밀림과 누적 상한을 같은 비율로 줄임 - 좌우 흔들림은 피드백용이라 고정
+        recoilPush = Mathf.Min(recoilPush + vertical * recoilScale, data.maxRecoilPush * recoilScale);
         recoilAngle = Mathf.Clamp(recoilAngle + noise * data.horizontalKick, -data.maxRecoilAngle, data.maxRecoilAngle);
         consecutiveShots++;
     }

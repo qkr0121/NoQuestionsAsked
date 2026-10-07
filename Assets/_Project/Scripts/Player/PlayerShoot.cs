@@ -55,7 +55,7 @@ public class PlayerShoot : MonoBehaviour
         if(mouse.leftButton.isPressed && cooldownTimer <= 0f)
         {
             Fire();
-            cooldownTimer = PlayerWeapon.Instance.Data.fireCooldown;
+            cooldownTimer = PlayerWeapon.Instance.FireInterval;
         }
     }
 
@@ -69,7 +69,7 @@ public class PlayerShoot : MonoBehaviour
         if (!PlayerWeapon.Instance.CanReload) return;
 
         isReloading = true;
-        reloadTimer = PlayerWeapon.Instance.Data.reloadTime;
+        reloadTimer = PlayerWeapon.Instance.ReloadTime;
     }
 
     private void Fire()

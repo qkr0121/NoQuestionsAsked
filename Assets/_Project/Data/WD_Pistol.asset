@@ -12,27 +12,77 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b97a15de10434f499b5c3beed6785c3, type: 3}
   m_Name: WD_Pistol
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
-  fireCooldown: 0.2
-  magazineSize: 12
-  reloadTime: 1.5
+  levels:
+  - damage: 20
+    fireInterval: 0.5
+    recoilScale: 1
+    spreadScale: 1
+    reloadTime: 1.5
+    magazineSize: 12
+    maxReserveAmmo: 120
+    fireSlowMultiplier: 0.5
+    reloadSlowMultiplier: 0.7
+    upgradeCost: 0
+  - damage: 20
+    fireInterval: 0.4
+    recoilScale: 1
+    spreadScale: 1
+    reloadTime: 1.5
+    magazineSize: 12
+    maxReserveAmmo: 120
+    fireSlowMultiplier: 0.5
+    reloadSlowMultiplier: 0.7
+    upgradeCost: 100
+  - damage: 25
+    fireInterval: 0.4
+    recoilScale: 0.6
+    spreadScale: 1
+    reloadTime: 1.5
+    magazineSize: 15
+    maxReserveAmmo: 120
+    fireSlowMultiplier: 0.5
+    reloadSlowMultiplier: 0.7
+    upgradeCost: 200
+  - damage: 25
+    fireInterval: 0.4
+    recoilScale: 0.6
+    spreadScale: 0.6
+    reloadTime: 1.2
+    magazineSize: 15
+    maxReserveAmmo: 120
+    fireSlowMultiplier: 0.5
+    reloadSlowMultiplier: 0.85
+    upgradeCost: 300
+  - damage: 34
+    fireInterval: 0.4
+    recoilScale: 0.6
+    spreadScale: 0.6
+    reloadTime: 1.2
+    magazineSize: 15
+    maxReserveAmmo: 180
+    fireSlowMultiplier: 0.5
+    reloadSlowMultiplier: 0.85
+    upgradeCost: 400
   startingReserveAmmo: 60
-  maxReserveAmmo: 100
+  ammoCostPerRound: 4
+  bulletSpeed: 300
+  range: 50
   verticalKickByShot:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.25
+      value: 0.4
       inSlope: 0
-      outSlope: 0.025
+      outSlope: 0.033333335
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
       time: 6
-      value: 0.4
-      inSlope: 0.025
+      value: 0.6
+      inSlope: 0.033333335
       outSlope: 0
       tangentMode: 0
       weightedMode: 0
@@ -41,13 +91,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  horizontalKick: 4
-  maxRecoilPush: 1.5
-  maxRecoilAngle: 8
-  recoveryRate: 3
-  fireSlowMultiplier: 0.8
-  fireSlowDuration: 0.25
-  reloadSlowMultiplier: 0.7
-  damageByLevel: 0a000000140000001e0000002800000032000000
-  upgradeCostByLevel: 64000000c80000002c01000090010000f4010000
-  ammoBundleCost: 50
+  horizontalKick: 5
+  maxRecoilPush: 2
+  maxRecoilAngle: 10
+  pushRecoveryRate: 1
+  angleRecoveryRate: 4
+  fireSlowDuration: 0.6

@@ -17,24 +17,34 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField] private WeaponSlot[] weaponSlots; // 인스펙터에서 보유 무기 목록 채움
     private int equippedIndex = 0;
     private WeaponSlot Equipped => weaponSlots[equippedIndex];
+    private WeaponData.LevelStats Stats => Equipped.data.GetStats(Equipped.CurrentLevel);
     public WeaponData Data => Equipped.data;
 
     public int CurrentLevel => Equipped.CurrentLevel;
-    public int CurrentDamage => Equipped.data.damageByLevel[Equipped.CurrentLevel - 1];
     public bool IsMaxLevel => Equipped.CurrentLevel >= Equipped.data.MaxLevel;
-    public int NextUpgradeCost => Equipped.data.upgradeCostByLevel[Equipped.CurrentLevel - 1];
+    // 다음 레벨 줄에 적힌 비용이 곧 그 레벨로 올리는 비용
+    public int NextUpgradeCost => Equipped.data.GetStats(Equipped.CurrentLevel + 1).upgradeCost;
+
+    public int CurrentDamage => Stats.damage;
+    public float FireInterval => Stats.fireInterval;
+    public float RecoilScale => Stats.recoilScale;
+    public float SpreadScale => Stats.spreadScale;
+    public float ReloadTime => Stats.reloadTime;
+    public float FireSlowMultiplier => Stats.fireSlowMultiplier;
+    public float ReloadSlowMultiplier => Stats.reloadSlowMultiplier;
+    public int MagazineSize => Stats.magazineSize;
+    public int MaxReserveAmmo => Stats.maxReserveAmmo;
 
     public int MagazineAmmo => Equipped.MagazineAmmo;
     public int ReserveAmmo => Equipped.ReserveAmmo;
-    public int MaxReserveAmmo => Equipped.data.maxReserveAmmo;
-    public bool CanReload => Equipped.MagazineAmmo < Equipped.data.magazineSize && Equipped.ReserveAmmo > 0;
+    public bool CanReload => Equipped.MagazineAmmo < Stats.magazineSize && Equipped.ReserveAmmo > 0;
 
     private void Awake()
     {
         Instance = this;
         foreach(WeaponSlot slot in weaponSlots)
         {
-            slot.MagazineAmmo = slot.data.magazineSize;
+            slot.MagazineAmmo = slot.data.GetStats(1).magazineSize;
             slot.ReserveAmmo = slot.data.startingReserveAmmo;
         }
     }
@@ -50,6 +60,7 @@ public class PlayerWeapon : MonoBehaviour
         if (IsMaxLevel) return false;
         if (!CurrencyManager.Instance.TrySpend(NextUpgradeCost)) return false;
 
+        // 탄창이 커져도 현재 탄창의 탄은 그대로 - 다음 장전부터 커진 크기가 적용됨
         Equipped.CurrentLevel++;
         return true;
     }
@@ -64,7 +75,7 @@ public class PlayerWeapon : MonoBehaviour
 
     public void Reload()
     {
-        int needed = Equipped.data.magazineSize - Equipped.MagazineAmmo;
+        int needed = Stats.magazineSize - Equipped.MagazineAmmo;
         int actual = Mathf.Min(needed, Equipped.ReserveAmmo);
 
         Equipped.MagazineAmmo += actual;
@@ -76,23 +87,25 @@ public class PlayerWeapon : MonoBehaviour
         Equipped.ReserveAmmo += amount;
     }
 
-    public int GetAmmoBundleCost(int bundleCount) => Equipped.data.ammoBundleCost * bundleCount;
+    // 상한을 넘는 만큼은 받지 않으므로, 비용도 실제로 받는 탄약 수 기준으로 계산함
+    public int GetAmmoFillAmount(int bundleCount) => Mathf.Min(bundleCount * MagazineSize, MaxReserveAmmo - ReserveAmmo);
+    public int GetAmmoCost(int bundleCount) => GetAmmoFillAmount(bundleCount) * Equipped.data.ammoCostPerRound;
 
     public int GetMaxAffordableBundles()
     {
-        int needed = Equipped.data.maxReserveAmmo - ReserveAmmo;
+        int needed = Stats.maxReserveAmmo - ReserveAmmo;
         if (needed <= 0) return 0;
-        return Mathf.CeilToInt((float)needed / Equipped.data.magazineSize);
+        return Mathf.CeilToInt((float)needed / Stats.magazineSize);
     }
 
     public bool TryBuyAmmo(int bundleCount)
     {
-        int cost = GetAmmoBundleCost(bundleCount);
-        if (!CurrencyManager.Instance.TrySpend(cost)) return false;
+        int amount = GetAmmoFillAmount(bundleCount);
+        if (amount <= 0) return false;
+        if (!CurrencyManager.Instance.TrySpend(GetAmmoCost(bundleCount))) return false;
 
-        int amount = Mathf.Min(bundleCount * Equipped.data.magazineSize, Equipped.data.maxReserveAmmo - Equipped.ReserveAmmo);
         Equipped.ReserveAmmo += amount;
-        Debug.Log($"탄약 {amount}발 구매 완료. 현재 예비탄약: {Equipped.ReserveAmmo}/{Equipped.data.maxReserveAmmo}");
+        Debug.Log($"탄약 {amount}발 구매 완료. 현재 예비탄약: {Equipped.ReserveAmmo}/{Stats.maxReserveAmmo}");
         return true;
     }
 
@@ -108,7 +121,7 @@ public class PlayerWeapon : MonoBehaviour
         foreach(WeaponSlot slot in weaponSlots)
         {
             slot.CurrentLevel = 1;
-            slot.MagazineAmmo = slot.data.magazineSize;
+            slot.MagazineAmmo = slot.data.GetStats(1).magazineSize;
             slot.ReserveAmmo = slot.data.startingReserveAmmo;
         }
         equippedIndex = 0;
