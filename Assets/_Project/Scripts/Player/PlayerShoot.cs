@@ -83,8 +83,9 @@ public class PlayerShoot : MonoBehaviour
         Quaternion rot = dir.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(dir) : fp.rotation;
 
         Projectile projectile = ProjectilePool.Instance.Get(fp.position, rot);
-        projectile.SetDamage(PlayerWeapon.Instance.CurrentDamage);
+        WeaponData data = PlayerWeapon.Instance.Data;
+        projectile.Launch(PlayerWeapon.Instance.CurrentDamage, data.bulletSpeed, data.range);
 
-        playerAim.ApplyRecoil(PlayerWeapon.Instance.Data);
+        playerAim.ApplyRecoil(data);
     }
 }

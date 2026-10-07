@@ -10,7 +10,10 @@ public class WeaponData : ScriptableObject
     public float reloadTime = 1.5f;
     public int startingReserveAmmo = 60;
     public int maxReserveAmmo = 100;
-    // 사거리는 아직 코드에 사거리 개념 자체가 없음(Projectile 이 lifeTime 으로만 판정) - 필요해지면 여기 추가
+
+    [Header("탄")]
+    public float bulletSpeed = 300f;    // 거의 즉시 맞는 느낌. 판정이 이동 구간 Raycast라 빨라도 좀비를 건너뛰지 않음
+    public float range = 50f;           // 사거리(월드 단위). 지금까지는 lifeTime x speed로 우연히 정해졌음
 
     [Header("반동")]
     public AnimationCurve verticalKickByShot = AnimationCurve.Linear(0f, 0.3f, 10f, 0.6f); // x: 연속발사 순번, y: 조준점이 앞으로 밀리는 거리(월드 단위) 탑다운이라 탄 방향은 안 바뀌는 연출용
