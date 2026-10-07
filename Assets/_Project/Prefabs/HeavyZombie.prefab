@@ -56,7 +56,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1
+  m_Radius: 0.85
   m_Height: 2.8
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0.34}
@@ -72,7 +72,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f47da41e70049cb4ab7dfab1fb911afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
-  moveSpeed: 3
+  moveSpeed: 2.5
   rotationSpeed: 8
   stoppingDistance: 0.4
 --- !u!114 &-305322981433289500
@@ -87,7 +87,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acda63cbbbb99044983ab289e4eb3d50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 30
+  maxHealth: 250
 --- !u!114 &-186988232349598092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -100,9 +100,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be187df68291c214cb27eba32a44c781, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack
-  damage: 10
-  attackInterval: 1
-  barricadeDamage: 10
+  damage: 25
+  attackInterval: 1.5
+  barricadeDamage: 40
   barricadeAttackInterval: 1
   sphereCastRadius: 0.5
   sphereCastDistance: 1.5
