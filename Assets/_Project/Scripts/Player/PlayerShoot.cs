@@ -5,6 +5,7 @@ public class PlayerShoot : MonoBehaviour
 {
     [SerializeField] private PlayerAim playerAim;
     [SerializeField] private PlayerGrenade playerGrenade;
+    [SerializeField] private ParticleSystem muzzleFlash;    // FirePoint 자식, 비워둬도 동작
 
     private float cooldownTimer;
     private float reloadTimer;
@@ -85,6 +86,12 @@ public class PlayerShoot : MonoBehaviour
         Projectile projectile = ProjectilePool.Instance.Get(fp.position, rot);
         WeaponData data = PlayerWeapon.Instance.Data;
         projectile.Launch(PlayerWeapon.Instance.CurrentDamage, data.bulletSpeed, data.range);
+
+        if(muzzleFlash != null)
+        {
+            muzzleFlash.transform.rotation = rot; // 캐릭터 회전이 늦게 따라와도 화염이 탄 방향을 향하게 함
+            muzzleFlash.Play();
+        }
 
         playerAim.ApplyRecoil(data);
     }

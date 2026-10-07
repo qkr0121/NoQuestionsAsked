@@ -51,6 +51,7 @@ MonoBehaviour:
   trail: {fileID: 5377650239926710421}
   trailLingerTime: 0.1
   muzzleCheckRadius: 0.1
+  hitEffect: {fileID: 2530673837211435579, guid: 9cbb3fe98ac96554faddfecd3ce4f6af, type: 3}
 --- !u!96 &5377650239926710421
 TrailRenderer:
   serializedVersion: 4

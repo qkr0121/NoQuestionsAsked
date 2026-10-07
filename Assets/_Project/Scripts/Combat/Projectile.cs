@@ -6,6 +6,7 @@ public class Projectile : MonoBehaviour
     [SerializeField] private TrailRenderer trail;           // 잔상, 비워둬도 동작
     [SerializeField] private float trailLingerTime = 0.1f;  // 명중 후 잔상이 사라질 때까지 반납을 미루는 시간
     [SerializeField] private float muzzleCheckRadius = 0.1f;
+    [SerializeField] private PooledEffect hitEffect;        // 피격 이펙트, 비워둬도 동작
 
     private ProjectilePool pool;
     private int damage;
@@ -33,7 +34,7 @@ public class Projectile : MonoBehaviour
         Collider[] overlaps = Physics.OverlapSphere(transform.position, muzzleCheckRadius, hitMask, QueryTriggerInteraction.Collide);
         if(overlaps.Length > 0)
         {
-            ApplyHit(overlaps[0]);
+            ApplyHit(overlaps[0], transform.position, -transform.forward);
             Finish();
         }
     }
@@ -54,7 +55,7 @@ public class Projectile : MonoBehaviour
         if(Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, stepLength, hitMask, QueryTriggerInteraction.Collide))
         {
             transform.position = hit.point;
-            ApplyHit(hit.collider);
+            ApplyHit(hit.collider, hit.point, hit.normal);
             Finish();
             return;
         }
@@ -64,10 +65,15 @@ public class Projectile : MonoBehaviour
         if (remainingRange <= 0f) Finish();
     }
 
-    private void ApplyHit(Collider other)
+    private void ApplyHit(Collider other, Vector3 point, Vector3 noraml)
     {
         EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
-        if (enemy != null) enemy.TakeDamage(damage);
+        if (enemy == null) return;
+        
+        enemy.TakeDamage(damage);
+
+        // 맞은 표면 바깥쪽(총을 쏜 쪽)으로 터지게 함
+        if (hitEffect != null) EffectPool.Instance.Play(hitEffect, point, Quaternion.LookRotation(noraml));
     }
 
     private void Finish()
