@@ -31,6 +31,8 @@ public class SaveData
     public int weaponLevel;
     public int magazineAmmo;
     public int reserveAmmo;
+    public int[] grenadeCounts;   // 소모품 개수 - 종류 순서는 PlayerConsumables의 배열 순서
+    public int[] potionCounts;
 
     public MissionSaveEntry[] missions;
     public PlayerSaveData player;

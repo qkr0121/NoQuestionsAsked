@@ -4,6 +4,30 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
+## ⭐ Issue 5 회복약 사용 구현 완료 (2026-10-08) — 코드·플레이 확인 끝, 커밋 전
+
+**이슈 본문과 실제 코드가 달랐음**: 회복약 **구매 쪽은 이미 구현**돼 있었음(`PotionData` 회복량 30·가격 30·최대 10, `PlayerConsumables.TryBuyPotion`, 상점 `PotionRowUI`, `PlayerHealth.Heal`). 이번에 한 건 **사용(Q키)·쿨타임·세이브·리셋**.
+
+**설계 결정(사용자 승인)**
+- **즉시 회복 + 쿨타임 3초**(성공한 사용에만 쿨타임, 무시된 입력은 쿨타임 없음). 캐스팅 시간은 일정 때문에 제외. 회복량은 **고정 30 유지**(최대 체력 100 기준), 수치 조정은 #30.
+- **체력이 가득이면 소모 없이 무시**. 부족하면 사용 가능하고 **초과분은 버려짐**(`SetCurrentHealth`가 최대 체력으로 `Clamp` — 90에서 30 회복 시 100, 약 1개 소모).
+- **무제한 구역(`InfiniteAmmoZone`)은 회복약에 적용하지 않음** — 있으면 침대(완전 회복)가 의미가 없어짐. 이슈 #5의 해당 체크 항목은 삭제 대상(사용자가 직접 수정). 회복약은 Base에서도 개수를 소모함.
+- 입력은 `PlayerShoot`·`PlayerGrenade`처럼 각자 `Update`에서 받던 방식을 따라 **별도 `PlayerPotion` 컴포넌트**(Q 입력 + `public TryUse()`)로 만듦. 핫바(#6)에서 입력을 통합할 때 `Update`만 걷어내고 `TryUse()`를 호출하게 함. 피드백은 기존 체력 UI로 충분, 개수·쿨타임 표시는 #6(`CooldownRemaining`을 public으로 노출해 둠).
+
+**코드**
+- `PotionData.cs`: `cooldown = 3f` 추가(기존 에셋은 코드 기본값으로 채워져 수정 불필요).
+- `PlayerConsumables.cs`: `GetPotionData`, `TryConsumePotion`, 세이브용 `GetGrenadeCounts/GetPotionCounts`(복사본 반환), `LoadCounts`(길이가 달라도 겹치는 부분만 복원, `null`이면 0 — 필드가 생기기 전의 옛 세이브 호환), `ResetCounts`.
+- `PlayerPotion.cs`(신규): `Update`에서 `PlayerInputLock` 확인 후 Q, `TryUse()`는 **체력 0 이하 → 가득 → 쿨타임 → 개수** 순으로 막고 **다 통과한 뒤에만 개수를 줄임**(순서가 바뀌면 가득 찬 체력에서 약만 사라짐). 쿨타임은 "다음 사용 가능 시각(`nextUseTime`)"을 저장하는 방식.
+- `SaveData.cs`: `grenadeCounts[]`, `potionCounts[]`. `SaveManager.cs`: `Save()`·`TryLoadAndApply()`에 저장/복원 한 줄씩. `RunState.ResetEntireRun()`: `PlayerConsumables.Instance.ResetCounts()` 추가.
+
+**같이 고친 기존 구멍**: `PlayerConsumables`가 `PersistentManagers`(DontDestroyOnLoad)에 있는데 **수류탄·회복약 개수가 세이브에 없고 `ResetEntireRun`에서도 리셋되지 않아** 게임오버 후 새 런에 이전 개수가 이어질 수 있었음(코드상 판단, 플레이 확인은 안 함). 수류탄도 같은 클래스라 함께 처리.
+
+**에디터 작업(사용자)**: 플레이어 오브젝트에 `PlayerPotion` 추가 + `Player Health` 연결(Base·ZWD에 따로 있으면 둘 다). 쿨타임은 씬이 바뀌면 초기화됨(플레이어가 씬마다 새로 생기므로).
+
+**이어하기 동작 확인(사용자 질문)**: 이어하기 버튼은 `MainMenuUI.Start`에서 **`save.json` 존재 여부**로만 결정. 저장은 **`RunState.AdvanceSlot()`(시간대가 넘어갈 때) 한 곳뿐**이고, 새 게임·게임오버 후 메뉴 이동 시 삭제됨. Base에서 메뉴 버튼으로 나가면 저장도 삭제도 안 함. 따라서 **새 게임 후 시간대를 한 번도 안 넘기고 메뉴로 나가면 이어하기가 안 뜨는 게 정상**이고(사용자가 시간을 안 넘겨서였음), 메뉴로 나가거나 종료하면 **마지막 시간대 이동 이후의 변화(상점 구매 등)는 이어하기에 반영되지 않음** — 기존 설계(시간대 단위 체크포인트)이며 이번 변경과 무관, 메뉴 이동 시 저장은 MVP 이후 후보.
+
+**남은 일**: 개수·쿨타임 HUD 표시 → #6 핫바 / 회복량·가격 수치 → #30 / 회복 숫자 표시(초록 플로팅 텍스트)는 #8 데미지 숫자 이후 재사용 검토 / 이슈 #5 본문의 "무제한 구역" 항목 삭제(사용자).
+
 ## ⭐ Issue 29 상점 무기 탭 UI 구현 완료 (2026-10-08) — 코드·씬 연결·플레이 확인까지 끝, 커밋 전
 
 **결과**: 상점 무기 탭이 목록 + 상세 구조가 됨. 저격총은 잠긴 상태(회색, "잠김", 구매 버튼, 1레벨 스탯 미리보기)로 보이다가 구매하면 열림. 소모품 탭의 탄약 구매는 무기별 행으로 바뀜(저격총 탄약 구매 추가).

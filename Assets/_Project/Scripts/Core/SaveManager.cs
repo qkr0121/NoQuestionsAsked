@@ -25,6 +25,8 @@ public class SaveManager : MonoBehaviour
             weaponLevel = PlayerWeapon.Instance.CurrentLevel,
             magazineAmmo = PlayerWeapon.Instance.MagazineAmmo,
             reserveAmmo = PlayerWeapon.Instance.ReserveAmmo,
+            grenadeCounts = PlayerConsumables.Instance.GetGrenadeCounts(),
+            potionCounts = PlayerConsumables.Instance.GetPotionCounts(),
             missions = BuildMissionEntries(),
             player = new PlayerSaveData
             {
@@ -79,6 +81,7 @@ public class SaveManager : MonoBehaviour
         RunState.Instance.LoadFrom(data);
         CurrencyManager.Instance.LoadCrystal(data.crystal);
         PlayerWeapon.Instance.LoadFrom(data.weaponLevel, data.magazineAmmo, data.reserveAmmo);
+        PlayerConsumables.Instance.LoadCounts(data.grenadeCounts, data.potionCounts);
         if(data.player != null)
         {
             PlayerManager.Instance.LoadHealth(data.player.currentHealth, data.player.maxHealth);

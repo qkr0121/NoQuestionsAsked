@@ -111,6 +111,7 @@ public class RunState : MonoBehaviour
         PlayerManager.Instance.ResetHealth();
         GameManager.Instance.ResetGameOver();
         PlayerWeapon.Instance.ResetWeapon();
+        PlayerConsumables.Instance.ResetCounts();
     }
 
     public void LoadFrom(SaveData data)

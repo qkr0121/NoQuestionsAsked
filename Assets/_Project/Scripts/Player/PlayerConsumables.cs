@@ -67,4 +67,38 @@ public class PlayerConsumables : MonoBehaviour
         Debug.Log($"{data.name} {count}개 구매 완료. 현재 보유: {potionCounts[potionIndex]}/{data.maxCount}");
         return true;
     }
+
+    public PotionData GetPotionData(int potionIndex) => potionTypes[potionIndex];
+
+    public bool TryConsumePotion(int potionIndex)
+    {
+        if (potionCounts[potionIndex] <= 0) return false;
+        potionCounts[potionIndex]--;
+        return true;
+    }
+
+    public int[] GetGrenadeCounts() => (int[])grenadeCounts.Clone();
+    public int[] GetPotionCounts() => (int[])potionCounts.Clone();
+
+    public void LoadCounts(int[] savedGrenades, int[] savedPotions)
+    {
+        RestoreCounts(savedGrenades, grenadeCounts);
+        RestoreCounts(savedPotions, potionCounts);
+    }
+
+    public void ResetCounts()
+    {
+        System.Array.Clear(grenadeCounts, 0, grenadeCounts.Length);
+        System.Array.Clear(potionCounts, 0, potionCounts.Length);
+    }
+
+    private static void RestoreCounts(int[] saved, int[] target)
+    {
+        System.Array.Clear(target, 0, target.Length);
+        if (saved == null) return;   // 이 필드가 생기기 전에 만든 세이브 파일
+
+        // 종류 수가 바뀐 세이브도 안전하도록 겹치는 부분만 복원
+        int count = Mathf.Min(saved.Length, target.Length);
+        System.Array.Copy(saved, target, count);
+    }
 }
