@@ -109,21 +109,21 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
 <main>
 
 <p class="kicker">No Questions Asked · MVP 일정</p>
-<h1>MVP 일정 재배분 (2차 · 최신 확정본)</h1>
-<p class="sub">9/30 ~ 10/13, 코딩 92시간 예산. Issue 17(맵 확장) · Issue 18(GameUI 재작성) 반영해 1차 일정표를 재배분한 버전.</p>
+<h1>MVP 일정 재배분 (3차 · 10/8 갱신)</h1>
+<p class="sub">9/30 ~ 10/7은 기존 그대로, <b>10/8부터</b> 남은 이슈를 "MVP"와 "MVP 이후"로 다시 나눠 재배분한 버전. 10/13을 넘는 분량은 10/14로 이월.</p>
 
 <div class="stats">
-  <div class="stat"><div class="n">92h</div><div class="l">코딩 예산 (9/30~10/13)</div></div>
-  <div class="stat"><div class="n">14</div><div class="l">일</div></div>
-  <div class="stat"><div class="n">9</div><div class="l">평일 · 8h</div></div>
-  <div class="stat"><div class="n">5</div><div class="l">주말·공휴일 · 4h</div></div>
+  <div class="stat"><div class="n">36h</div><div class="l">10/8~10/13 남은 용량</div></div>
+  <div class="stat"><div class="n">47.5h</div><div class="l">남은 작업 (필요 시간)</div></div>
+  <div class="stat"><div class="n" style="color:var(--risk)">+11.5h</div><div class="l">용량 초과 → 10/14 이월</div></div>
+  <div class="stat"><div class="n">13 / 11</div><div class="l">MVP 이슈 / MVP 이후 이슈</div></div>
 </div>
 
 <div class="legend">
   <span><i style="background:var(--accent)"></i>평일 (8h)</span>
   <span><i style="background:var(--weekend)"></i>주말·공휴일 (4h)</span>
-  <span><i style="background:var(--model-tag)"></i>모델 제작 병행일</span>
-  <span><i style="background:var(--risk)"></i>지연 위험 구간</span>
+  <span><i style="background:var(--model-tag)"></i>모델 제작 병행일 (10/7 이전)</span>
+  <span><i style="background:var(--risk)"></i>용량 초과 (필요 시간 &gt; 하루 용량)</span>
   <span>각 날짜의 "작업 목록" 클릭 시 해당 GitHub 이슈의 세부 항목 펼쳐보기</span>
 </div>
 
@@ -242,14 +242,16 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
     <div class="d-date"><span class="date">10/8</span><span class="wd">목</span></div>
     <div class="d-hours">8h</div>
     <div class="d-task">
-      <div class="row1"><span class="txt"><b>회복약 시스템</b>(PotionCount) + <b>전투 핫바 UI</b>(1/2/3/4/Q 슬롯)</span><span class="tag issue">Issue 5 · 6</span></div>
-      <details class="checklist"><summary>작업 목록 (Issue 5, 6)</summary><ul>
-        <li>PotionCount 상태 관리 (구매 시 AddPotion, 사용 시 TryUsePotion)</li>
-        <li>Q키 입력으로 사용 (PlayerHealth.Heal 연동)</li>
-        <li>회복량 수치 설계 (침대=완전회복보다 저렴/불완전하게)</li>
-        <li>세이브/로드 연동 (SaveData 필드 추가), RunState.ResetEntireRun()에 리셋 로직 추가</li>
-        <li>HUD에 핫바 UI 추가 (5칸, 보유 현황 표시)</li>
-        <li>1/2/3키 무기 전환, 4키 수류탄 전환 로직</li>
+      <div class="row1"><span class="txt"><b>상점 무기 탭 UI</b>(저격총 해금 · 선택한 무기 탄약 구매) + <b>회복약</b> + <b>전투 핫바</b></span><span class="tag risk">필요 10h · +2h</span><span class="tag issue">Issue 29 · 5 · 6</span></div>
+      <details class="checklist"><summary>작업 목록 (Issue 29, 5, 6)</summary><ul>
+        <li>상점 무기 탭 UI — 왼쪽 무기 목록 / 오른쪽 상세(다음 레벨에서 바뀌는 값) / 하단 강화·구매 버튼, 만렙은 "강화 MAX"</li>
+        <li>해금 전 저격총은 회색 + Lv1 미리보기 + 구매 버튼 (2번 슬롯 해금 구매)</li>
+        <li><code>PlayerWeapon</code>: 선택한 무기(슬롯 인덱스)를 강화하는 API</li>
+        <li>탄약 구매를 "선택한 무기" 기준으로 변경 (저격총 탄약 구매 포함)</li>
+        <li class="done"><code>LevelStats</code> 구조 · 탄약 발당 가격 · 권총/저격총 레벨 값 1차 입력 (완료)</li>
+        <li>회복약: <code>PotionCount</code> 상태 관리, Q키 사용(<code>PlayerHealth.Heal</code>), 회복량 수치, 세이브/로드, <code>ResetEntireRun</code> 리셋, 무제한 구역 소모 제외</li>
+        <li>핫바: HUD 5칸(보유·잠금·선택 표시), 1/2/3 무기 전환(잠금 슬롯 제외), 교체 시 재장전 취소, 4키 수류탄, Q키 회복약</li>
+        <li>정리: <code>PlayerShoot</code>의 테스트용 무기 교체 블록 삭제</li>
       </ul></details>
     </div>
   </div>
@@ -258,11 +260,13 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
     <div class="d-date"><span class="date">10/9</span><span class="wd weekend-label">금 · 공휴일</span></div>
     <div class="d-hours">4h</div>
     <div class="d-task">
-      <div class="row1"><span class="txt">1/2/3/4키 전환 로직 마무리 + <b>ZWD 맵 확장</b>(2~3배)</span><span class="tag issue">Issue 6 · 17</span></div>
-      <details class="checklist"><summary>작업 목록 (Issue 6 잔여, 17 일부)</summary><ul>
-        <li>Q키는 Issue 5(회복약 시스템)와 연동 확인</li>
-        <li>ZWD 맵 크기 2~3배 확장 (바닥/벽/천장 재배치)</li>
-        <li>카메라 경계(useBounds/minBounds/maxBounds) 값 확장된 맵에 맞게 재조정</li>
+      <div class="row1"><span class="txt"><b>무기별 세이브</b> + 전투 피드백(<b>데미지 숫자</b>, <b>재장전 게이지바</b>)</span><span class="tag risk">필요 5.5h · +1.5h</span><span class="tag issue">Issue 23 · 8</span></div>
+      <details class="checklist"><summary>작업 목록 (Issue 23, 8 일부)</summary><ul>
+        <li><code>SaveData</code>에 무기별 상태 배열 추가 (<code>WeaponSaveEntry[]</code>), 장착 중인 무기 인덱스도 저장</li>
+        <li><code>PlayerWeapon.LoadFrom</code>을 전체 무기 목록 복원으로 재설계, <code>SaveManager</code> 저장·복원 수정</li>
+        <li>좀비 피격 데미지 숫자 표시 (플로팅 텍스트, 대량 스폰 성능 고려)</li>
+        <li>재장전 중 게이지바 UI</li>
+        <li class="done">총구 화염 파티클 (완료)</li>
       </ul></details>
     </div>
   </div>
@@ -271,11 +275,12 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
     <div class="d-date"><span class="date">10/10</span><span class="wd weekend-label">토</span></div>
     <div class="d-hours">4h</div>
     <div class="d-task">
-      <div class="row1"><span class="txt"><b>8방향 스폰포인트</b> 배치 + 스폰 방향 인디케이터 UI</span><span class="tag model">모델 병행</span><span class="tag issue">Issue 17</span></div>
-      <details class="checklist"><summary>작업 목록 (Issue 17 잔여)</summary><ul>
-        <li>8방향 스폰포인트 실제 배치 (SpawnDirectionPattern.Eight)</li>
-        <li>스폰 방향 인디케이터 UI (화면 가장자리, 좀비 스폰 방향에 화살표 등 표시)</li>
-        <li>WaveSpawner가 스폰 시점에 인디케이터를 트리거하도록 연결</li>
+      <div class="row1"><span class="txt"><b>지원 동기 질문 UI</b> + <b>미션 시스템 조정</b>(7일 주기)</span><span class="tag issue">Issue 9 · 10</span></div>
+      <details class="checklist"><summary>작업 목록 (Issue 9, 10)</summary><ul>
+        <li>9종 동기 목록 UI (텍스트 + 선택)</li>
+        <li>선택 결과를 <code>RunState</code> 등에 저장 (엔딩에서 참조)</li>
+        <li>MainMenu → 새 게임 시작 흐름에 연결</li>
+        <li><code>RunState.missionInterval</code>을 7로 변경, <code>missionQuota</code> 임시값 설정, 실제 플레이로 체감 확인</li>
       </ul></details>
     </div>
   </div>
@@ -284,12 +289,13 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
     <div class="d-date"><span class="date">10/11</span><span class="wd weekend-label">일</span></div>
     <div class="d-hours">4h</div>
     <div class="d-task">
-      <div class="row1"><span class="txt">지원 동기 질문 UI + <b>미션 시스템 조정</b>(7일 주기)</span><span class="tag model">모델 병행</span><span class="tag issue">Issue 9 · 10</span></div>
-      <details class="checklist"><summary>작업 목록 (Issue 9, 10)</summary><ul>
-        <li>9종 동기 목록 UI (텍스트 + 선택)</li>
-        <li>선택 결과를 RunState 등에 저장 (엔딩에서 참조)</li>
-        <li>MainMenu → 새 게임 시작 흐름에 연결</li>
-        <li>RunState.missionInterval을 7로 변경, missionQuota 임시값 설정</li>
+      <div class="row1"><span class="txt"><b>좀비 군집 처리</b>(공격 위상 분산 · 피격 무적 시간) + <b>GameUI 축소 재작성</b></span><span class="tag issue">Issue 32 · 18</span></div>
+      <details class="checklist"><summary>작업 목록 (Issue 32 일부, 18 축소판)</summary><ul>
+        <li><code>EnemyAttack</code>: 처음 붙을 때 공격 타이머를 랜덤(0~공격 간격)으로 시작</li>
+        <li><code>PlayerHealth</code>: 피격 후 짧은 무적 시간 (기본 0.3초, 인스펙터 수정)</li>
+        <li>HUD 앵커 배치 (상단좌 / 상단우 / 하단중앙)</li>
+        <li>크리스탈 · 주차/요일/시간대 · 미션 진행 · 체력바(<code>fillAmount</code>) — 핫바(Issue 6)와 배치 조율</li>
+        <li class="done">분리 조향 · 떨림 방지 · 스폰 오프셋 → MVP 이후</li>
       </ul></details>
     </div>
   </div>
@@ -298,14 +304,16 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
     <div class="d-date"><span class="date">10/12</span><span class="wd">월</span></div>
     <div class="d-hours">8h</div>
     <div class="d-task">
-      <div class="row1"><span class="txt"><b>GameUI 재작성</b>(레이아웃, 주차/요일 표시, 체력바) + 전투 피드백(총구화염, 데미지 숫자, 재장전 게이지)</span><span class="tag risk">지연 가능</span><span class="tag issue">Issue 18 · 8</span></div>
-      <details class="checklist"><summary>작업 목록 (Issue 18, 8)</summary><ul>
-        <li>HUD 레이아웃 구성 (상단좌/상단우/하단중앙 앵커 배치)</li>
-        <li>크리스탈 보유량, 주차/요일/시간대 계산 및 표시 (상단 좌측)</li>
-        <li>미션 진행 상황 표시 (상단 우측) — RunState.CurrentMission 연동</li>
-        <li>플레이어 체력바 시각화 (Image.fillAmount 기반)</li>
-        <li>총구 화염 파티클, 좀비 피격 시 머티리얼 색상 플래시</li>
-        <li>재장전 중 게이지바 UI, 좀비 피격 데미지 숫자 표시(플로팅 텍스트)</li>
+      <div class="row1"><span class="txt"><b>런 28일 엔딩</b> + <b>1차 밸런스 · 웨이브 10개</b></span><span class="tag risk">필요 12.5h · +4.5h</span><span class="tag issue">Issue 11 · 30</span></div>
+      <details class="checklist"><summary>작업 목록 (Issue 11, 30)</summary><ul>
+        <li><code>RunState</code>에 28일 도달 시 런 종료 트리거</li>
+        <li><code>RunEndUI</code> 신설 — 최종 크리스탈량 표시, 동기별 결과 텍스트 9개 연결, 메인메뉴 복귀 흐름</li>
+        <li>경제 수치 (킬 보상, 탄약·회복약·수류탄·강화·방어벽 가격)</li>
+        <li>방어·생존 수치 (플레이어 HP, 방어벽 내구도, 좀비의 방어벽 공격력)</li>
+        <li><b>웨이브 SO 10개 작성</b> (지금은 웨이브 1개뿐 — 좀비 2종으로 마릿수·방향·간격·구성 변화)</li>
+        <li>날짜별 증가 곡선 (<code>RunState.CurrentDay</code> 기반 마릿수 배율)</li>
+        <li>플레이테스트로 1차 검증 — 테스트 때 런 한 바퀴를 돌 수 있을 정도로 쉬운 쪽으로</li>
+        <li class="done">좀비 · 무기 1차 수치, 히트박스 축소 (완료)</li>
       </ul></details>
     </div>
   </div>
@@ -314,13 +322,27 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
     <div class="d-date"><span class="date">10/13</span><span class="wd">화</span></div>
     <div class="d-hours">8h</div>
     <div class="d-task">
-      <div class="row1"><span class="txt"><b>런 28일 엔딩</b> + 전투/기지 튜토리얼 구현</span><span class="tag risk">지연 가능</span><span class="tag issue">Issue 11 · 15 · 16</span></div>
-      <details class="checklist"><summary>작업 목록 (Issue 11, 15, 16)</summary><ul>
-        <li>RunState에 28일 도달 시 런 종료 트리거 추가</li>
-        <li>RunEndUI 신설 — 최종 크리스탈량 표시, 동기별 결과 텍스트 9개 연결</li>
-        <li>TutorialManager 신설 — "새 게임" 시 0일차 밤 전투 튜토리얼 진입(이어하기는 제외)</li>
-        <li>전투 튜토리얼: 이동/조준/발사/재장전/핫바전환 감지 후 단계 진행, 안내 UI</li>
-        <li>기지 튜토리얼: 미션보드 첫 미션 받기 실습(필수), 나머지 시설은 카메라 이동+텍스트 안내</li>
+      <div class="row1"><span class="txt"><b>전투 튜토리얼</b> + <b>기지 튜토리얼</b></span><span class="tag risk">필요 12h · +4h</span><span class="tag issue">Issue 15 · 16</span></div>
+      <details class="checklist"><summary>작업 목록 (Issue 15, 16)</summary><ul>
+        <li><code>TutorialManager</code> 신설 — "새 게임" 시 0일차 밤 전투 튜토리얼 진입(이어하기 제외)</li>
+        <li>이동/조준/발사/재장전/핫바전환 감지 후 단계 진행, 단계별 안내 UI, 튜토리얼 전용 쉬운 웨이브</li>
+        <li>종료 조건 처리 → 기지(Base)로 전환</li>
+        <li>기지 튜토리얼: 상점 · 소환기 · 침대 · 미션보드/출구 안내 (카메라 강제 이동 + 시설별 텍스트)</li>
+        <li>미션보드 실습 감지 (첫 미션을 받아야 다음 단계), 튜토리얼 종료 후 28일 런 시작 전환</li>
+      </ul></details>
+    </div>
+  </div>
+
+  <div class="day">
+    <div class="d-date"><span class="date">10/14</span><span class="wd">수 · 연장</span></div>
+    <div class="d-hours">연장</div>
+    <div class="d-task">
+      <div class="row1"><span class="txt"><b>초과분 이월</b> (약 11.5h) + 마지막 날 줄일 항목 판단</span><span class="tag risk">연장 허용</span><span class="tag issue">전체</span></div>
+      <details class="checklist"><summary>줄일 수 있는 후보 (마지막 날 판단)</summary><ul>
+        <li><b>#18 축소판</b>을 더 줄이기 (약 3h 중 일부)</li>
+        <li><b>튜토리얼 범위</b> 축소 (전투 / 기지 안내 일부)</li>
+        <li><b>#30 검증 단계</b> 축소 (약 2h 중 일부)</li>
+        <li>위 세 가지를 합쳐 약 3.5h를 줄일 수 있음 — 10/14를 8h로 가정하면 이월 11.5h 중 3.5h가 더 남기 때문</li>
       </ul></details>
     </div>
   </div>
@@ -328,52 +350,66 @@ footer{margin-top:32px;color:var(--sub);font-size:12.5px;font-family:var(--font-
 </div>
 
 <div class="stretch">
-<h2>여유 항목 — 92시간 표 밖, 시간 되는 데까지</h2>
-<p class="stretch-sub">MVP 필수 아님. 위 9/30~10/13 표가 끝난 뒤, 또는 각 구간에 여유가 생기면 순서대로 진행. 좀비 3종째 → 무기 3종째 → 수류탄 2·3종째 순서 권장(SessionLog 기준).</p>
-
+<h2>MVP 이후 — MVP 마일스톤 밖</h2>
+<p class="stretch-sub">여유와 보류를 "MVP 이후" 하나로 합침(가중치가 비슷해서 나눌 실익이 없음). 위 일정이 끝난 뒤, 또는 시간이 생길 때 진행. 이슈 11개 + 분리 항목 2개.</p>
   <div class="stretch-item">
-    <div class="row1"><span class="name">좀비 3번째 종류 추가 + 웨이브 10개 다양화</span><span class="tag issue">Issue 12</span></div>
-    <details class="checklist"><summary>작업 목록</summary><ul>
-      <li>좀비 3종째 스탯/AI/모델</li>
-      <li>웨이브 10개 SO 작성 — 좀비 구성 비율 변화(초반 다수 위주 → 후반 강한 소수 비중↑)</li>
-      <li>웨이브별 스폰 방향 패턴 다양화 (Four/Eight)</li>
-      <li>웨이브별 스폰 간격 조정 (구성에 맞춰서)</li>
-      <li>8방향 스폰포인트 씬 배치</li>
-      <li class="done">3D 모델은 MVP 시간 부족 시 CBT/OBT로 미뤄도 됨 (로직/밸런스만 MVP 기준 완료)</li>
-    </ul></details>
+    <div class="row1"><span class="name">조준(ADS) + 탄퍼짐</span><span class="tag issue">Issue 26</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">우클릭 조준과 무기별 퍼짐 각도. 치명타 · 신규 콘텐츠와 <b>전부 구현돼야 의미 있는 묶음</b>.</div>
   </div>
-
   <div class="stretch-item">
-    <div class="row1"><span class="name">무기 3번째 종류 추가 (돌격소총)</span><span class="tag issue">Issue 13</span></div>
-    <details class="checklist"><summary>작업 목록</summary><ul>
-      <li>돌격소총 WeaponData 작성 (높은 연사속도, 누적 빠른 반동)</li>
-      <li>밸런스 테스트 (권총/저격과 차별화되는지)</li>
-      <li class="done">3D 모델은 MVP 시간 부족 시 CBT/OBT로 미뤄도 됨</li>
-    </ul></details>
+    <div class="row1"><span class="name">치명타</span><span class="tag issue">Issue 31</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">클릭 순간 조준선이 좀비 위에 있으면 치명타(Duckov식). 밀림이 치명타를 방해하는 구조와 연결.</div>
   </div>
-
   <div class="stretch-item">
-    <div class="row1"><span class="name">수류탄 2·3번째 종류 추가</span><span class="tag issue">Issue 14</span></div>
-    <details class="checklist"><summary>작업 목록</summary><ul>
-      <li>2번째 수류탄 설계 (예: 화염/전기 등 차별화 효과)</li>
-      <li>3번째 수류탄 설계</li>
-      <li>4키 순환 전환에서 정상 작동 확인</li>
-      <li class="done">3D 모델은 MVP 시간 부족 시 CBT/OBT로 미뤄도 됨</li>
-    </ul></details>
+    <div class="row1"><span class="name">좀비 3번째 종류 · 무기 3번째(돌격소총) · 수류탄 2·3번째</span><span class="tag issue">Issue 12 · 13 · 14</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">패스트 좀비, 소총(반동 튜닝 기준 무기), 슬로우 수류탄과 적 감속 효과. 위 묶음과 함께.</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">ZWD 맵 확장 + 스폰 방향 인디케이터</span><span class="tag issue">Issue 17</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">8방향 스폰포인트는 4방향 유지로 제외. 웨이브 선택 화면에서 이미 방향을 보여줌.</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">방어벽 내구도 표시 UI</span><span class="tag issue">Issue 20</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">Issue 8의 데미지 숫자 방식으로 얹으면 약 1h.</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">방어벽 승강 기능</span><span class="tag issue">Issue 21</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">8방향 확장(보류)과 함께 필요한 작업.</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">웨이브 진입 전 장비 선택 테이블</span><span class="tag issue">Issue 24</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">무기가 2종뿐이라 선택의 의미가 약함 — 무기 3종 이상일 때 재검토.</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">방어구 관통</span><span class="tag issue">Issue 27</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">헤비 HP만으로 저격총의 역할이 이미 생겨서 필요성이 약함.</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">3D 모델 적용 + 최종 밸런스</span><span class="tag issue">Issue 19</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">MVP 코딩 예산 밖. 별도 진행.</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">(분리 항목) 좀비 분리 조향 · 떨림 방지 · 스폰 오프셋</span><span class="tag issue">Issue 32</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">이슈는 MVP에 남고 이 항목들만 MVP 이후 (약 2h).</div>
+  </div>
+  <div class="stretch-item">
+    <div class="row1"><span class="name">(분리 항목) 좀비 피격 플래시</span><span class="tag issue">Issue 8</span></div>
+    <div style="font-size:12.5px;color:var(--sub)">이슈는 MVP에 남고 이 항목만 MVP 이후 (약 1h). 피격 이펙트(피 터짐)가 이미 있음.</div>
   </div>
 </div>
 
 <div class="notes">
 <h2>읽는 법 · 위험 평가</h2>
 <ul>
-<li>진행 순서는 이슈 번호(1~18) 순이 아니라 <b>작업 흐름 기준</b>으로 재배열: 상점 → 좀비+방어벽(연관) → 무기 다중화·반동·수류탄(가장 무거운 작업, 중간에 몰아서) → 회복약+핫바(슬롯 연동 자연스러움) → 맵 확장+스폰인디케이터 → 지원동기+미션조정 → GameUI 재작성+전투피드백(데이터가 갖춰진 뒤에 레이아웃) → 엔딩+튜토리얼(맨 마지막).</li>
-<li><b>10/5~10/9</b>: 무기 다중화 아키텍처 재설계 + 반동 + 수류탄 신설이 겹치는 구간이라 지연 가능성이 가장 높다.</li>
-<li><b>10/12~10/13</b>: GameUI 재작성 · 전투 피드백 · 엔딩 · 튜토리얼 2개가 마지막 이틀에 몰려 있어, 실제로는 <code>10/14~15</code>로 자연 연장될 가능성이 가장 높은 지점.</li>
-<li>92시간 예산은 그대로 유지하고 새 작업을 최대한 욱여넣어 시도하되, 안 되면 10/14~15로 연장하는 것을 허용 — 칼같이 맞춰야 한다는 강박은 없음.</li>
-<li>3D 모델 제작(좀비 2종·무기 2종·수류탄 1종·방어벽)은 이 표와 별개로 <b>주말</b>(10/3~4, 10/10~11)에 병행 진행하는 별도 예산.</li>
+<li>9/30~10/7은 기존 일정 그대로 두고, <b>10/8부터</b> 열린 이슈 24개를 "MVP 13개 / MVP 이후 11개"로 다시 나눠 재배분했다. 이슈 #32와 #8은 쪼개지 않고 MVP에 두되, 분리 조향과 피격 플래시만 MVP 이후로 본다(두 이슈는 MVP 기간에 완전히 닫히지 않을 수 있음).</li>
+<li><b>용량 초과</b>: 10/8~10/13의 용량은 36h(8h + 4h·3일 + 8h·2일)인데 남은 작업은 47.5h. 하루 용량을 넘는 날은 10/8(+2h), 10/9(+1.5h), 10/12(+4.5h), 10/13(+4h)이고, 앞날의 초과분이 뒷날로 밀리는 구조라 <b>10/12~10/13에 쌓임</b>. 약 11.5h는 10/14로 이월.</li>
+<li><b>10/14를 8h로 가정해도 3.5h가 더 필요</b> — 줄일 수 있는 후보(#18 축소판, 튜토리얼 범위, #30 검증 단계)는 마지막 날 판단하기로 함. 그전까지는 줄이지 않고 계획대로 진행.</li>
+<li><b>10/12</b>가 가장 위험한 날: 엔딩(4h) + 밸런스·웨이브 10개(8.5h). 웨이브 SO 10개(약 3.5h)는 앞날 남는 시간에 미리 해두면 부담이 줄어든다.</li>
+<li>웨이브는 <b>지금 1개뿐</b>이라 Issue 30에서 10개를 만든다(좀비 2종이라도 마릿수·방향·간격으로 변화). 탄퍼짐(ADS)이 MVP 이후라 유효 TTK가 약 2초로 쉬워졌지만, 테스트에서 한 번에 런 한 바퀴를 돌 수 있도록 <b>그대로 쉽게</b> 간다.</li>
+<li>3D 모델 제작과 최종 밸런스는 Issue 19로 MVP 이후 별도 진행(10/7 이전 표의 "모델 병행" 표시는 그 당시 기록).</li>
 </ul>
 </div>
 
-<footer>No Questions Asked · SessionLog.md "MVP 일정 재배분 2차" 기준 · 2026-09-29 확정</footer>
+<footer>No Questions Asked · SessionLog.md "MVP 범위 재정리 + 최신 일정" 기준 · 2026-10-08 갱신</footer>
 
 </main>

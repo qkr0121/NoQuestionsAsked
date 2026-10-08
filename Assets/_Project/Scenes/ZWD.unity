@@ -486,7 +486,7 @@ MonoBehaviour:
   initialZoom: 1
   zoomSpeed: 10
   minZoom: 0.5
-  maxZoom: 1
+  maxZoom: 2
   useBounds: 0
   minBounds: {x: 0, y: 0}
   maxBounds: {x: 0, y: 0}

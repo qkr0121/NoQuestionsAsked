@@ -72,17 +72,17 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.8
+      value: 2.8
       inSlope: 0
-      outSlope: 0.06666666
+      outSlope: 0.23333335
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
       time: 3
-      value: 1
-      inSlope: 0.06666666
+      value: 3.5
+      inSlope: 0.23333335
       outSlope: 0
       tangentMode: 0
       weightedMode: 0
@@ -92,7 +92,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   horizontalKick: 0
-  maxRecoilPush: 1.5
+  maxRecoilPush: 5
   maxRecoilAngle: 0
   pushRecoveryRate: 1
   angleRecoveryRate: 4
