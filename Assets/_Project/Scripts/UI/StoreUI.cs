@@ -15,16 +15,14 @@ public class StoreUI : MonoBehaviour
     [SerializeField] private GameObject barricadeMenuGroup;
     [SerializeField] private GameObject consumableGroup;
 
-    [Header("무기 강화")]
-    [SerializeField] private TMP_Text weaponLevelText;
-    [SerializeField] private TMP_Text weaponUpgradeCostText;
-    [SerializeField] private Button weaponUpgradeButton;
+    [Header("무기 탭")]
+    [SerializeField] private WeaponTabUI weaponTab;
 
     [Header("방어벽 행")]
     [SerializeField] private BarricadeRowUI[] barricadeRows;
 
     [Header("소모품 행")]
-    [SerializeField] private AmmoRowUI ammoRow;
+    [SerializeField] private AmmoRowUI[] ammoRows;   // 무기 슬롯마다 한 행
     [SerializeField] private PotionRowUI potionRow;
     [SerializeField] private GrenadeRowUI grenadeRow;
 
@@ -51,7 +49,7 @@ public class StoreUI : MonoBehaviour
         barricadeMenuGroup.SetActive(false);
         consumableGroup.SetActive(false);
 
-        RefreshWeaponUpgrade();
+        weaponTab.Show();
     }
 
     public void ShowBarricadeMenu()
@@ -72,34 +70,14 @@ public class StoreUI : MonoBehaviour
         barricadeMenuGroup.SetActive(false);
         consumableGroup.SetActive(true);
 
-        ammoRow.Refresh();
+        foreach (AmmoRowUI row in ammoRows)
+        {
+            // 사지 않은 무기의 탄약은 살 수 없으므로 행 자체를 숨김
+            bool unlocked = PlayerWeapon.Instance.GetSlot(row.WeaponIndex).IsUnlocked;
+            row.gameObject.SetActive(unlocked);
+            if (unlocked) row.Refresh();
+        }
         potionRow.Refresh();
         grenadeRow.Refresh();
-    }
-
-    private void RefreshWeaponUpgrade()
-    {
-        weaponLevelText.text = $"{PlayerWeapon.Instance.CurrentLevel}단계";
-
-        if(PlayerWeapon.Instance.IsMaxLevel)
-        {
-            weaponUpgradeCostText.text = "최대 강화";
-            weaponUpgradeButton.interactable = false;
-        }
-        else
-        {
-            weaponUpgradeCostText.text = $"{PlayerWeapon.Instance.NextUpgradeCost} 크리스탈";
-            weaponUpgradeButton.interactable = true;
-        }
-    }
-
-    public void OnWeaponUpgradeClicked()
-    {
-        int cost = PlayerWeapon.Instance.NextUpgradeCost;
-        ConfirmationDialog.Instance.Show($"{cost} 크리스탈로 강화하시겠습니까?", () =>
-        {
-            PlayerWeapon.Instance.TryUpgrade();
-            RefreshWeaponUpgrade();
-        });
     }
 }

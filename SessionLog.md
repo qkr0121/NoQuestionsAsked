@@ -1,8 +1,34 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-10-02
+마지막 업데이트: 2026-10-08
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
+
+## ⭐ Issue 29 상점 무기 탭 UI 구현 완료 (2026-10-08) — 코드·씬 연결·플레이 확인까지 끝, 커밋 전
+
+**결과**: 상점 무기 탭이 목록 + 상세 구조가 됨. 저격총은 잠긴 상태(회색, "잠김", 구매 버튼, 1레벨 스탯 미리보기)로 보이다가 구매하면 열림. 소모품 탭의 탄약 구매는 무기별 행으로 바뀜(저격총 탄약 구매 추가).
+
+**설계 결정(사용자 승인)**
+- **상세는 스탯 8줄을 항상 전부 보여주고, 다음 레벨에서 값이 바뀌는 줄만 `→ 값`을 표시**(현재/다음을 문자열로 비교 — 화면에 같게 찍히면 안 바뀐 것). 표시 항목: 공격력·발사 간격·재장전·탄창·예비 탄약 상한·반동(밀림)·사격 중 이동 속도·재장전 중 이동 속도. **탄퍼짐(`spreadScale`)은 ADS 구현(Issue 26) 전까지 효과가 없어 표시 안 함** — 구현 후 `WeaponTabUI.StatDefs`에 한 줄 + StatRow 1개만 추가하면 됨. 증감값 `(+9)`는 줄이 길어져서 생략.
+- **탄약 구매는 소모품 탭에 무기별 행**(`AmmoRowUI.weaponIndex`, 라벨은 `탄약(권총)` 형식). 잠긴 무기의 행은 `StoreUI.ShowConsumables`가 꺼서 숨김.
+- **해금**: `WeaponData.unlockCost`(0이면 처음부터 해금 = 권총, 별도 "기본 해금" 필드 없음), `displayName` 추가. **저격총 해금 가격은 임시 500**(경제는 Issue 30). 해금해도 자동 장착은 안 됨(핫바 #6이 담당). `EquipWeapon`은 잠긴 슬롯을 거부.
+- **상점에서 "선택"과 전투의 "장착"은 분리**. 상점을 열면 처음 선택은 **현재 장착한 무기**. 버튼은 상태에 따라 구매/강화/강화 MAX, 흐름은 확인창 → 실행, 크리스탈 부족하면 토스트.
+
+**코드 구조**
+- `PlayerWeapon.WeaponSlot`에 조회 멤버를 옮김: `IsUnlocked`, `Stats`, `IsMaxLevel`, `NextUpgradeCost`, `GetAmmoFillAmount/GetAmmoCost/GetMaxAffordableBundles`(슬롯은 조회만, 크리스탈 소비는 안 함). `PlayerWeapon`은 `GetSlot(i)`, `SlotCount`, `EquippedIndex`와 **크리스탈을 쓰는 세 동작 `TryUnlock(i)`, `TryUpgrade(i)`, `TryBuyAmmo(i, bundle)`**만 가짐. 장착 기준 `IsMaxLevel`/`NextUpgradeCost`/인자 없는 `TryUpgrade()`/장착 기준 탄약 구매 API는 삭제(상점 전용이었음). `Awake`는 `ResetWeapon()`을 호출(초기화 중복 제거). 처음 초안은 `GetLevel(i)` 같은 한 줄 전달 메서드가 10개였는데 "슬롯을 내주는" 구조로 줄임.
+- 신규 `WeaponTabUI`(선택·갱신·강화/구매 지휘, `Func<LevelStats,string>` 형식 목록 `StatDefs`), `WeaponRowUI`(목록 한 행, `Init(Action)`으로 클릭 연결 — 행이 자기 번호를 몰라도 되게), `StatRowUI`(스탯 한 줄, 값이 안 바뀌면 `NextText`를 끔). `StoreUI`는 무기 탭을 `WeaponTabUI`에 위임하고 `ammoRows[]` 배열을 가짐.
+
+**UI 계층(Base 씬, 사용자 작업)**: `StoreUI`(스크립트, 화면 전체·여백 0) > `StorePanel`(앵커 0.1~0.9 × 0.1~0.8, 비율 여백) > `MainGroup`(**위 고정 높이 160**, Title·CloseButton·TabLayout) + `ContentArea`(Top 160으로 나머지를 채움) > `WeaponUpgradeGroup`(`WeaponTabUI`) > `WeaponList`(Vertical Layout, `WeaponRow_0/1`: Image+Button+`WeaponRowUI`, 자식 NameText·StatusText·SelectedMark·LockedMark) / `WeaponDetail`(NameText·LevelText·`StatRows`(Vertical Layout, StatRow ×8)·CostText·ActionButton).
+- **배운 점**: ① 헤더를 비율(위 20%)로 잡으면 화면이 가로로 길어질 때 고정 픽셀 자식(Title+탭)이 겹침 → **헤더 고정 높이 + `ContentArea`(Top 값 하나)**로 변경. 헤더 높이를 바꿀 땐 `MainGroup` Height와 `ContentArea` Top 두 곳만. ② `StatRow`는 Horizontal Layout 대신 **자식 3개를 앵커로 칸 분할** — `NextText`가 껐다 켜지므로 레이아웃 그룹은 열이 어긋남. ③ Vertical Layout에서 줄을 폭만 채우려면 Control Child Size Width + **Force Expand Width 유지**, 높이는 줄 자체 Height를 고정. ④ 앵커는 **앵커·피벗 먼저, 여백은 마지막에** 입력(앵커를 바꾸면 Unity가 여백을 자동 보정). ⑤ `AmmoRow` 복제 시 `weaponIndex`를 1로 바꾸고 필드가 복제본 자신의 자식을 가리키는지 확인.
+
+**폰트 이슈(`→` 미표시)**: `SCDream5 SDF`는 **Static 아틀라스 + 폴백 목록이 비어 있어서** `→`(U+2192)가 안 나옴(Console의 "character not found" 경고). 본 에셋은 건드리지 않고 **별도 에셋 `SCDream5 SDF_1`(Source `SCDream5.otf`, Unicode Range `2192`, SDFAA)을 만들어 `SCDream5 SDF`의 Fallback에 등록**. 처음 `Sampling Point Size`를 Auto Sizing으로 했더니 글자 모양이 아니라 사각형으로 채워짐 → **본 폰트와 같은 Custom Size 21 + Padding 5**로 다시 생성해 해결. 새 폰트 에셋과 `.meta`는 반드시 커밋에 포함할 것.
+
+**남은 일 / 주의**
+- **세이브(Issue 23)**: 저격총 해금 상태와 무기별 레벨이 저장되지 않음 → 이어하기 시 저격총이 다시 잠김(`LoadFrom`은 여전히 장착 무기 하나만 복원). 내일 #23에서 `unlocked[]`·`levels[]` 등 무기별로 저장.
+- **핫바(#6)**: `PlayerShoot`의 1/2 테스트 키 제거, 구매 후 자동 장착 없음, `PlayerWeapon.SlotCount`는 핫바에서 쓸 예정.
+- **초광폭 확인**: `WeaponDetail` 높이가 줄면(21:9 등) 위쪽 + 스탯 352 + 아래쪽 70이 맞닿을 수 있음 → 그때 StatRow 높이를 40 → 36 등으로.
+- `StoreUI.cs` 상단의 사용하지 않는 `using`(UnityEngine.UI·TMPro·System) 정리는 선택. `WeaponData`/`WD_Pistol`·`WD_Sniper`에 `displayName`(권총/저격총)·`unlockCost`(0/500) 입력 완료.
+- Notion C# 데이터베이스에 `Func<> / Action 델리게이트` 페이지 추가(사용자 요청, 이번 코드 예시 포함).
 
 ## ⭐ MVP 범위 재정리 + 최신 일정 (2026-10-08 확정, 사용자 결정) — 아래 옛 일정표들보다 이 섹션이 우선
 

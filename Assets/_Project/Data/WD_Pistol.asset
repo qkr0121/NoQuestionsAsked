@@ -63,6 +63,8 @@ MonoBehaviour:
     fireSlowMultiplier: 0.5
     reloadSlowMultiplier: 0.85
     upgradeCost: 400
+  displayName: "\uAD8C\uCD1D"
+  unlockCost: 0
   startingReserveAmmo: 60
   ammoCostPerRound: 4
   bulletSpeed: 300

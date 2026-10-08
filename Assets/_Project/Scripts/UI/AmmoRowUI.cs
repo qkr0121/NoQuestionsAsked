@@ -4,6 +4,8 @@ using TMPro;
 
 public class AmmoRowUI : MonoBehaviour
 {
+    [SerializeField] private int weaponIndex;           // PlayerWeapon 슬롯 번호 - 행마다 다르게 설정
+    [SerializeField] private TMP_Text weaponNameText;   // "권총", "저격총"
     [SerializeField] private TMP_Text reserveText;      // "88 / 100"
     [SerializeField] private TMP_Text bundleCountText;  // "2"
     [SerializeField] private TMP_Text fillAmountText;   // "+12발"
@@ -13,6 +15,8 @@ public class AmmoRowUI : MonoBehaviour
     [SerializeField] private Button buyButton;
 
     private int bundleCount = 1;
+
+    public int WeaponIndex => weaponIndex;
 
     private void Awake()
     {
@@ -28,16 +32,18 @@ public class AmmoRowUI : MonoBehaviour
 
     public void Refresh()
     {
-        int maxBundles = PlayerWeapon.Instance.GetMaxAffordableBundles();
+        PlayerWeapon.WeaponSlot slot = PlayerWeapon.Instance.GetSlot(weaponIndex);
+        int maxBundles = slot.GetMaxAffordableBundles();
         bundleCount = Mathf.Clamp(bundleCount, 1, Mathf.Max(1,maxBundles));
 
-        reserveText.text = $"{PlayerWeapon.Instance.ReserveAmmo} / {PlayerWeapon.Instance.MaxReserveAmmo}";
+        weaponNameText.text = $"탄약({slot.data.displayName})";
+        reserveText.text = $"{slot.ReserveAmmo} / {slot.Stats.maxReserveAmmo}";
         bundleCountText.text = bundleCount.ToString();
 
-        int fillAmount = PlayerWeapon.Instance.GetAmmoFillAmount(bundleCount);
+        int fillAmount = slot.GetAmmoFillAmount(bundleCount);
         fillAmountText.text = $"+{fillAmount}발";
 
-        int cost = PlayerWeapon.Instance.GetAmmoCost(bundleCount);
+        int cost = slot.GetAmmoCost(bundleCount);
         totalCostText.text = $"{cost} 크리스탈";
 
         bool canBuy = maxBundles > 0;
@@ -60,10 +66,11 @@ public class AmmoRowUI : MonoBehaviour
 
     private void OnBuyClicked()
     {
-        int cost = PlayerWeapon.Instance.GetAmmoCost(bundleCount);
-        ConfirmationDialog.Instance.Show($"{cost} 크리스탈로 탄약을 구매하시겠습니까?", () =>
+        PlayerWeapon.WeaponSlot slot = PlayerWeapon.Instance.GetSlot(weaponIndex);
+        int cost = slot.GetAmmoCost(bundleCount);
+        ConfirmationDialog.Instance.Show($"{slot.data.displayName} 탄약을 {cost} 크리스탈로 구매하시겠습니까?", () =>
         {
-            if (!PlayerWeapon.Instance.TryBuyAmmo(bundleCount))
+            if (!PlayerWeapon.Instance.TryBuyAmmo(weaponIndex, bundleCount))
             {
                 ToastMessage.Instance.Show("크리스탈이 부족합니다.");
                 return;

@@ -23,6 +23,10 @@ public class WeaponData : ScriptableObject
     [Header("레벨별 스탯 (인덱스 0 = 1레벨, 강화 대상)")]
     public LevelStats[] levels = { new LevelStats(), new LevelStats(), new LevelStats(), new LevelStats(), new LevelStats() };
 
+    [Header("표시 / 해금")]
+    public string displayName = "무기";
+    public int unlockCost;  // 0이면 처음부터 해금(권총). 상점에서 사서 여는 무기만 값을 넣음
+
     [Header("계열 고유 특성(강화 대상 아님)")]
     public int startingReserveAmmo = 60;
     public int ammoCostPerRound = 4; // 묶음 가격이 아니라 한 발 가격 - 탄창이 커져도 발당 가격이 그대로이도록

@@ -10,6 +10,23 @@ public class PlayerWeapon : MonoBehaviour
         public int CurrentLevel { get; set; } = 1;
         public int MagazineAmmo { get; set; }
         public int ReserveAmmo { get; set; }
+        public bool IsUnlocked { get; set; }
+
+        public WeaponData.LevelStats Stats => data.GetStats(CurrentLevel);
+        public bool IsMaxLevel => CurrentLevel >= data.MaxLevel;
+        // 다음 레벨 줄에 적힌 비용이 곧 그 레벨로 올리는 비용 (최대 레벨에서는 호출 금지)
+        public int NextUpgradeCost => data.GetStats(CurrentLevel + 1).upgradeCost;
+
+        // 상한을 넘는 만큼은 받지 않으므로, 비용도 실제로 받는 탄약 수 기준으로 계산함
+        public int GetAmmoFillAmount(int bundleCount) => Mathf.Min(bundleCount * Stats.magazineSize, Stats.maxReserveAmmo - ReserveAmmo);
+        public int GetAmmoCost(int bundleCount) => GetAmmoFillAmount(bundleCount) * data.ammoCostPerRound;
+
+        public int GetMaxAffordableBundles()
+        {
+            int needed = Stats.maxReserveAmmo - ReserveAmmo;
+            if (needed <= 0) return 0;
+            return Mathf.CeilToInt((float)needed / Stats.magazineSize);
+        }
     }
 
     public static PlayerWeapon Instance { get; private set; }
@@ -17,13 +34,13 @@ public class PlayerWeapon : MonoBehaviour
     [SerializeField] private WeaponSlot[] weaponSlots; // 인스펙터에서 보유 무기 목록 채움
     private int equippedIndex = 0;
     private WeaponSlot Equipped => weaponSlots[equippedIndex];
-    private WeaponData.LevelStats Stats => Equipped.data.GetStats(Equipped.CurrentLevel);
+    private WeaponData.LevelStats Stats => Equipped.Stats;
     public WeaponData Data => Equipped.data;
 
+    public int SlotCount => weaponSlots.Length;
+    public int EquippedIndex => equippedIndex;
+
     public int CurrentLevel => Equipped.CurrentLevel;
-    public bool IsMaxLevel => Equipped.CurrentLevel >= Equipped.data.MaxLevel;
-    // 다음 레벨 줄에 적힌 비용이 곧 그 레벨로 올리는 비용
-    public int NextUpgradeCost => Equipped.data.GetStats(Equipped.CurrentLevel + 1).upgradeCost;
 
     public int CurrentDamage => Stats.damage;
     public float FireInterval => Stats.fireInterval;
@@ -42,26 +59,37 @@ public class PlayerWeapon : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        foreach(WeaponSlot slot in weaponSlots)
-        {
-            slot.MagazineAmmo = slot.data.GetStats(1).magazineSize;
-            slot.ReserveAmmo = slot.data.startingReserveAmmo;
-        }
+        ResetWeapon();
     }
+
+    // 상점은 장착 무기와 무관하게 아무 슬롯이나 조회·강화하므로 슬롯을 통째로 내줌
+    public WeaponSlot GetSlot(int index) => weaponSlots[index];
 
     public void EquipWeapon(int index)
     {
         if (index < 0 || index >= weaponSlots.Length) return;
+        if (!weaponSlots[index].IsUnlocked) return;
         equippedIndex = index;
     }
 
-    public bool TryUpgrade()
+    public bool TryUnlock(int index)
     {
-        if (IsMaxLevel) return false;
-        if (!CurrencyManager.Instance.TrySpend(NextUpgradeCost)) return false;
+        WeaponSlot slot = weaponSlots[index];
+        if (slot.IsUnlocked) return false;
+        if (!CurrencyManager.Instance.TrySpend(slot.data.unlockCost)) return false;
+
+        slot.IsUnlocked = true;
+        return true;
+    }
+
+    public bool TryUpgrade(int index)
+    {
+        WeaponSlot slot = weaponSlots[index];
+        if (!slot.IsUnlocked || slot.IsMaxLevel) return false;
+        if (!CurrencyManager.Instance.TrySpend(slot.NextUpgradeCost)) return false;
 
         // 탄창이 커져도 현재 탄창의 탄은 그대로 - 다음 장전부터 커진 크기가 적용됨
-        Equipped.CurrentLevel++;
+        slot.CurrentLevel++;
         return true;
     }
 
@@ -87,25 +115,14 @@ public class PlayerWeapon : MonoBehaviour
         Equipped.ReserveAmmo += amount;
     }
 
-    // 상한을 넘는 만큼은 받지 않으므로, 비용도 실제로 받는 탄약 수 기준으로 계산함
-    public int GetAmmoFillAmount(int bundleCount) => Mathf.Min(bundleCount * MagazineSize, MaxReserveAmmo - ReserveAmmo);
-    public int GetAmmoCost(int bundleCount) => GetAmmoFillAmount(bundleCount) * Equipped.data.ammoCostPerRound;
-
-    public int GetMaxAffordableBundles()
+    public bool TryBuyAmmo(int index, int bundleCount)
     {
-        int needed = Stats.maxReserveAmmo - ReserveAmmo;
-        if (needed <= 0) return 0;
-        return Mathf.CeilToInt((float)needed / Stats.magazineSize);
-    }
-
-    public bool TryBuyAmmo(int bundleCount)
-    {
-        int amount = GetAmmoFillAmount(bundleCount);
+        WeaponSlot slot = weaponSlots[index];
+        int amount = slot.GetAmmoFillAmount(bundleCount);
         if (amount <= 0) return false;
-        if (!CurrencyManager.Instance.TrySpend(GetAmmoCost(bundleCount))) return false;
+        if (!CurrencyManager.Instance.TrySpend(slot.GetAmmoCost(bundleCount))) return false;
 
-        Equipped.ReserveAmmo += amount;
-        Debug.Log($"탄약 {amount}발 구매 완료. 현재 예비탄약: {Equipped.ReserveAmmo}/{Stats.maxReserveAmmo}");
+        slot.ReserveAmmo += amount;
         return true;
     }
 
@@ -123,6 +140,7 @@ public class PlayerWeapon : MonoBehaviour
             slot.CurrentLevel = 1;
             slot.MagazineAmmo = slot.data.GetStats(1).magazineSize;
             slot.ReserveAmmo = slot.data.startingReserveAmmo;
+            slot.IsUnlocked = slot.data.unlockCost <= 0;
         }
         equippedIndex = 0;
     }
