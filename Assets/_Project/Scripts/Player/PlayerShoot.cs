@@ -8,9 +8,12 @@ public class PlayerShoot : MonoBehaviour
     [SerializeField] private ParticleSystem muzzleFlash;    // FirePoint 자식, 비워둬도 동작
 
     private float reloadTimer;
+    private float reloadDuration;   // 재장전 시작 때 저장 - 진행률 계산에 필요
     private bool isReloading;
 
     public bool IsReloading => isReloading;
+    // 재장전 게이지용 진행률 (0~1)
+    public float ReloadProgress => isReloading && reloadDuration > 0f ? 1f - reloadTimer / reloadDuration : 0f;
     public float LastFireTime { get; private set; } = -999f; // 시작하자마자 감속 상태로 판정되지 않도록 아주 과거 값 
 
     private void Update()
@@ -57,7 +60,8 @@ public class PlayerShoot : MonoBehaviour
         if (!PlayerWeapon.Instance.CanReload) return;
 
         isReloading = true;
-        reloadTimer = PlayerWeapon.Instance.ReloadTime;
+        reloadDuration = PlayerWeapon.Instance.ReloadTime;
+        reloadTimer = reloadDuration;
     }
 
     private void Fire()

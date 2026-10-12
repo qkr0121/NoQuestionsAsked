@@ -5,6 +5,7 @@ using UnityEngine;
 public class EnemyHealth : MonoBehaviour
 {
     [SerializeField] private int maxHealth = 30;
+    [SerializeField] private float damageNumberHeight = 1.5f;   // 좀비 위치에서 머리 위까지 높이 - 프리팹마다 조정
 
     private int currentHealth;
     private bool isDead;
@@ -33,6 +34,12 @@ public class EnemyHealth : MonoBehaviour
     public void TakeDamage(int amount)
     {
         if (isDead) return;
+
+        // 표시 값은 무기 데미지 그대로 (남은 체력보다 커도 줄이지 않음) - 풀이 없어도 전투가 멈추지 않게 null 검사
+        if (DamageNumberPool.Instance != null)
+        {
+            DamageNumberPool.Instance.Show(amount, transform.position + Vector3.up * damageNumberHeight);
+        }
 
         currentHealth -= amount;
         if(currentHealth <= 0)

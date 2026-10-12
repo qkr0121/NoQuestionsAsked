@@ -4,6 +4,26 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
+## ⭐ Issue 8 전투 피드백 — 데미지 숫자 + 재장전 게이지 구현 완료 (코드·씬 연결·플레이 확인까지 끝, 커밋 전)
+
+**범위(사용자 결정)**: 이번엔 **데미지 숫자 + 재장전 게이지바**만. **좀비 피격 플래시는 MVP 이후**(이슈 #8은 그 항목 때문에 안 닫힘), 좀비 체력바는 만들지 않고 숫자로 대체(이슈 설계), **회복약 회복 숫자(`+30`)는 제외**(필수 아님), 치명타 스타일은 Issue 31.
+
+**데미지 숫자 — 설계**
+- 호출 지점은 **`EnemyHealth.TakeDamage` 한 곳**(총알 `Projectile.ApplyHit`과 수류탄 `Grenade.Explode`가 이미 여기를 지남, 이미 죽은 좀비는 `isDead`로 앞에서 return돼 중복 표시 없음). 표시 값은 **무기 데미지 그대로**(체력이 10 남아도 25를 맞히면 25 — 줄이면 강화 효과가 안 느껴짐). 풀이 없어도 전투가 멈추지 않게 `DamageNumberPool.Instance != null` 검사(이 호출이 데미지 적용 앞에 있어서 예외가 나면 좀비가 안 죽을 수 있음).
+- **월드 공간 TextMeshPro(3D) 풀링**(`DamageNumberPool` + `DamageNumber`, `EffectPool` 패턴, 동시 표시 상한 `maxActive` 30 — 초과분은 생략, 이슈의 "대량 스폰 시 성능 고려"). Overlay 캔버스 + `WorldToScreenPoint` 방식은 대량일 때 비용이 커서 제외.
+- **줌 보정(사용자 지적: "줌에 따라 크기가 달라지는 것 아니냐")**: `CameraFollow`가 카메라를 `offset × zoomLevel`로 이동하는 **원근 카메라**라 월드 공간 숫자는 줌아웃하면 작아짐(예: maxZoom 2면 절반). 숫자를 띄울 때 **카메라 앞쪽 깊이에 비례해 크기를 키움**: `scale = baseScale × depth / referenceDepth`, `depth = dot(대상 − 카메라, 카메라 forward)`(유클리드 거리가 아니라 깊이여야 화면 크기가 일정). `referenceDepth` 14.4 = 기본 카메라 `offset`(0, 12, −8)의 크기 — **카메라 offset을 바꾸면 이 값도 맞출 것**. 상승 속도와 가로 흩뿌림도 같은 비율로 키워 화면에서 보이는 속도·간격이 줌과 무관. 숫자는 `cam.transform.rotation`을 그대로 써서 화면에 정면으로 섬(비스듬히 보이지 않음). 카메라가 위에서 내려다보면 월드 위쪽이 화면에서는 `cos(피치)`배(약 0.56)만 올라가 보이므로 `Rise Speed`로 조정.
+- **세팅 함정**: ① 3D TMP 기본 Rect가 **20×5에 정렬 `TopLeft`**라 글자가 박스 왼쪽 끝에서 시작해 **좀비 기준 왼쪽으로 약 10 단위** 떨어진 곳에 떴음 → 정렬을 가운데(Center/Middle)로, Rect를 작게. ② 기본 셰이더는 깊이 검사로 바닥·좀비에 가려져서 **`Distance Field Overlay`** 필요. ③ **셰이더를 폰트의 공유 머티리얼에 직접 바꿔서 `SCDream5 SDF.asset`(`SCDream5 SDF Material`의 `m_Shader`가 `TMP_SDF` → `Overlay`)이 커밋 변경에 들어감** — 이 폰트를 쓰는 모든 TMP가 Overlay 셰이더가 됨(지금은 UI 텍스트가 대부분이라 시각 차이는 없음). 권장은 **머티리얼 프리셋을 따로 만들어 `DamageNumber`에만 쓰고 공유 머티리얼은 원복**(월드 공간 TMP를 더 쓰게 되면 문제가 될 수 있음). 좀비 프리팹의 `damageNumberHeight`는 기본 1.5(피벗 위치에 따라 조정).
+
+**재장전 게이지 — 설계**
+- **캐릭터 머리 위(사용자 판단)**. 처음엔 에임 포인터 근처를 추천했으나, 재장전 중에는 이동이 느려져 **시선이 캐릭터와 주변 좀비에 가 있고 포인터는 쏘지 않는 동안 주목받지 않으므로** 머리 위가 맞음(내 전제가 틀렸음).
+- **Player 프리팹의 `AimPointerCanvas`(Overlay)에서 매 프레임 머리 위 월드 좌표를 화면 좌표로 변환**(`PlayerAim.WorldToScreen`) — 픽셀 크기가 항상 일정해 별도 거리 보정이 필요 없고, 같은 프리팹 안이라 `PlayerShoot`·`PlayerAim`을 인스펙터로 직접 연결(핫바처럼 코드 주입 불필요). 월드 공간 캔버스는 숫자와 같은 줌 문제가 있어 제외.
+- `PlayerShoot.ReloadProgress`(0~1) = `1 − reloadTimer / reloadDuration`, 재장전 시작 때 총 시간을 `reloadDuration`에 저장(권총 1.5초·저격총 3초가 각자 길이로 참). 채움은 `Image.Filled`(스프라이트 필요) 대신 **자식 `Fill`의 가로 스케일**(피벗 왼쪽 가운데, 앵커 stretch). 재장전 취소(무기 교체·수류탄)·종료·UI 패널 열림(`PlayerInputLock`) 시 숨김. 구조: `ReloadGaugeHolder`(`ReloadGaugeUI`) > `ReloadGauge`(배경 80×10, 어두운 반투명) > `Fill`(노랑).
+- **세팅 함정**: `ReloadGaugeUI.root` 필드를 홀더 자신에 연결하면 스크립트가 `root.SetActive(false)`로 **자기 오브젝트를 꺼서 `LateUpdate`가 멈추고 게이지가 영영 안 켜짐** → `root`는 반드시 홀더의 **자식**(`ReloadGauge`).
+
+**풀 위치 정리(사용자 제안, 코드 수정 없음)**: `DamageNumberPool`과 `EffectPool`을 `PersistentManagers`에서 **ZWD 씬으로 이동**. 근거: `EffectPool`은 `Projectile.ApplyHit`(좀비를 맞혔을 때만)에서만, `DamageNumberPool`은 `EnemyHealth.TakeDamage`에서만 쓰이는데 `EnemyHealth`는 `NormalZombie`/`HeavyZombie` 프리팹에만 있고 Base·MainMenu·ZWD에 직접 배치된 것이 없어 **좀비는 ZWD의 `EnemyPool`로만 생성** → 두 풀은 ZWD에서만 필요. 이득: 풀링해 둔 오브젝트가 ZWD를 나갈 때 같이 사라짐(숫자가 뜬 채 씬이 바뀌어도 정리됨), `PersistentManagers`에는 런 전체 상태만 남음. 세 풀(`EnemyPool`·`DamageNumberPool`·`EffectPool`)은 **빈 부모 `Pools`(위치 0·회전 0·스케일 1) 아래 자식으로** 묶음(각 풀이 `Instantiate(prefab, transform)`으로 자기 자식에 만들기 때문에 컴포넌트를 한 오브젝트에 몰면 좀비·숫자·파티클이 섞임, 스케일이 1이 아니면 숫자 보정이 어긋남). **`ProjectilePool`은 남김**(Base 연습 구역에서도 총알을 씀). 나중에 Base에 `EnemyHealth` 달린 허수아비를 두면 Base에도 풀이 필요하거나 `Projectile`의 `EffectPool.Instance`에 null 검사 필요.
+
+**남은 일**: 이슈 #8 체크박스 정리(사용자) — **피격 플래시는 남김** / 폰트 공유 머티리얼 셰이더 원복 여부 결정 / 치명타 스타일은 Issue 31 / `referenceDepth`는 카메라 `offset` 변경 시 갱신.
+
 ## ⭐ Issue 23 무기별 세이브 구현 (2026-10-12) — 코드 반영, 플레이 확인 전
 
 **#23이 하는 일(사용자 질문으로 정리)**: "무엇을 저장하는가" 중 무기 부분만. **저장 시점·저장 버튼·확인창은 #23이 아니라 별도 이슈**(아래). 이전 구조는 장착 중인 무기 하나의 레벨·탄약만 저장하고 `LoadFrom`이 그 값을 `Equipped` 슬롯에 넣어서, **저격총을 든 채 저장하면 저격총의 레벨·탄약이 권총 슬롯에 들어가고**, 해금 상태가 저장되지 않아 저격총이 다시 잠겼음. (같은 실행 중 이어하기 문제는 아래 "이어하기 동작 발견과 수정" 참고.)
