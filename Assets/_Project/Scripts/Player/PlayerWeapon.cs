@@ -132,11 +132,30 @@ public class PlayerWeapon : MonoBehaviour
         return true;
     }
 
-    public void LoadFrom(int level, int magazin, int reserve)
+    public void LoadFrom(WeaponSaveEntry[] entries, int savedEquippedIndex)
     {
-        Equipped.CurrentLevel = level;
-        Equipped.MagazineAmmo = magazin;
-        Equipped.ReserveAmmo = reserve;
+        // 저장에 없는 값이 메모리에 남지 않도록 먼저 전부 기본 상태로 되돌림
+        ResetWeapon();
+        if (entries == null) return;   // 이 필드가 생기기 전에 만든 세이브 파일
+
+        int count = Mathf.Min(entries.Length, weaponSlots.Length);
+        for (int i = 0; i < count; i++)
+        {
+            WeaponSlot slot = weaponSlots[i];
+            WeaponSaveEntry entry = entries[i];
+
+            // 밸런스를 수정한 뒤에도 옛 세이브가 범위를 넘는 값을 만들지 못하게 자름
+            slot.CurrentLevel = Mathf.Clamp(entry.level, 1, slot.data.MaxLevel);
+            slot.IsUnlocked = entry.isUnlocked || slot.data.unlockCost <= 0;
+
+            WeaponData.LevelStats stats = slot.Stats;
+            slot.MagazineAmmo = Mathf.Clamp(entry.magazineAmmo, 0, stats.magazineSize);
+            slot.ReserveAmmo = Mathf.Clamp(entry.reserveAmmo, 0, stats.maxReserveAmmo);
+        }
+
+        // 범위를 벗어나거나 잠긴 슬롯이면 기본 무기로
+        bool validIndex = savedEquippedIndex >= 0 && savedEquippedIndex < weaponSlots.Length;
+        equippedIndex = validIndex && weaponSlots[savedEquippedIndex].IsUnlocked ? savedEquippedIndex : 0;
     }
 
     public void ResetWeapon()

@@ -112,6 +112,7 @@ public class RunState : MonoBehaviour
         GameManager.Instance.ResetGameOver();
         PlayerWeapon.Instance.ResetWeapon();
         PlayerConsumables.Instance.ResetCounts();
+        BarricadeManager.Instance.ResetAllSlots();
     }
 
     public void LoadFrom(SaveData data)

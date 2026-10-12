@@ -15,6 +15,23 @@ public class MissionSaveEntry
 }
 
 [Serializable]
+public class WeaponSaveEntry
+{
+    public int level;
+    public int magazineAmmo;
+    public int reserveAmmo;
+    public bool isUnlocked;
+}
+
+[Serializable]
+public class BarricadeSaveEntry
+{
+    public int state;        // BarricadeState 값
+    public int level;
+    public int durability;
+}
+
+[Serializable]
 public class PlayerSaveData
 {
     public int currentHealth;
@@ -28,9 +45,9 @@ public class SaveData
     public int currentSlot;
     public int crystal;
     public int rareCrystal; // TODO : CurrencyManager 에 희귀 크리스탈 재화 추가 시 Save/Load 배관 연결 필요(현재 미사용)
-    public int weaponLevel;
-    public int magazineAmmo;
-    public int reserveAmmo;
+    public WeaponSaveEntry[] weapons;   // 슬롯 순서 = PlayerWeapon.weaponSlots 순서
+    public int equippedIndex;
+    public BarricadeSaveEntry[] barricades;   // BarricadeDirection 순서 (North, East, South, West)
     public int[] grenadeCounts;   // 소모품 개수 - 종류 순서는 PlayerConsumables의 배열 순서
     public int[] potionCounts;
 

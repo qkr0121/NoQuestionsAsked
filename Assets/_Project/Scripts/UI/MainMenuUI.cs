@@ -11,6 +11,9 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnContinueClicked()
     {
+        // 같은 실행 중에도 저장 파일 기준으로 복원되도록 메모리 상태를 먼저 리셋함
+        // (안 그러면 RunState가 "런 진행 중"으로 보고 로드를 건너뜀)
+        RunState.Instance.ResetEntireRun();
         PendingLoad.MarkForLoad();
         SceneTransitioner.GoTo("Base");
     }

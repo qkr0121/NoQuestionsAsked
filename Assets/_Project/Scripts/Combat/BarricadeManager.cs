@@ -110,6 +110,32 @@ public class BarricadeManager : MonoBehaviour
         }
     }
 
+    public void LoadFrom(BarricadeSaveEntry[] entries)
+    {
+        // 저장에 없는 값이 남지 않도록 먼저 전부 비움
+        ResetAllSlots();
+        if (entries == null) return;   // 이 필드가 생기기 전에 만든 세이브 파일
+
+        BarricadeDirection[] directions = (BarricadeDirection[])Enum.GetValues(typeof(BarricadeDirection));
+        int count = Mathf.Min(entries.Length, directions.Length);
+        for (int i = 0; i < count; i++)
+        {
+            BarricadeSaveEntry entry = entries[i];
+
+            // 밸런스를 수정한 뒤에도 옛 세이브가 범위를 넘는 값을 만들지 못하게 검증함
+            if (!Enum.IsDefined(typeof(BarricadeState), entry.state)) continue;
+            BarricadeState state = (BarricadeState)entry.state;
+            if (state == BarricadeState.Empty) continue;
+            if (entry.level < 1 || entry.level > MaxLevel) continue;
+
+            SlotData data = slots[directions[i]];
+            data.State = state;
+            data.CurrentLevel = entry.level;
+            data.CurrentDurability = Mathf.Clamp(entry.durability, 0, barricadeData.maxDurabilityByLevel[entry.level - 1]);
+            OnSlotChanged?.Invoke(directions[i]);
+        }
+    }
+
     private BlueprintId LevelToBlueprintId(int level)
     {
         switch(level)

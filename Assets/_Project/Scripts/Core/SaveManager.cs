@@ -22,9 +22,9 @@ public class SaveManager : MonoBehaviour
             currentDay = RunState.Instance.CurrentDay,
             currentSlot = (int)RunState.Instance.CurrentSlot,
             crystal = CurrencyManager.Instance.Crystal,
-            weaponLevel = PlayerWeapon.Instance.CurrentLevel,
-            magazineAmmo = PlayerWeapon.Instance.MagazineAmmo,
-            reserveAmmo = PlayerWeapon.Instance.ReserveAmmo,
+            weapons = BuildWeaponEntries(),
+            equippedIndex = PlayerWeapon.Instance.EquippedIndex,
+            barricades = BuildBarricadeEntries(),
             grenadeCounts = PlayerConsumables.Instance.GetGrenadeCounts(),
             potionCounts = PlayerConsumables.Instance.GetPotionCounts(),
             missions = BuildMissionEntries(),
@@ -37,6 +37,41 @@ public class SaveManager : MonoBehaviour
 
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SavePath, json);
+    }
+
+    private WeaponSaveEntry[] BuildWeaponEntries()
+    {
+        PlayerWeapon weapon = PlayerWeapon.Instance;
+        WeaponSaveEntry[] entries = new WeaponSaveEntry[weapon.SlotCount];
+        for (int i = 0; i < entries.Length; i++)
+        {
+            PlayerWeapon.WeaponSlot slot = weapon.GetSlot(i);
+            entries[i] = new WeaponSaveEntry
+            {
+                level = slot.CurrentLevel,
+                magazineAmmo = slot.MagazineAmmo,
+                reserveAmmo = slot.ReserveAmmo,
+                isUnlocked = slot.IsUnlocked
+            };
+        }
+        return entries;
+    }
+
+    private BarricadeSaveEntry[] BuildBarricadeEntries()
+    {
+        BarricadeDirection[] directions = (BarricadeDirection[])System.Enum.GetValues(typeof(BarricadeDirection));
+        BarricadeSaveEntry[] entries = new BarricadeSaveEntry[directions.Length];
+        for (int i = 0; i < directions.Length; i++)
+        {
+            BarricadeSlotInfo info = BarricadeManager.Instance.GetSlotInfo(directions[i]);
+            entries[i] = new BarricadeSaveEntry
+            {
+                state = (int)info.State,
+                level = info.CurrentLevel,
+                durability = info.CurrentDurability
+            };
+        }
+        return entries;
     }
 
     private MissionSaveEntry[] BuildMissionEntries()
@@ -80,7 +115,8 @@ public class SaveManager : MonoBehaviour
 
         RunState.Instance.LoadFrom(data);
         CurrencyManager.Instance.LoadCrystal(data.crystal);
-        PlayerWeapon.Instance.LoadFrom(data.weaponLevel, data.magazineAmmo, data.reserveAmmo);
+        PlayerWeapon.Instance.LoadFrom(data.weapons, data.equippedIndex);
+        BarricadeManager.Instance.LoadFrom(data.barricades);
         PlayerConsumables.Instance.LoadCounts(data.grenadeCounts, data.potionCounts);
         if(data.player != null)
         {
