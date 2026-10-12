@@ -15,6 +15,8 @@ public class CombatExitPoint : MonoBehaviour
         {
             RunState.Instance.ClearSelectedWave();
             RunState.Instance.AdvanceSlot();
+            // 마감 실패로 게임오버가 되었으면 이 씬에서 게임오버 화면을 보여주고 Base로 넘어가지 않음
+            if (GameManager.Instance.IsGameOver) return;
             SceneManager.LoadScene("Base");
         });
     }

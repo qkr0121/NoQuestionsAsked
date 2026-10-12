@@ -45,7 +45,7 @@ public class ScreenFader : MonoBehaviour
 
         while(elapsed < fadeDuration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;   // 게임오버로 timeScale이 0이 되어도 페이드가 끝나도록
             float alpha = Mathf.Lerp(from, to, elapsed / fadeDuration);
             fadeImage.color = new Color(color.r, color.g, color.b, alpha);
             yield return null;

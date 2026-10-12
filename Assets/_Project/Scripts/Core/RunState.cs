@@ -12,8 +12,9 @@ public class RunState : MonoBehaviour
     [SerializeField] private int currentDay = 1;
 
     [Header("미션 설정")]
-    [SerializeField] private int missionInterval = 10;
-    [SerializeField] private int missionQuota = 100;
+    [SerializeField] private int missionInterval = 7;
+    [SerializeField] private int missionQuota = 400;        // 첫 주기 요구 금액
+    [SerializeField] private int missionQuotaStep = 100;    // 주기마다 늘어나는 금액
 
     [Header("지원 동기")]
     [SerializeField] private MotiveData motiveData;
@@ -78,6 +79,7 @@ public class RunState : MonoBehaviour
             CurrentSlot = CurrentSlot + 1;
         }
 
+        if (GameManager.Instance.IsGameOver) return;   // 마감 실패로 끝난 런은 저장하지 않음
         SaveManager.Instance.Save();
     }
 
@@ -88,6 +90,8 @@ public class RunState : MonoBehaviour
         if (CurrentMission != null && !CurrentMission.IsSubmitted && CurrentMission.IsOverdue(currentDay))
         {
             OnMissionResolved?.Invoke(false);
+            GameManager.Instance.GameOver();   // 마감을 넘기면 런 실패
+            return;                            // 실패한 런에는 새 미션을 발급하지 않음
         }
         
         if(IsMissionIssueDay())
@@ -182,10 +186,13 @@ public class RunState : MonoBehaviour
 
     private void IssueNewMission()
     {
+        // 0부터 시작하는 주기 번호 - 발급일에서 바로 계산돼 세이브에 따로 저장할 필요 없음
+        int cycle = (CurrentDay - 1) / missionInterval;
+
         CurrentMission = new Mission
         {
             MissionName = $"크리스탈 상납",
-            RequiredCrystal = missionQuota,
+            RequiredCrystal = missionQuota + missionQuotaStep * cycle,
             IssuedDay = CurrentDay,
             DueDay = currentDay + missionInterval - 1,
             IsSubmitted = false
