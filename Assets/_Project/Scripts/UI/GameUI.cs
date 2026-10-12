@@ -1,21 +1,91 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class GameUI : MonoBehaviour
 {
+    [Header("상단 좌측")]
     [SerializeField] private TMP_Text crystalText;
-    [SerializeField] private TMP_Text healthText;
-    [SerializeField] private TMP_Text dayText;
-    [SerializeField] private TMP_Text slotText;
+    [SerializeField] private TMP_Text dateText;
+
+    [Header("상단 우측")]
+    [SerializeField] private TMP_Text missionText;
+    [SerializeField] private Color missionNormalColor = Color.white;
+    [SerializeField] private Color missionWarningColor = new Color(1f, 0.85f, 0.25f);
+    [SerializeField] private Color missionDangerColor = new Color(1f, 0.3f, 0.3f);
+    [SerializeField] private Color missionDoneColor = new Color(0.4f, 0.9f, 0.4f);
+
+    [Header("체력바")]
+    [SerializeField] private RectTransform hpFill;          // 가로 스케일로 채우는 바 (피벗 왼쪽)
+    [SerializeField] private Image hpFillImage;             // 저체력 색 변경용
+    [SerializeField] private TMP_Text hpText;
+    [SerializeField] private Color hpNormalColor = new Color(0.35f, 0.8f, 0.35f);
+    [SerializeField] private Color hpLowColor = new Color(0.9f, 0.2f, 0.2f);
+    [SerializeField] private float lowHealthRatio = 0.3f;
+
+    private const int DaysPerWeek = 7;   // 미션 주기와 "일주일"을 일치시키기 위한 요일 표시용 (1일차 = 월요일)
+    private const int WarningDaysLeft = 2;
+    private const string MissionHeader = "<size=70%><color=#B0B0B0>미션</color></size>\n";   // 머리글만 작고 회색으로 - 본문 색은 상태에 따라 바뀜
+    private static readonly string[] WeekdayNames = { "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일" };
 
     private void Update()
     {
-        crystalText.text = $"Crystal: {CurrencyManager.Instance.Crystal}";
-        healthText.text = $"HP: {PlayerManager.Instance.CurrentHealth} / {PlayerManager.Instance.MaxHealth}";
-        dayText.text = $"DAY {RunState.Instance.CurrentDay}";
-        slotText.text = GetSlotLabel();
+        RunState run = RunState.Instance;
+
+        crystalText.text = $"크리스탈 {CurrencyManager.Instance.Crystal}";
+        dateText.text = $"{GetDateLabel(run.CurrentDay)} · {GetSlotLabel()}";
+        UpdateMission(run);
+        UpdateHealth();
     }
-    
+
+    private void UpdateMission(RunState run)
+    {
+        Mission mission = run.CurrentMission;
+        if (mission == null)
+        {
+            missionText.text = "";
+            return;
+        }
+
+        if (mission.IsSubmitted)
+        {
+            // 다음 미션은 발급일에만 뜸 - 마감일 다음 날(다음 주 월요일)
+            missionText.text = $"{MissionHeader}상납 완료 다음 미션 {GetDateLabel(mission.DueDay + 1)}";
+            missionText.color = missionDoneColor;
+            return;
+        }
+
+        int daysLeft = mission.DaysRemaining(run.CurrentDay);
+        if (daysLeft <= 0)
+        {
+            missionText.text = $"{MissionHeader}크리스탈 상납 {mission.RequiredCrystal} 오늘 마감!";
+            missionText.color = missionDangerColor;
+        }
+        else
+        {
+            missionText.text = $"{MissionHeader}크리스탈 상납 {mission.RequiredCrystal} 마감까지 {daysLeft}일";
+            missionText.color = daysLeft <= WarningDaysLeft ? missionWarningColor : missionNormalColor;
+        }
+    }
+
+    private void UpdateHealth()
+    {
+        int current = PlayerManager.Instance.CurrentHealth;
+        int max = PlayerManager.Instance.MaxHealth;
+        float ratio = max > 0 ? Mathf.Clamp01((float)current / max) : 0f;
+
+        hpFill.localScale = new Vector3(ratio, 1f, 1f);
+        hpFillImage.color = ratio <= lowHealthRatio ? hpLowColor : hpNormalColor;
+        hpText.text = $"{current} / {max}";
+    }
+
+    // RunState는 건드리지 않고 표시 로직에서만 주차/요일로 가공함
+    private static string GetDateLabel(int day)
+    {
+        int week = (day - 1) / DaysPerWeek + 1;
+        return $"{week}주차 {WeekdayNames[(day - 1) % DaysPerWeek]}";
+    }
+
     private string GetSlotLabel()
     {
         return RunState.Instance.CurrentSlot switch
