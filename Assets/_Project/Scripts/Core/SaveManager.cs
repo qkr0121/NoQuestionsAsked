@@ -24,6 +24,7 @@ public class SaveManager : MonoBehaviour
             crystal = CurrencyManager.Instance.Crystal,
             weapons = BuildWeaponEntries(),
             equippedIndex = PlayerWeapon.Instance.EquippedIndex,
+            motiveIndex = RunState.Instance.MotiveIndex,
             barricades = BuildBarricadeEntries(),
             grenadeCounts = PlayerConsumables.Instance.GetGrenadeCounts(),
             potionCounts = PlayerConsumables.Instance.GetPotionCounts(),

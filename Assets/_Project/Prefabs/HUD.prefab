@@ -2206,7 +2206,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 0}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3567,8 +3567,6 @@ MonoBehaviour:
   - {fileID: 2626005326944021250}
   grenadeSlot: {fileID: 6004813639029594052}
   potionSlot: {fileID: 4311212532207407657}
-  playerGrenade: {fileID: 0}
-  playerPotion: {fileID: 0}
 --- !u!1 &7103537924366531309
 GameObject:
   m_ObjectHideFlags: 0

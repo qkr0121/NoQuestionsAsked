@@ -47,6 +47,7 @@ public class SaveData
     public int rareCrystal; // TODO : CurrencyManager 에 희귀 크리스탈 재화 추가 시 Save/Load 배관 연결 필요(현재 미사용)
     public WeaponSaveEntry[] weapons;   // 슬롯 순서 = PlayerWeapon.weaponSlots 순서
     public int equippedIndex;
+    public int motiveIndex = -1;   // 초기값 -1: 이 필드가 생기기 전의 옛 세이브는 0이 아니라 미선택으로 읽힘
     public BarricadeSaveEntry[] barricades;   // BarricadeDirection 순서 (North, East, South, West)
     public int[] grenadeCounts;   // 소모품 개수 - 종류 순서는 PlayerConsumables의 배열 순서
     public int[] potionCounts;

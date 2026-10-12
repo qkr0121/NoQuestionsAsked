@@ -2051,6 +2051,7 @@ MonoBehaviour:
   currentDay: 1
   missionInterval: 10
   missionQuota: 100
+  motiveData: {fileID: 11400000, guid: f9c5d22b5f8c535449fe281172b3f1c0, type: 2}
 --- !u!1 &9142951311836180778
 GameObject:
   m_ObjectHideFlags: 0

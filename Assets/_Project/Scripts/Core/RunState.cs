@@ -15,6 +15,9 @@ public class RunState : MonoBehaviour
     [SerializeField] private int missionInterval = 10;
     [SerializeField] private int missionQuota = 100;
 
+    [Header("지원 동기")]
+    [SerializeField] private MotiveData motiveData;
+
     public int CurrentDay => currentDay;
     public TimeSlot CurrentSlot { get; private set; } = TimeSlot.Morning;
 
@@ -23,6 +26,10 @@ public class RunState : MonoBehaviour
     public Mission CurrentMission { get; private set; }
     public WaveDefinition SelectedWave { get; private set; }
     public TimeOfDayModifier SelectedTimeOfDay { get; private set; }
+
+    public MotiveData Motives => motiveData;
+    public int MotiveIndex { get; private set; } = -1;   // -1 = 아직 고르지 않음
+    public MotiveData.Motive CurrentMotive => MotiveIndex >= 0 ? motiveData.Get(MotiveIndex) : null;
 
     // 지금은 구독자 없음(MissionBoardUI 가 구독하던 걸 Open()의 강제 갱신과 중복이라 제거함)
     // 다만 삭제하지 않고 남겨둠 - 미션 시각적 피드백(미션보드 위 느낌표/물음표 표시) 구현 시 이 이벤트들을 사용할 예정:
@@ -46,6 +53,11 @@ public class RunState : MonoBehaviour
     {
         SelectedWave = wave;
         SelectedTimeOfDay = timeOfDay;
+    }
+
+    public void SelectMotive(int index)
+    {
+        MotiveIndex = index;
     }
 
     public void ClearSelectedWave()
@@ -98,6 +110,7 @@ public class RunState : MonoBehaviour
     public void ResetForNewRun()
     {
         currentDay = 1;
+        MotiveIndex = -1;
         CurrentSlot = TimeSlot.Morning;
         CurrentMission = null;
         SelectedWave = null;
@@ -119,6 +132,8 @@ public class RunState : MonoBehaviour
     {
         currentDay = data.currentDay;
         CurrentSlot = (TimeSlot)data.currentSlot;
+        // 동기 목록이 바뀌어 범위를 벗어난 값은 미선택으로 처리
+        MotiveIndex = (data.motiveIndex >= 0 && data.motiveIndex < motiveData.Count) ? data.motiveIndex : -1;
 
         if(data.missions != null && data.missions.Length > 0)
         {
