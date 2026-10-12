@@ -9,6 +9,7 @@ public class ScenePlayerSpawner : MonoBehaviour
     [Header("연동 대상")]
     [SerializeField] private CameraFollow cameraFollow;
     [SerializeField] private WaveSpawner waveSpawner;
+    [SerializeField] private HotbarUI hotbarUI;   // HUD 인스턴스의 Hotbar
 
     private void Start()
     {
@@ -24,5 +25,7 @@ public class ScenePlayerSpawner : MonoBehaviour
         {
             waveSpawner.SetPlayer(playerObj.transform);
         }
+
+        hotbarUI.SetPlayer(playerObj.GetComponent<PlayerGrenade>(), playerObj.GetComponent<PlayerPotion>());
     }
 }

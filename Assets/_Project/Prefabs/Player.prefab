@@ -91,6 +91,7 @@ GameObject:
   - component: {fileID: 7364220199263705777}
   - component: {fileID: 3457539790126404289}
   - component: {fileID: 7111703229695138416}
+  - component: {fileID: 7339422114142112496}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -236,6 +237,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPotion
   playerHealth: {fileID: 7364220199263705777}
+--- !u!114 &7339422114142112496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1869114276241098260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6692c35f010761b4f9e7eb5b47952b89, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHotbar
+  playerShoot: {fileID: 927560397106520338}
+  playerGrenade: {fileID: 3457539790126404289}
+  playerPotion: {fileID: 7111703229695138416}
+  playerAim: {fileID: 1281207540894405453}
 --- !u!1 &3076558244195835219
 GameObject:
   m_ObjectHideFlags: 0

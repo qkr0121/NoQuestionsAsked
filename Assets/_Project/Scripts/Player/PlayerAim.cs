@@ -60,6 +60,13 @@ public class PlayerAim : MonoBehaviour
         mainCamera = camera;
     }
 
+    // 무기를 바꿔도 쌓인 밀림·좌우 각도(조준선 위치)는 그대로 두고, 연사 순번만 새로 시작함
+    // 회복 속도와 상한은 현재 무기 값을 읽으므로 자동으로 새 무기에 맞춰짐
+    public void ResetBurst()
+    {
+        consecutiveShots = 0;
+    }
+
     public void ApplyRecoil(WeaponData data)
     {
         float recoilScale = PlayerWeapon.Instance.RecoilScale;
@@ -78,8 +85,12 @@ public class PlayerAim : MonoBehaviour
         float noise = Mathf.Clamp((Mathf.PerlinNoise(noiseSeed, consecutiveShots * 0.35f) - 0.5f) * 4f, -1f, 1f);
 
         // 강화로 반동이 줄어들면 한 발의 밀림과 누적 상한을 같은 비율로 줄임 - 좌우 흔들림은 피드백용이라 고정
-        recoilPush = Mathf.Min(recoilPush + vertical * recoilScale, data.maxRecoilPush * recoilScale);
-        recoilAngle = Mathf.Clamp(recoilAngle + noise * data.horizontalKick, -data.maxRecoilAngle, data.maxRecoilAngle);
+        // 이전 무기에서 쌓인 값이 새 무기 상한보다 크면 줄이지 않고 회복에 맡김 - 사격 순간에 조준선이 튀지 않게
+        float pushCap = data.maxRecoilPush * recoilScale;
+        if (recoilPush <= pushCap) recoilPush = Mathf.Min(recoilPush + vertical * recoilScale, pushCap);
+
+        if (Mathf.Abs(recoilAngle) <= data.maxRecoilAngle)
+            recoilAngle = Mathf.Clamp(recoilAngle + noise * data.horizontalKick, -data.maxRecoilAngle, data.maxRecoilAngle);
         consecutiveShots++;
     }
 

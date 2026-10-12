@@ -11,6 +11,7 @@ public class PlayerWeapon : MonoBehaviour
         public int MagazineAmmo { get; set; }
         public int ReserveAmmo { get; set; }
         public bool IsUnlocked { get; set; }
+        public float NextFireTime { get; set; }   // 이 무기를 다시 쏠 수 있는 시각 - 무기별로 따로 두어야 교체로 쿨다운을 우회하지 못함
 
         public WeaponData.LevelStats Stats => data.GetStats(CurrentLevel);
         public bool IsMaxLevel => CurrentLevel >= data.MaxLevel;
@@ -55,6 +56,8 @@ public class PlayerWeapon : MonoBehaviour
     public int MagazineAmmo => Equipped.MagazineAmmo;
     public int ReserveAmmo => Equipped.ReserveAmmo;
     public bool CanReload => Equipped.MagazineAmmo < Stats.magazineSize && Equipped.ReserveAmmo > 0;
+    public bool CanFire => Time.time >= Equipped.NextFireTime;
+    public void StartFireCooldown() => Equipped.NextFireTime = Time.time + FireInterval;
 
     private void Awake()
     {
@@ -65,11 +68,14 @@ public class PlayerWeapon : MonoBehaviour
     // 상점은 장착 무기와 무관하게 아무 슬롯이나 조회·강화하므로 슬롯을 통째로 내줌
     public WeaponSlot GetSlot(int index) => weaponSlots[index];
 
-    public void EquipWeapon(int index)
+    public bool EquipWeapon(int index)
     {
-        if (index < 0 || index >= weaponSlots.Length) return;
-        if (!weaponSlots[index].IsUnlocked) return;
+        if (index < 0 || index >= weaponSlots.Length) return false;
+        if (!weaponSlots[index].IsUnlocked) return false;
+        if (index == equippedIndex) return false;   // 이미 든 무기
+
         equippedIndex = index;
+        return true;
     }
 
     public bool TryUnlock(int index)
@@ -141,6 +147,7 @@ public class PlayerWeapon : MonoBehaviour
             slot.MagazineAmmo = slot.data.GetStats(1).magazineSize;
             slot.ReserveAmmo = slot.data.startingReserveAmmo;
             slot.IsUnlocked = slot.data.unlockCost <= 0;
+            slot.NextFireTime = 0f;
         }
         equippedIndex = 0;
     }

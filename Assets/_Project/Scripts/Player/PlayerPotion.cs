@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerPotion : MonoBehaviour
 {
@@ -8,17 +7,10 @@ public class PlayerPotion : MonoBehaviour
     private const int PotionIndex = 0;   // 지금은 회복약 1종만 사용 (PotionRowUI와 동일)
     private float nextUseTime;
 
-    // 핫바(Issue 6)가 쿨타임 표시에 쓸 값
+    // 핫바가 쿨타임 표시에 쓰는 값
     public float CooldownRemaining => Mathf.Max(0f, nextUseTime - Time.time);
 
-    private void Update()
-    {
-        if (PlayerInputLock.IsLocked) return;
-
-        Keyboard keyboard = Keyboard.current;
-        if (keyboard != null && keyboard.qKey.wasPressedThisFrame) TryUse();
-    }
-
+    // 입력은 PlayerHotbar가 받아서 이 메서드를 호출함
     public bool TryUse()
     {
         PlayerManager player = PlayerManager.Instance;

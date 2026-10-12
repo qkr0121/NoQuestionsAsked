@@ -7,7 +7,6 @@ public class PlayerShoot : MonoBehaviour
     [SerializeField] private PlayerGrenade playerGrenade;
     [SerializeField] private ParticleSystem muzzleFlash;    // FirePoint 자식, 비워둬도 동작
 
-    private float cooldownTimer;
     private float reloadTimer;
     private bool isReloading;
 
@@ -16,15 +15,6 @@ public class PlayerShoot : MonoBehaviour
 
     private void Update()
     {
-        Keyboard keyboard = Keyboard.current;
-
-        // 테스트용 무기 교체 로직
-        if (keyboard != null)
-        {
-            if (keyboard.digit1Key.wasPressedThisFrame) PlayerWeapon.Instance.EquipWeapon(0);
-            if (keyboard.digit2Key.wasPressedThisFrame) PlayerWeapon.Instance.EquipWeapon(1);
-        }
-
         if (PlayerInputLock.IsLocked) return;
         //수류탄을 든 동안에는 좌클릭이 투척이므로 사격,재장전 입력을 받지 않음
         if (playerGrenade.IsHolding) return;
@@ -40,9 +30,7 @@ public class PlayerShoot : MonoBehaviour
             return;
         }
 
-        cooldownTimer -= Time.deltaTime;
-
-        //Keyboard keyboard = Keyboard.current;
+        Keyboard keyboard = Keyboard.current;
         if(keyboard != null && keyboard.rKey.wasPressedThisFrame)
         {
             TryStartReload();
@@ -52,10 +40,10 @@ public class PlayerShoot : MonoBehaviour
         Mouse mouse = Mouse.current;
         if (mouse == null) return;
 
-        if(mouse.leftButton.isPressed && cooldownTimer <= 0f)
+        if(mouse.leftButton.isPressed && PlayerWeapon.Instance.CanFire)
         {
             Fire();
-            cooldownTimer = PlayerWeapon.Instance.FireInterval;
+            PlayerWeapon.Instance.StartFireCooldown();
         }
     }
 

@@ -32,14 +32,6 @@ public class PlayerGrenade : MonoBehaviour
 
         cooldownTimer -= Time.deltaTime;
 
-        Keyboard keyboard = Keyboard.current;
-        if(keyboard != null)
-        {
-            if (keyboard.digit4Key.wasPressedThisFrame) OnGrenadeKey();
-            // 무기 키를 누르면 수류탄을 내려놓음 - 핫바(Issue 6) 에서 입력 통합 예정
-            if (keyboard.digit1Key.wasPressedThisFrame || keyboard.digit2Key.wasPressedThisFrame) IsHolding = false;
-        }
-
         if(!IsHolding || !TryGetLandPoint(out Vector3 landPoint))
         {
             indicator.gameObject.SetActive(false);
@@ -59,7 +51,8 @@ public class PlayerGrenade : MonoBehaviour
 
     private bool HasGrenade() => InfiniteAmmoZone.IsActive || PlayerConsumables.Instance.GetGrenadeCount(selectedIndex) > 0;
 
-    private void OnGrenadeKey()
+    // 입력은 PlayerHotbar가 받아서 호출함
+    public void OnGrenadeKey()
     {
         if(IsHolding)
         {
@@ -74,6 +67,11 @@ public class PlayerGrenade : MonoBehaviour
 
         IsHolding = true;
         playerShoot.CancelReload();
+    }
+
+    public void PutDown()
+    {
+        IsHolding = false;
     }
 
     // 현재 선택 종류부터 순환하며 개수가 남은 첫 종류를 고름 - 선택 종류가 0개여도 다른 종류를 들 수 있게
