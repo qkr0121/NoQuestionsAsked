@@ -83,6 +83,13 @@ public class EnemyAttack : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (IsObstacleLayer(other)) nearWall = true;
+
+        // 처음 닿는 순간 공격 타이머를 랜덤으로 시작해, 같은 곳에 겹쳐 도착한 좀비들이 일제히 때리지 않게 함
+        // 타이머가 이미 만료된 경우에만 적용 - 경계에서 들락날락하거나 콜라이더가 여러 개여도 공격이 계속 밀리지 않도록
+        if (other.CompareTag("Player") && attackTimer <= 0f)
+        {
+            attackTimer = Random.Range(0f, attackInterval);
+        }
     }
 
     private void OnTriggerExit(Collider other)
