@@ -15,13 +15,9 @@ MonoBehaviour:
   waveName: Wave1
   spawnSegments:
   - type: 1
-    count: 5
+    count: 4
     directions: 0000000002000000
     simultaneousCount: 1
-  - type: 0
-    count: 3
-    directions: 0100000003000000
-    simultaneousCount: 1
-  spawnInterval: 1.5
+  spawnInterval: 6
   spawnDirections: 0
   rareCrystalDropChance: 0.05

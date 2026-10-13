@@ -38,7 +38,7 @@ public class PotionRowUI : MonoBehaviour
         buyCountText.text = buyCount.ToString();
 
         int cost = PlayerConsumables.Instance.GetPotionBundleCost(PotionIndex, buyCount);
-        totalCostText.text = $"{cost} 크리스탈";
+        totalCostText.text = $"{CurrencyManager.Format(cost)} 크리스탈";
 
         bool canBuy = maxAffordable > 0;
         decreaseButton.interactable = canBuy && buyCount > 1;
@@ -61,7 +61,7 @@ public class PotionRowUI : MonoBehaviour
     private void OnBuyClicked()
     {
         int cost = PlayerConsumables.Instance.GetPotionBundleCost(PotionIndex, buyCount);
-        ConfirmationDialog.Instance.Show($"{cost} 크리스탈로 회복약을 구매하시겠습니까?", () =>
+        ConfirmationDialog.Instance.Show($"{CurrencyManager.Format(cost)} 크리스탈로 회복약을 구매하시겠습니까?", () =>
         {
             if (!PlayerConsumables.Instance.TryBuyPotion(PotionIndex, buyCount))
             {

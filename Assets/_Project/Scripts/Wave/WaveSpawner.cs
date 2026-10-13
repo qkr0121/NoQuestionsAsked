@@ -10,6 +10,7 @@ public class WaveSpawner : MonoBehaviour
     }
 
     [SerializeField] private Transform[] spawnPoints; // 순서: North, East, South, West(BarricadeDirection 과 일치)
+    [SerializeField] private float spawnOffset = 1.5f;   // 같은 지점에서 한꺼번에 나와 겹치지 않도록 스폰 위치에 주는 무작위 범위
 
     private Transform player;
     private WaveDefinition waveDefinition;
@@ -89,7 +90,8 @@ public class WaveSpawner : MonoBehaviour
         foreach(SpawnEvent spawnEvent in batch)
         {
             Transform spawnPoint = GetSpawnPoint(spawnEvent.direction);
-            EnemyMovement enemy = EnemyPool.Instance.Get(spawnEvent.type, spawnPoint.position, spawnPoint.rotation);
+            Vector3 offset = new Vector3(Random.Range(-spawnOffset, spawnOffset), 0f, Random.Range(-spawnOffset, spawnOffset));
+            EnemyMovement enemy = EnemyPool.Instance.Get(spawnEvent.type, spawnPoint.position + offset, spawnPoint.rotation);
             enemy.SetTarget(player);
 
             EnemyHealth health = enemy.GetComponent<EnemyHealth>();

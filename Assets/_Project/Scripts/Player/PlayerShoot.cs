@@ -77,7 +77,8 @@ public class PlayerShoot : MonoBehaviour
 
         Projectile projectile = ProjectilePool.Instance.Get(fp.position, rot);
         WeaponData data = PlayerWeapon.Instance.Data;
-        projectile.Launch(PlayerWeapon.Instance.CurrentDamage, data.bulletSpeed, data.range);
+        projectile.Launch(PlayerWeapon.Instance.CurrentDamage, data.bulletSpeed, data.range,
+            PlayerWeapon.Instance.CurrentHitSlowMultiplier, PlayerWeapon.Instance.CurrentHitSlowDuration);
 
         if(muzzleFlash != null)
         {

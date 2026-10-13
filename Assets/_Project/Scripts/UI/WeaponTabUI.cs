@@ -80,7 +80,7 @@ public class WeaponTabUI : MonoBehaviour
 
         if (!slot.IsUnlocked)
         {
-            costText.text = $"{data.unlockCost} 크리스탈";
+            costText.text = $"{CurrencyManager.Format(data.unlockCost)} 크리스탈";
             actionButtonText.text = "구매";
             actionButton.interactable = true;
         }
@@ -92,7 +92,7 @@ public class WeaponTabUI : MonoBehaviour
         }
         else
         {
-            costText.text = $"{slot.NextUpgradeCost} 크리스탈";
+            costText.text = $"{CurrencyManager.Format(slot.NextUpgradeCost)} 크리스탈";
             actionButtonText.text = "강화";
             actionButton.interactable = true;
         }
@@ -106,11 +106,11 @@ public class WeaponTabUI : MonoBehaviour
 
         if (!slot.IsUnlocked)
         {
-            Confirm($"{slot.data.unlockCost} 크리스탈로 {slot.data.displayName}을(를) 구매하시겠습니까?", () => weapon.TryUnlock(index));
+            Confirm($"{CurrencyManager.Format(slot.data.unlockCost)} 크리스탈로 {slot.data.displayName}을(를) 구매하시겠습니까?", () => weapon.TryUnlock(index));
         }
         else
         {
-            Confirm($"{slot.NextUpgradeCost} 크리스탈로 {slot.data.displayName}을(를) 강화하시겠습니까?", () => weapon.TryUpgrade(index));
+            Confirm($"{CurrencyManager.Format(slot.NextUpgradeCost)} 크리스탈로 {slot.data.displayName}을(를) 강화하시겠습니까?", () => weapon.TryUpgrade(index));
         }
     }
 

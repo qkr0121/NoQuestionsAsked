@@ -14,8 +14,8 @@ public class RunState : MonoBehaviour
 
     [Header("미션 설정")]
     [SerializeField] private int missionInterval = 7;
-    [SerializeField] private int missionQuota = 400;        // 첫 주기 요구 금액
-    [SerializeField] private int missionQuotaStep = 100;    // 주기마다 늘어나는 금액
+    // 주기별 요구 금액 (0번 = 첫 주기) - 주기마다 증가폭이 달라야 웨이브 수입 곡선과 맞출 수 있어 배열로 둠
+    [SerializeField] private int[] missionQuotas = { 6000, 9000, 12000, 15000 };
 
     [Header("지원 동기")]
     [SerializeField] private MotiveData motiveData;
@@ -199,12 +199,19 @@ public class RunState : MonoBehaviour
         CurrentMission = new Mission
         {
             MissionName = $"크리스탈 상납",
-            RequiredCrystal = missionQuota + missionQuotaStep * cycle,
+            RequiredCrystal = GetQuota(cycle),
             IssuedDay = CurrentDay,
             DueDay = currentDay + missionInterval - 1,
             IsSubmitted = false
         };
 
         OnMissionIssued?.Invoke(CurrentMission);
+    }
+
+    // 배열보다 주기가 많으면(테스트로 주기를 줄였을 때 등) 마지막 값을 씀
+    private int GetQuota(int cycle)
+    {
+        if (missionQuotas == null || missionQuotas.Length == 0) return 0;
+        return missionQuotas[Mathf.Min(cycle, missionQuotas.Length - 1)];
     }
 }

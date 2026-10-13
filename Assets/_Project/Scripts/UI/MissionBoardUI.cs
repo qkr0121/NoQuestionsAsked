@@ -56,7 +56,7 @@ public class MissionBoardUI : MonoBehaviour
 
         missionNameText.text = mission.MissionName;
         daysRemainingText.text = $"{mission.DaysRemaining(RunState.Instance.CurrentDay)}일 남음";
-        requiredCrystalText.text = $"{mission.RequiredCrystal} 크리스탈";
+        requiredCrystalText.text = $"{CurrencyManager.Format(mission.RequiredCrystal)} 크리스탈";
         submitButton.interactable = CurrencyManager.Instance.Crystal >= mission.RequiredCrystal;
     }
 }

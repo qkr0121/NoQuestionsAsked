@@ -32,7 +32,7 @@ public class GameUI : MonoBehaviour
     {
         RunState run = RunState.Instance;
 
-        crystalText.text = $"크리스탈 {CurrencyManager.Instance.Crystal}";
+        crystalText.text = $"크리스탈 {CurrencyManager.Format(CurrencyManager.Instance.Crystal)}";
         dateText.text = $"{GetDateLabel(run.CurrentDay)} · {GetSlotLabel()}";
         UpdateMission(run);
         UpdateHealth();
@@ -67,12 +67,12 @@ public class GameUI : MonoBehaviour
         int daysLeft = mission.DaysRemaining(run.CurrentDay);
         if (daysLeft <= 0)
         {
-            missionText.text = $"{MissionHeader}크리스탈 상납 {mission.RequiredCrystal} 오늘 마감!";
+            missionText.text = $"{MissionHeader}크리스탈 상납 {CurrencyManager.Format(mission.RequiredCrystal)} 오늘 마감!";
             missionText.color = missionDangerColor;
         }
         else
         {
-            missionText.text = $"{MissionHeader}크리스탈 상납 {mission.RequiredCrystal} 마감까지 {daysLeft}일";
+            missionText.text = $"{MissionHeader}크리스탈 상납 {CurrencyManager.Format(mission.RequiredCrystal)} 마감까지 {daysLeft}일";
             missionText.color = daysLeft <= WarningDaysLeft ? missionWarningColor : missionNormalColor;
         }
     }

@@ -97,7 +97,7 @@ public class BarricadeRowUI : MonoBehaviour
             {
                 currentAction = ActionType.Repair;
                 currentCost = BarricadeManager.Instance.GetRepairCost(direction);
-                actionButtonText.text = $"수리({currentCost})";
+                actionButtonText.text = $"수리({CurrencyManager.Format(currentCost)})";
                 actionButton.interactable = true;
             }
         }
@@ -114,7 +114,7 @@ public class BarricadeRowUI : MonoBehaviour
             {
                 currentAction = ActionType.Install;
                 currentCost = BarricadeManager.Instance.InstallCost(selectedLevel);
-                actionButtonText.text = $"설치({currentCost})";
+                actionButtonText.text = $"설치({CurrencyManager.Format(currentCost)})";
                 actionButton.interactable = true;
             }
         }
@@ -124,7 +124,7 @@ public class BarricadeRowUI : MonoBehaviour
     {
         if(currentAction == ActionType.Repair)
         {
-            ConfirmationDialog.Instance.Show($"{currentCost} 크리스탈로 수리하시겠습니까?", () =>
+            ConfirmationDialog.Instance.Show($"{CurrencyManager.Format(currentCost)} 크리스탈로 수리하시겠습니까?", () =>
             {
                 if(!BarricadeManager.Instance.TryRepair(direction))
                 {
@@ -137,7 +137,7 @@ public class BarricadeRowUI : MonoBehaviour
         else if(currentAction == ActionType.Install)
         {
             int level = GetSelectedLevel();
-            ConfirmationDialog.Instance.Show($"{currentCost} 크리스탈로 설치하시겠습니까?", () =>
+            ConfirmationDialog.Instance.Show($"{CurrencyManager.Format(currentCost)} 크리스탈로 설치하시겠습니까?", () =>
             {
                 if(!BarricadeManager.Instance.TryInstall(direction, level))
                 {

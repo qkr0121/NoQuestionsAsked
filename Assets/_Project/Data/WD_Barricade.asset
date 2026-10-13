@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: WD_Barricade
   m_EditorClassIdentifier: Assembly-CSharp::WallData
   maxDurabilityByLevel: c80000009001000058020000
-  installCostByLevel: c80000009001000058020000
+  installCostByLevel: f4010000e8030000dc050000

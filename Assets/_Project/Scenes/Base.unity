@@ -24322,6 +24322,8 @@ MonoBehaviour:
   panel: {fileID: 1319338643}
   availableWaves:
   - {fileID: 11400000, guid: 68a5b656ea61b894d811608fb6f1360c, type: 2}
+  - {fileID: 11400000, guid: a9061df7d9f34a943aea772ea68d6588, type: 2}
+  - {fileID: 11400000, guid: 70290e292559b294eb790d8bfcff6fe6, type: 2}
   timeOfDayOptions:
   - {fileID: 11400000, guid: 24bf6677f94ec5b42959b9e49ff175e4, type: 2}
   - {fileID: 11400000, guid: 79b6e5aae9e1f094f838a5f6a9b0c3dc, type: 2}

@@ -44,7 +44,7 @@ public class AmmoRowUI : MonoBehaviour
         fillAmountText.text = $"+{fillAmount}발";
 
         int cost = slot.GetAmmoCost(bundleCount);
-        totalCostText.text = $"{cost} 크리스탈";
+        totalCostText.text = $"{CurrencyManager.Format(cost)} 크리스탈";
 
         bool canBuy = maxBundles > 0;
         decreaseButton.interactable = canBuy && bundleCount > 1;
@@ -68,7 +68,7 @@ public class AmmoRowUI : MonoBehaviour
     {
         PlayerWeapon.WeaponSlot slot = PlayerWeapon.Instance.GetSlot(weaponIndex);
         int cost = slot.GetAmmoCost(bundleCount);
-        ConfirmationDialog.Instance.Show($"{slot.data.displayName} 탄약을 {cost} 크리스탈로 구매하시겠습니까?", () =>
+        ConfirmationDialog.Instance.Show($"{slot.data.displayName} 탄약을 {CurrencyManager.Format(cost)} 크리스탈로 구매하시겠습니까?", () =>
         {
             if (!PlayerWeapon.Instance.TryBuyAmmo(weaponIndex, bundleCount))
             {

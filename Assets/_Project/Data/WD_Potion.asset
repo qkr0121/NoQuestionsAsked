@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: WD_Potion
   m_EditorClassIdentifier: Assembly-CSharp::PotionData
   healAmount: 30
-  bundleCost: 30
+  bundleCost: 200
   maxCount: 10
+  cooldown: 3

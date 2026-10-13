@@ -17,7 +17,7 @@ public class EndingUI : MonoBehaviour
         MotiveData.Motive motive = RunState.Instance.CurrentMotive;
         // 지원 동기에 답하지 않은 런은 전용 텍스트를 보여줌
         motiveEndingText.text = motive != null ? motive.endingText : RunState.Instance.Motives.NoAnswerEndingText;
-        finalCrystalText.text = $"최종 크리스탈 {CurrencyManager.Instance.Crystal}";
+        finalCrystalText.text = $"최종 크리스탈 {CurrencyManager.Format(CurrencyManager.Instance.Crystal)}";
         endingPanel.SetActive(true);
     }
 

@@ -2306,6 +2306,7 @@ MonoBehaviour:
   - {fileID: 1744417192}
   - {fileID: 288689632}
   - {fileID: 560745437}
+  spawnOffset: 4
 --- !u!4 &1206912861
 Transform:
   m_ObjectHideFlags: 0

@@ -17,6 +17,8 @@ public class WeaponData : ScriptableObject
         public int maxReserveAmmo = 100;
         public float fireSlowMultiplier = 0.5f;     // 발사 직후 이동속도 배율
         public float reloadSlowMultiplier = 0.7f;    // 재장전 중 이동속도 배율
+        public float hitSlowMultiplier = 1f;         // 맞은 좀비의 이동속도 배율 (1 = 슬로우 없음) - 이후 무기/좀비 추가 때 쓸 수 있게 모든 무기가 보유
+        public float hitSlowDuration = 0f;           // 맞은 좀비의 슬로우 지속 시간(초), 0이면 효과 없음
         public int upgradeCost;                     // 이 레벨로 올리는 비용 (1레벨 줄은 사용하지 않음)
     }
 

@@ -1,10 +1,16 @@
+using System.Globalization;
 using UnityEngine;
 
 public class CurrencyManager : MonoBehaviour
 {
     public static CurrencyManager Instance { get; private set; }
 
-    [SerializeField] private int crystalPerKill = 10;
+    // 모든 크리스탈 표시를 한곳에서 포맷 - 문화권 설정과 무관하게 항상 12,000 형태로 보이게 함
+    public static string Format(int amount)
+    {
+        return amount.ToString("N0", CultureInfo.InvariantCulture);
+    }
+
     [SerializeField] private int startingCrystal = 0; // 테스트용 - 빌드 전 0으로 되돌릴 것
 
     public int Crystal { get; private set; }
@@ -15,9 +21,9 @@ public class CurrencyManager : MonoBehaviour
         Crystal = startingCrystal;
     }
 
-    public void AddKillReward()
+    public void AddKillReward(int amount)
     {
-        Crystal += crystalPerKill;
+        Crystal += amount;
     }
 
     public bool TrySpend(int amount)

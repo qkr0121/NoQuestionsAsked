@@ -19,9 +19,11 @@ MonoBehaviour:
     spreadScale: 1
     reloadTime: 1.5
     magazineSize: 12
-    maxReserveAmmo: 120
+    maxReserveAmmo: 240
     fireSlowMultiplier: 0.5
     reloadSlowMultiplier: 0.7
+    hitSlowMultiplier: 0.3
+    hitSlowDuration: 0.75
     upgradeCost: 0
   - damage: 20
     fireInterval: 0.4
@@ -29,44 +31,52 @@ MonoBehaviour:
     spreadScale: 1
     reloadTime: 1.5
     magazineSize: 12
-    maxReserveAmmo: 120
+    maxReserveAmmo: 240
     fireSlowMultiplier: 0.5
     reloadSlowMultiplier: 0.7
-    upgradeCost: 100
+    hitSlowMultiplier: 0.3
+    hitSlowDuration: 0.75
+    upgradeCost: 600
   - damage: 25
     fireInterval: 0.4
     recoilScale: 0.6
     spreadScale: 1
     reloadTime: 1.5
     magazineSize: 15
-    maxReserveAmmo: 120
+    maxReserveAmmo: 240
     fireSlowMultiplier: 0.5
     reloadSlowMultiplier: 0.7
-    upgradeCost: 200
+    hitSlowMultiplier: 0.3
+    hitSlowDuration: 0.75
+    upgradeCost: 1200
   - damage: 25
     fireInterval: 0.4
     recoilScale: 0.6
     spreadScale: 0.6
     reloadTime: 1.2
     magazineSize: 15
-    maxReserveAmmo: 120
+    maxReserveAmmo: 240
     fireSlowMultiplier: 0.5
     reloadSlowMultiplier: 0.85
-    upgradeCost: 300
+    hitSlowMultiplier: 0.6
+    hitSlowDuration: 0.6
+    upgradeCost: 1800
   - damage: 34
     fireInterval: 0.4
     recoilScale: 0.6
     spreadScale: 0.6
     reloadTime: 1.2
     magazineSize: 15
-    maxReserveAmmo: 180
+    maxReserveAmmo: 320
     fireSlowMultiplier: 0.5
     reloadSlowMultiplier: 0.85
-    upgradeCost: 400
+    hitSlowMultiplier: 0.6
+    hitSlowDuration: 0.6
+    upgradeCost: 2400
   displayName: "\uAD8C\uCD1D"
   unlockCost: 0
   startingReserveAmmo: 60
-  ammoCostPerRound: 4
+  ammoCostPerRound: 10
   bulletSpeed: 300
   range: 50
   verticalKickByShot:
@@ -98,4 +108,4 @@ MonoBehaviour:
   maxRecoilAngle: 10
   pushRecoveryRate: 1
   angleRecoveryRate: 4
-  fireSlowDuration: 0.6
+  fireSlowDuration: 0.4

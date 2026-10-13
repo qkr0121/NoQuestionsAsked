@@ -10,6 +10,8 @@ public class Projectile : MonoBehaviour
 
     private ProjectilePool pool;
     private int damage;
+    private float slowMultiplier;
+    private float slowDuration;
     private float speed;
     private float remainingRange;
     private bool isFinished;
@@ -20,9 +22,11 @@ public class Projectile : MonoBehaviour
         this.pool = pool;
     }
 
-    public void Launch(int damage, float speed, float range)
+    public void Launch(int damage, float speed, float range, float slowMultiplier, float slowDuration)
     {
         this.damage = damage;
+        this.slowMultiplier = slowMultiplier;
+        this.slowDuration = slowDuration;
         this.speed = speed;
         remainingRange = range;
         isFinished = false;
@@ -69,7 +73,9 @@ public class Projectile : MonoBehaviour
     {
         EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
         if (enemy == null) return;
-        
+
+        // 사망해 풀로 반납되기 전에 적용 - 반납된 오브젝트에 슬로우 상태가 남지 않게 함
+        enemy.GetComponent<EnemyMovement>().ApplySlow(slowMultiplier, slowDuration);
         enemy.TakeDamage(damage);
 
         // 맞은 표면 바깥쪽(총을 쏜 쪽)으로 터지게 함

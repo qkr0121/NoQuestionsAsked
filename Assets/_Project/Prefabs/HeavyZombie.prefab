@@ -75,6 +75,12 @@ MonoBehaviour:
   moveSpeed: 2.5
   rotationSpeed: 8
   stoppingDistance: 0.4
+  immuneToSlow: 1
+  separationRadius: 0.8
+  separationMass: 3
+  separationSpeed: 3
+  separationDeadZone: 0.05
+  separationSmoothing: 10
 --- !u!114 &-305322981433289500
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -87,7 +93,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acda63cbbbb99044983ab289e4eb3d50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 250
+  maxHealth: 500
+  damageNumberHeight: 1.5
+  crystalReward: 10
 --- !u!114 &-186988232349598092
 MonoBehaviour:
   m_ObjectHideFlags: 0

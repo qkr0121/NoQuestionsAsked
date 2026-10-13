@@ -44,6 +44,8 @@ public class PlayerWeapon : MonoBehaviour
     public int CurrentLevel => Equipped.CurrentLevel;
 
     public int CurrentDamage => Stats.damage;
+    public float CurrentHitSlowMultiplier => Stats.hitSlowMultiplier;
+    public float CurrentHitSlowDuration => Stats.hitSlowDuration;
     public float FireInterval => Stats.fireInterval;
     public float RecoilScale => Stats.recoilScale;
     public float SpreadScale => Stats.spreadScale;

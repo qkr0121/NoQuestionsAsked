@@ -6,6 +6,7 @@ public class EnemyHealth : MonoBehaviour
 {
     [SerializeField] private int maxHealth = 30;
     [SerializeField] private float damageNumberHeight = 1.5f;   // 좀비 위치에서 머리 위까지 높이 - 프리팹마다 조정
+    [SerializeField] private int crystalReward = 10;   // 킬 보상 - 프리팹마다 조정 (일반/헤비 등 종류별로 다르게)
 
     private int currentHealth;
     private bool isDead;
@@ -50,7 +51,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
-        CurrencyManager.Instance.AddKillReward(); // 좀비 종류 추가 시 매개변수화 및 메서드를 EnemyHealth 로 이동
+        CurrencyManager.Instance.AddKillReward(crystalReward);
         isDead = true;
         onDeathCallback?.Invoke();
         enemyMovement.ReturnToPool();

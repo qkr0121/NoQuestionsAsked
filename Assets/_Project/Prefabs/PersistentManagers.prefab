@@ -1790,8 +1790,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3b70101afc344f468a2a4e73c100bfb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
-  crystalPerKill: 10
-  startingCrystal: 1000
+  startingCrystal: 10000
 --- !u!1 &8645406827600742721
 GameObject:
   m_ObjectHideFlags: 0
@@ -2049,10 +2048,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RunState
   currentDay: 1
-  totalDays: 28
+  totalDays: 7
   missionInterval: 7
-  missionQuota: 400
-  missionQuotaStep: 100
+  missionQuotas: 7017000028230000e02e0000983a0000
   motiveData: {fileID: 11400000, guid: f9c5d22b5f8c535449fe281172b3f1c0, type: 2}
 --- !u!1 &9142951311836180778
 GameObject:

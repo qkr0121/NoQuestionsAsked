@@ -72,9 +72,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f47da41e70049cb4ab7dfab1fb911afc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
-  moveSpeed: 4.5
+  moveSpeed: 5
   rotationSpeed: 8
   stoppingDistance: 0.4
+  immuneToSlow: 0
+  separationRadius: 0.7
+  separationMass: 1
+  separationSpeed: 3
+  separationDeadZone: 0.05
+  separationSmoothing: 10
 --- !u!114 &-305322981433289500
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -88,6 +94,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 100
+  damageNumberHeight: 1.5
+  crystalReward: 200
 --- !u!114 &-186988232349598092
 MonoBehaviour:
   m_ObjectHideFlags: 0
