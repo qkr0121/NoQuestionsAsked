@@ -7,7 +7,7 @@ public class CombatSceneEntry : MonoBehaviour
     private void Start()
     {
         // 소환기에서 웨이브를 선택하지 않고 지상에 온 경우 - 좀비 없이 그냥 둘러볼 수 있는 상태
-        // GDD 미정 사항("웨이브 미선택 시 시간 흐름 여부")과 연관된 지점, 결정되면 이 분기 로직이 바뀔 수 있음
+        // 이 경우 나가도 시간이 흐르지 않음(CombatExitPoint)
         if(RunState.Instance.SelectedWave == null)
         {
             return;

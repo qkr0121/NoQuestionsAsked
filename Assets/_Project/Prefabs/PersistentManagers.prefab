@@ -2049,6 +2049,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RunState
   currentDay: 1
+  totalDays: 28
   missionInterval: 7
   missionQuota: 400
   missionQuotaStep: 100

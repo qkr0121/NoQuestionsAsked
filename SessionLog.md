@@ -1,8 +1,41 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-10-08
+마지막 업데이트: 2026-10-13
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
+
+## ⭐ Issue 11 28일 엔딩(로켓 귀환) 구현 완료 (2026-10-13) — 코드·씬 연결·엔딩 흐름 플레이 확인까지 끝(로켓 29일 한정 표시 수정만 확인 전), 커밋 전
+
+**결과**: 마지막 미션(마감 28일)까지 전부 제출하고 **29일(5주차 월요일 아침)이 되면** 출구를 뺀 Base 건물이 전부 잠기고 HUD가 "지상으로 나가세요"로 바뀜 → ZWD로 나가 **로켓**에 E → 확인창("지구로 돌아가시겠습니까?") → 플레이어가 사라지고 로켓이 가속하며 상승 → 암전 중 **세이브 삭제 + 엔딩 화면** → 선택한 지원 동기의 엔딩 텍스트 + 최종 크리스탈 + 메인 메뉴 버튼. 엔딩 후에는 이어하기 불가(세이브 삭제).
+
+**설계 변경 경위**: 처음 설계는 "29일이 되는 순간 `AdvanceDay`에서 바로 엔딩"이었으나 사용자가 **로켓 탑승 연출로 변경**(로켓은 새 게임 시작의 튜토리얼 착륙과 같은 오브젝트로 재사용 예정 — 시작과 끝이 같은 로켓). 그래서 `GameManager.IsRunEnded`/`Clear()` 안은 폐기(29일에는 시간이 안 흐르고 건물이 막혀서 엔딩 뒤에 Base로 넘어가거나 저장되는 경로가 없음). **"전체 미션 성공" 판정은 따로 없음** — 마감 실패는 곧 게임오버이므로 29일에 도달했다는 것 자체가 전부 성공(`AdvanceDay`의 실패 판정이 항상 먼저).
+
+**구현**
+- `RunState`: `totalDays = 28`(마지막 미션 마감일), `TotalDays`, **`IsEscapeReady = currentDay > totalDays && !IsGameOver`**. **`IsMissionIssueDay`에 `currentDay <= totalDays` 추가** — 29일도 `(29-1)%7==0`이라 5번째 미션이 발급되던 버그. **`AdvanceSlot` 맨 앞에서 `ClearSelectedWave()`** — 웨이브를 골라 놓고 침대에서 자면 선택이 남아 다음 날 낡은 웨이브(시간대 배율 포함)가 시작되던 기존 문제도 같이 해결(29일 아침에도 같은 경로로 웨이브가 시작될 수 있었음).
+- `InteractableStructure`: `Availability { Always, NotInEscapePhase, OnlyInEscapePhase }`(기본 `Always` — 기존 건물은 수정 없이 그대로). `Interact()`/`SetPromptVisible()`가 `IsUsable`로 막고, **`Update`에서 켜져 있는 프롬프트가 막힌 상태면 끔**(건물 위에 선 채로 침대에서 자면 날짜가 바뀌어도 프롬프트가 남음). 지정: 상점·침대·미션보드·소환기 = `NotInEscapePhase`, 로켓 = `OnlyInEscapePhase`, 출구 둘은 `Always`.
+- `CombatExitPoint`: **`SelectedWave == null`이면(웨이브 없이 둘러보기만) `AdvanceSlot()` 없이 Base로만 복귀 — 시간이 흐르지 않음**(GDD 미정이던 "웨이브 미선택 시 시간 흐름 여부" 확정). `CombatSceneEntry`의 해당 주석도 정리. 29일 아침에 로켓을 보러 갔다 나와도 낮으로 넘어가지 않기 위해 필수.
+- `GameUI.UpdateMission`: `IsEscapeReady`이면 본문 줄 **"지상으로 나가세요"**(초록). 마지막 미션(`DueDay >= TotalDays`)을 제출하면 "다음 미션" 대신 **`상납 완료. 5주차 월요일 아침, 남은 크리스탈과 함께 귀환할 수 있습니다.`**(날짜는 `GetDateLabel(TotalDays + 1)`로 계산, 하드코딩 아님). Issue 18의 "마지막 미션 후 다음 미션 문구" 한계가 이걸로 해결됨.
+- **`RocketInteraction`(신규, ZWD)**: `OnInteract`(`IsEscapeReady` 재확인) → `ConfirmationDialog` → 코루틴: 입력 잠금, 플레이어 `SetActive(false)`, `rocketModel`이 `launchHeight × t²`로 상승(2.5초) → `ScreenFader.FadeAction`의 암전 중에 `SaveManager.DeleteSave()` + `EndingUI.Show()`(엔딩 화면에서 게임을 꺼도 이어하기가 안 남게). 플레이어는 런타임 생성이라 `ScenePlayerSpawner`가 `rocket.SetPlayer(playerObj)`로 주입(`rocket` 필드, Base에는 없어 null 검사). **`Start`에서 `gameObject.SetActive(RunState.Instance.IsEscapeReady)` — 로켓은 29일 이후에만 존재**(처음에는 상호작용만 막아서 모델이 계속 보였음).
+- **`EndingUI`(신규, ZWD Canvas 아래 — HUD가 아님)**: ZWD 전용이라 HUD 프리팹에 둘 이유가 없고 로켓이 같은 씬 오브젝트를 직렬화 참조로 연결할 수 있어서. `Show()`는 `CurrentMotive.endingText`(없으면 `MotiveData.NoAnswerEndingText`)와 `최종 크리스탈 N`을 표시, `OnReturnToMainMenuClicked`는 `PendingRunReset.MarkForReset()` + `SceneTransitioner.GoTo("MainMenu")`(세이브는 이미 삭제됨). `UIManager` 등록은 쓰지 않음. 패널은 처음에 꺼진 자식 + `LocksInputWhileActive`, 배경은 MotiveSelect 패널과 같은 스타일. **배경 알파를 1로 통일**(MotiveSelect·엔딩 패널 둘 다 — 뒤가 비쳐서 좋을 것 없음).
+- `GameOverUI`: `Survived`를 **`CurrentDay − 1`**로(마감 실패는 날짜가 넘어간 뒤 판정되므로 "끝까지 보낸 날"로 통일, 1일차 사망은 `0 Day`) — Issue 10에 남겨 둔 기록 해결.
+- `CurrencyManager.ResetCrystal()`이 `startingCrystal`을 씀(전에는 0 고정이라 새 게임에서 `Starting Crystal`이 안 먹었음). **`Starting Crystal`은 테스트용이라 빌드 전 반드시 0으로.**
+
+**엔딩 텍스트(`MotiveData.asset`, 동기 9개 + 무응답 1개, Claude 초안 → 사용자 조정)**: 톤은 **암울 + "한 번 더 지원해 볼까"** 로 통일(돈 "…남는 게 없었다. 앞으로 어떻게 살아야 하나… 한 번 더 지원해야 하나." / 사면 "…이제 범죄를 저질러도 여기에 지원만 하면 아무 문제 없겠네…" / 가족 치료 "…하지만 그다음은? …한 번 더 가야 하나."). **호기심만 예외로 해맑은 반말**(`그곳은 생각보다 훨씬 재미있었어! … 한 번만 더 지원해볼까?`)이라 **지원 동기 문구도 "…그곳엔 뭐가 있을까, 얼른 가보고 싶어!"로 같이 변경**(`아래` 표현은 일터가 지하라는 전제를 설명 없이 깔아서 제거). **용어: HUD의 "지상" = ZWD(로켓이 있는 곳), 엔딩 텍스트의 귀환지는 "지구"**(처음 초안의 "지상"을 3·5·6번에서 "지구"로 정정). 5번 "지구로 돌아오니 돌아갈 집은…"의 "돌아" 겹침과 7번 "한 번 더 들어가야 하나…"의 어휘 차이는 사용자 결정으로 그대로 둠.
+
+**함정/주의**
+- **ZWD 씬에서 로켓을 비활성화해 두면 안 됨** — 켜는 판단이 `Start`에서 일어나므로 꺼 두면 29일에도 안 켜져 엔딩 불가. 씬에서는 켜 둘 것(플레이 시작 직후 29일 전이면 스스로 꺼짐).
+- ZWD `Canvas`의 `CanvasScaler`가 Constant Pixel Size라 1920×1080 외 해상도에서는 크기가 달라짐(필요하면 Scale With Screen Size로).
+- **테스트 값 원복**: `RunState`의 `totalDays`(28)·`missionInterval`(7), `CurrencyManager`의 `Starting Crystal`(0)·`Crystal Per Kill`(10). 프리팹 저장 값이 코드 기본값보다 우선이라 프리팹에서 되돌려야 함.
+- 상승 방향은 `Vector3.up`이라 탑다운 카메라에서는 화면 쪽으로 커지며 사라짐, 플레이어가 꺼지면 카메라가 그 자리에 멈춤 — 어색하면 조정.
+- HUD "상납 완료. 5주차 월요일 아침…" 문구는 폭 720에서 두 줄로 접힐 수 있음.
+
+**별도 이슈로 분리(사용자 결정, 이슈 작성은 사용자)**
+- **런 기록**: 로켓 탑승 시점에 세이브를 지우면서 런 기록(최종 크리스탈·동기 등)을 메인 화면에 남기는 기능 — 이어하기 버튼처럼 "기록" 버튼+패널, 또는 버튼 옆 작은 패널. `save.json`은 지워지므로 별도 파일이 필요하고 `RocketInteraction`의 `DeleteSave` 자리가 기록을 남길 자리. 기록 항목은 미정.
+- **웨이브 선택 취소**: 현재 없음 — `WaveSelectionUI.Confirm()`이 `RunState.SelectWave`로 저장하고 `Close()`는 패널만 닫음(시간이 흘러 `AdvanceSlot`이 지우기 전에는 되돌릴 수 없음). 웨이브 없이는 시간이 안 흐르게 바뀌어 확정이 더 무거워짐.
+- **씬 페이드 시간 개별 조절**: 현재 없음 — `ScreenFader.fadeDuration` 하나(0.4초)를 침대·출구·메인메뉴·로켓이 모두 공유, `FadeAction(Action)`은 시간을 받지 않음.
+- **상호작용 구조물 `InteractPrompt` 문구 작성**.
+
+**남은 일**: 튜토리얼(#15·#16)에서 로켓 착륙 연출과 새 게임 시작 연결 — `RocketInteraction.Start`의 숨김 로직을 새 게임 여부로 분기하거나 튜토리얼 쪽에서 켜야 하고, **튜토리얼 0일차 밤 전투는 `SelectedWave`가 설정돼 있어야 종료 시 1일차 아침으로 넘어감**(웨이브 없이는 시간이 안 흐르므로) / 로켓 상승 연출 폴리싱 / 이슈 #11 체크박스 정리(사용자) / 위 테스트 값 원복.
 
 ## ⭐ Issue 18 축소판 — GameUI 재작성(크리스탈·날짜·미션·체력바) 구현 완료 (2026-10-12) — 코드·프리팹·플레이 확인까지 끝, 커밋 전
 
@@ -20,7 +53,7 @@
 - **글자 크기**: 기존 HUD 텍스트가 전부 72(좌상단 540×120 상자)였는데 48/40/40/24로 줄임.
 
 **알려진 한계 / 남은 일**
-- **마지막 미션(마감 28일)을 제출하면 "다음 미션 5주차 월요일"로 표시**됨 — 28일 런에는 5주차가 없는데 런 길이를 아는 값이 아직 없음. **#11에서 총 일수를 정하면 마지막 주기에서는 "다음 미션" 문구를 숨기도록 고칠 것**(엔딩은 28일 밤이 끝난 뒤 종료하기로 한 결정과 같이).
+- **마지막 미션(마감 28일)을 제출하면 "다음 미션 5주차 월요일"로 표시**됨 — 28일 런에는 5주차가 없는데 런 길이를 아는 값이 아직 없음. **#11에서 총 일수를 정하면 마지막 주기에서는 "다음 미션" 문구를 숨기도록 고칠 것**(엔딩은 28일 밤이 끝난 뒤 종료하기로 한 결정과 같이). → **#11에서 해결됨(맨 위 Issue 11 섹션 참고)**.
 - 크리스탈 아이콘·미션 아이콘 등은 폴리싱 단계(이슈 #6 핫바와 같은 이유로 CBT/OBT).
 - 이슈 #18 체크박스 정리(사용자) — 원래 이슈에 있던 항목 중 이번에 한 것(HUD 레이아웃·크리스탈·날짜·미션·체력바 시각화·핫바 배치)만 체크하고, 아이콘 등 폴리싱은 남길 것.
 

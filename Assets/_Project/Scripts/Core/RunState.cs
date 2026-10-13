@@ -10,6 +10,7 @@ public class RunState : MonoBehaviour
 
     [Header("런 진행 상태")]
     [SerializeField] private int currentDay = 1;
+    [SerializeField] private int totalDays = 28;   // 마지막 미션 마감일. 이 날이 지나 다음 날이 되면 탈출 단계
 
     [Header("미션 설정")]
     [SerializeField] private int missionInterval = 7;
@@ -20,6 +21,9 @@ public class RunState : MonoBehaviour
     [SerializeField] private MotiveData motiveData;
 
     public int CurrentDay => currentDay;
+    public int TotalDays => totalDays;
+    // 마감 실패로 게임오버가 된 경우는 탈출이 아님 - 실패 판정이 항상 먼저라 29일에 도달했다는 건 전 미션 성공이라는 뜻
+    public bool IsEscapeReady => currentDay > totalDays && !GameManager.Instance.IsGameOver;
     public TimeSlot CurrentSlot { get; private set; } = TimeSlot.Morning;
 
     // 지금은 미션 1개만 가정. 여러 미션 동시 진행(로그라이트 랜덤 미션)으로 확장 시,
@@ -69,6 +73,8 @@ public class RunState : MonoBehaviour
 
     public void AdvanceSlot()
     {
+        ClearSelectedWave();   // 시간이 흐르면 선택해 둔 웨이브(시간대 배율 포함)는 낡은 값이 됨
+
         if (CurrentSlot == TimeSlot.Night)
         {
             AdvanceDay();
@@ -180,8 +186,9 @@ public class RunState : MonoBehaviour
 
     private bool IsMissionIssueDay()
     {
-        // 1일차, 11일차, 21일차... (missionInterval 배수+1일째)에만 true
-        return (currentDay - 1) % missionInterval == 0;
+        // 1일차, 8일차, 15일차... (missionInterval 배수+1일째)에만 true
+        // 29일도 (29-1)%7==0이라 5번째 미션이 발급되므로 런 길이를 넘으면 막음
+        return currentDay <= totalDays && (currentDay - 1) % missionInterval == 0;
     }
 
     private void IssueNewMission()

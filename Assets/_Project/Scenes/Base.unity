@@ -7341,6 +7341,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   interactPrompt: {fileID: 0}
+  availability: 1
 --- !u!4 &467736100
 Transform:
   m_ObjectHideFlags: 0
@@ -14083,6 +14084,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   interactPrompt: {fileID: 0}
+  availability: 1
 --- !u!65 &1054794451
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -16558,6 +16560,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   interactPrompt: {fileID: 0}
+  availability: 0
 --- !u!4 &1260550918
 Transform:
   m_ObjectHideFlags: 0
@@ -21680,6 +21683,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   interactPrompt: {fileID: 0}
+  availability: 1
 --- !u!1 &1664984798
 GameObject:
   m_ObjectHideFlags: 0
@@ -23375,6 +23379,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   interactPrompt: {fileID: 0}
+  availability: 1
 --- !u!4 &1798806343
 Transform:
   m_ObjectHideFlags: 0
@@ -23447,6 +23452,7 @@ MonoBehaviour:
   cameraFollow: {fileID: 961739754}
   waveSpawner: {fileID: 0}
   hotbarUI: {fileID: 26440194}
+  rocket: {fileID: 0}
 --- !u!4 &1802641720
 Transform:
   m_ObjectHideFlags: 0

@@ -10,6 +10,7 @@ public class ScenePlayerSpawner : MonoBehaviour
     [SerializeField] private CameraFollow cameraFollow;
     [SerializeField] private WaveSpawner waveSpawner;
     [SerializeField] private HotbarUI hotbarUI;   // HUD 인스턴스의 Hotbar
+    [SerializeField] private RocketInteraction rocket;   // ZWD에만 있음
 
     private void Start()
     {
@@ -25,6 +26,8 @@ public class ScenePlayerSpawner : MonoBehaviour
         {
             waveSpawner.SetPlayer(playerObj.transform);
         }
+
+        if (rocket != null) rocket.SetPlayer(playerObj);
 
         hotbarUI.SetPlayer(playerObj.GetComponent<PlayerGrenade>(), playerObj.GetComponent<PlayerPotion>());
     }

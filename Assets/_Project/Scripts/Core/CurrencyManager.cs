@@ -35,6 +35,6 @@ public class CurrencyManager : MonoBehaviour
 
     public void ResetCrystal()
     {
-        Crystal = 0;
+        Crystal = startingCrystal;   // 새 런도 시작 크리스탈에서 출발 - 테스트 값을 쓰려면 이 필드를 올리면 됨
     }
 }

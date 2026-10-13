@@ -20,7 +20,8 @@ public class GameOverUI : MonoBehaviour
     public void Show()
     {
         finalScoreText.text = $"Final Crystal: {CurrencyManager.Instance.Crystal}";
-        survivedDaysText.text = $"Survived: {RunState.Instance.CurrentDay} Day";
+        // 날짜가 이미 넘어간 뒤 판정되는 마감 실패까지 포함해 "끝까지 보낸 날"로 통일
+        survivedDaysText.text = $"Survived: {RunState.Instance.CurrentDay - 1} Day";
         gameOverPanel.SetActive(true);
     }
 
