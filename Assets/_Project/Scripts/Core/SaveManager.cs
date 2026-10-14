@@ -20,7 +20,6 @@ public class SaveManager : MonoBehaviour
         SaveData data = new SaveData
         {
             currentDay = RunState.Instance.CurrentDay,
-            currentSlot = (int)RunState.Instance.CurrentSlot,
             crystal = CurrencyManager.Instance.Crystal,
             weapons = BuildWeaponEntries(),
             equippedIndex = PlayerWeapon.Instance.EquippedIndex,

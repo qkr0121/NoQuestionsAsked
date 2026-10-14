@@ -80,9 +80,6 @@ public class EnemyMovement : MonoBehaviour
     private void Update()
     {
         if (target == null) return;
-        if (IsBlocked) return;
-
-        ApplySeparation();   // 정지 거리 안에서도 밀려나야 고리 모양이 만들어지므로 추격 이동보다 먼저 호출
 
         Vector3 direction = target.position - transform.position;
         direction.y = 0f;
@@ -90,9 +87,14 @@ public class EnemyMovement : MonoBehaviour
         float distance = direction.magnitude;
         if (distance < 0.0001f) return;
 
+        // 방어벽에 막혀 있어도 플레이어 쪽으로 몸을 돌림 - 플레이어가 벽 반대편으로 가면 앞 방향이 벽에서 벗어나 막힘이 풀리고 다시 쫓아옴
         Quaternion targetRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 1 - Mathf.Exp(-rotationSpeed * Time.deltaTime));
         // 지수 감쇠 기반 부드러운 회전 : 프레임레이트에 무관하게 일정한 감쇠속도를 내기 위한 공식
+
+        if (IsBlocked) return;
+
+        ApplySeparation();   // 정지 거리 안에서도 밀려나야 고리 모양이 만들어지므로 추격 이동보다 먼저 호출
 
         if(distance > stoppingDistance)
         {

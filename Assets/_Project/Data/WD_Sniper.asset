@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: WD_Sniper
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   levels:
-  - damage: 100
-    fireInterval: 2
+  - damage: 250
+    fireInterval: 2.5
     recoilScale: 1
     spreadScale: 1
     reloadTime: 3
@@ -22,9 +22,11 @@ MonoBehaviour:
     maxReserveAmmo: 20
     fireSlowMultiplier: 0.2
     reloadSlowMultiplier: 0.6
+    hitSlowMultiplier: 1
+    hitSlowDuration: 0
     upgradeCost: 0
-  - damage: 100
-    fireInterval: 2
+  - damage: 250
+    fireInterval: 2.5
     recoilScale: 1
     spreadScale: 1
     reloadTime: 2.4
@@ -32,41 +34,49 @@ MonoBehaviour:
     maxReserveAmmo: 20
     fireSlowMultiplier: 0.2
     reloadSlowMultiplier: 0.8
-    upgradeCost: 200
-  - damage: 100
+    hitSlowMultiplier: 1
+    hitSlowDuration: 0
+    upgradeCost: 1500
+  - damage: 420
     fireInterval: 2
     recoilScale: 1
     spreadScale: 1
     reloadTime: 2.4
     magazineSize: 5
-    maxReserveAmmo: 20
-    fireSlowMultiplier: 0.4
+    maxReserveAmmo: 30
+    fireSlowMultiplier: 0.2
     reloadSlowMultiplier: 0.8
-    upgradeCost: 400
-  - damage: 125
+    hitSlowMultiplier: 1
+    hitSlowDuration: 0
+    upgradeCost: 2500
+  - damage: 420
     fireInterval: 2
     recoilScale: 0.6
     spreadScale: 1
     reloadTime: 2.4
     magazineSize: 5
-    maxReserveAmmo: 20
+    maxReserveAmmo: 40
     fireSlowMultiplier: 0.4
     reloadSlowMultiplier: 0.8
-    upgradeCost: 600
-  - damage: 125
-    fireInterval: 1.6
+    hitSlowMultiplier: 1
+    hitSlowDuration: 0
+    upgradeCost: 3500
+  - damage: 500
+    fireInterval: 2
     recoilScale: 0.6
     spreadScale: 0.6
-    reloadTime: 2.4
-    magazineSize: 5
-    maxReserveAmmo: 30
+    reloadTime: 1.8
+    magazineSize: 6
+    maxReserveAmmo: 50
     fireSlowMultiplier: 0.4
     reloadSlowMultiplier: 0.8
-    upgradeCost: 800
+    hitSlowMultiplier: 1
+    hitSlowDuration: 0
+    upgradeCost: 4500
   displayName: "\uC800\uACA9\uCD1D"
-  unlockCost: 500
+  unlockCost: 3000
   startingReserveAmmo: 12
-  ammoCostPerRound: 25
+  ammoCostPerRound: 40
   bulletSpeed: 300
   range: 80
   verticalKickByShot:

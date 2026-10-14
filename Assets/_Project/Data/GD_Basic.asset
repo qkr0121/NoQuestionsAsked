@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GrenadeData
   prefab: {fileID: 6757648878840057709, guid: 11a5e9db4baadeb42ab19940bcb6fbd9, type: 3}
   damage: 80
-  explosionRadius: 3
-  fuseTime: 1
+  explosionRadius: 2
+  fuseTime: 1.5
   maxThrowRange: 12
   flightTime: 0.8
   arcHeight: 3
-  bundleCost: 500
+  bundleCost: 800
   maxCount: 5

@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class WaveSpawner : MonoBehaviour
 {
@@ -9,44 +11,60 @@ public class WaveSpawner : MonoBehaviour
         public BarricadeDirection direction;
     }
 
+    // 한 틱마다 동시에 나갈 좀비 묶음 - 구간의 첫 묶음만 대기/경고를 가짐
+    private class SpawnBatch
+    {
+        public List<SpawnEvent> events = new List<SpawnEvent>();
+        public float delayBefore;   // 0이면 기본 간격
+        public bool showWarning;
+        public bool waitForClear;
+    }
+
     [SerializeField] private Transform[] spawnPoints; // 순서: North, East, South, West(BarricadeDirection 과 일치)
     [SerializeField] private float spawnOffset = 1.5f;   // 같은 지점에서 한꺼번에 나와 겹치지 않도록 스폰 위치에 주는 무작위 범위
 
     private Transform player;
     private WaveDefinition waveDefinition;
-    private TimeOfDayModifier timeOfDayModifier;
 
-    private Queue<List<SpawnEvent>> spawnQueue; // 한 틱마다 동시에 나갈 좀비 묶음
+    private Queue<SpawnBatch> spawnQueue;
     private int aliveCount;
     private float spawnTimer;
     private bool spawningStarted;
+    private bool waitingForClear;   // 필드가 빌 때까지 다음 묶음의 대기를 시작하지 않는 상태
+
+    public event Action<float> OnWarning;   // 인자: 경고 지속 시간(초)
 
     public bool IsCleared { get; private set; }
     public bool CanExit => !spawningStarted || IsCleared;
     // 아직 웨이브를 시작 안했거나(웨이브 미선택 상태), 이미 클리어했으면 나갈 수 있음
 
-    public void BeginWave(WaveDefinition definition, TimeOfDayModifier modifier)
+    public void BeginWave(WaveDefinition definition)
     {
         waveDefinition = definition;
-        timeOfDayModifier = modifier;
 
-        spawnQueue = new Queue<List<SpawnEvent>>();
+        spawnQueue = new Queue<SpawnBatch>();
         foreach (WaveDefinition.EnemySpawnSegment segment in definition.SpawnSegments)
         {
-            int scaledCount = Mathf.Max(1, Mathf.RoundToInt(segment.count * modifier.SpawnCountMultiplier));
-            int tickCount = Mathf.CeilToInt((float)scaledCount / segment.simultaneousCount); // 이 구간이 몇 번의 틱으로 나뉘는지
+            int tickCount = Mathf.CeilToInt((float)segment.count / segment.simultaneousCount); // 이 구간이 몇 번의 틱으로 나뉘는지
 
             for(int tick = 0; tick < tickCount; tick++)
             {
                 int spawnedSoFar = tick * segment.simultaneousCount;
-                int remainingInThisDirection = Mathf.Min(segment.simultaneousCount, scaledCount - spawnedSoFar);
+                int remainingInThisDirection = Mathf.Min(segment.simultaneousCount, segment.count - spawnedSoFar);
 
-                List<SpawnEvent> batch = new List<SpawnEvent>();
+                SpawnBatch batch = new SpawnBatch();
+                if (tick == 0)
+                {
+                    batch.delayBefore = segment.delayBefore;
+                    batch.showWarning = segment.showWarning;
+                    batch.waitForClear = segment.waitForClear;
+                }
+
                 foreach(BarricadeDirection direction in segment.directions)
                 {
                     for(int i = 0; i < remainingInThisDirection; i++)
                     {
-                        batch.Add(new SpawnEvent { type = segment.type, direction = direction });
+                        batch.events.Add(new SpawnEvent { type = segment.type, direction = direction });
                     }
                 }
                 spawnQueue.Enqueue(batch);
@@ -54,14 +72,35 @@ public class WaveSpawner : MonoBehaviour
         }
 
         aliveCount = 0;
-        spawnTimer = 0f;
         IsCleared = false;
+        waitingForClear = false;
         spawningStarted = true;
+        ScheduleNextBatch(0f);   // 첫 묶음은 기본 대기 없이 바로, 대기가 지정돼 있으면 그만큼 뒤에
     }
 
     public void SetPlayer(Transform playerTransform)
     {
         player = playerTransform;
+    }
+
+    private void ScheduleNextBatch(float defaultWait)
+    {
+        if (spawnQueue.Count == 0) return;
+
+        SpawnBatch next = spawnQueue.Peek();
+        if (next.waitForClear)
+        {
+            waitingForClear = true;   // 필드의 좀비를 모두 잡은 뒤에 대기와 경고를 시작함
+            return;
+        }
+        StartWait(next, defaultWait);
+    }
+
+    // 다음 묶음이 나가기까지 대기 시간을 정하고, 경고가 필요하면 알림
+    private void StartWait(SpawnBatch next, float defaultWait)
+    {
+        spawnTimer = next.delayBefore > 0f ? next.delayBefore : defaultWait;
+        if (next.showWarning) OnWarning?.Invoke(spawnTimer);
     }
 
     private void Update()
@@ -71,11 +110,19 @@ public class WaveSpawner : MonoBehaviour
 
         if(spawnQueue.Count > 0)
         {
+            if (waitingForClear)
+            {
+                if (aliveCount > 0) return;   // 아직 필드에 좀비가 남아 있음
+                waitingForClear = false;
+                StartWait(spawnQueue.Peek(), 0f);
+                return;
+            }
+
             spawnTimer -= Time.deltaTime;
             if(spawnTimer <= 0f) // spawnTimer 가 0f 로 시작해서 첫 프레임에 바로 스폰될 수 있고, player 주입 시점과 경쟁할 수도 있음
             {
                 SpawnEnemy();
-                spawnTimer = waveDefinition.SpawnInterval;
+                ScheduleNextBatch(waveDefinition.SpawnInterval);
             }
         }
         else if(aliveCount <= 0)
@@ -86,17 +133,18 @@ public class WaveSpawner : MonoBehaviour
 
     private void SpawnEnemy()
     {
-        List<SpawnEvent> batch = spawnQueue.Dequeue();
-        foreach(SpawnEvent spawnEvent in batch)
+        SpawnBatch batch = spawnQueue.Dequeue();
+        foreach(SpawnEvent spawnEvent in batch.events)
         {
             Transform spawnPoint = GetSpawnPoint(spawnEvent.direction);
             Vector3 offset = new Vector3(Random.Range(-spawnOffset, spawnOffset), 0f, Random.Range(-spawnOffset, spawnOffset));
             EnemyMovement enemy = EnemyPool.Instance.Get(spawnEvent.type, spawnPoint.position + offset, spawnPoint.rotation);
             enemy.SetTarget(player);
 
+            // 시간대 배율은 하루 단위 단순화로 제거 - 필요하면 웨이브 단위 배율로 복구
             EnemyHealth health = enemy.GetComponent<EnemyHealth>();
-            health.Initialize(timeOfDayModifier.EnemyStrengthMultiplier, OnEnemyDeath);
-            
+            health.Initialize(1f, OnEnemyDeath);
+
             aliveCount++;
         }
     }

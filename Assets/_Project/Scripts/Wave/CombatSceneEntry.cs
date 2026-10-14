@@ -13,6 +13,6 @@ public class CombatSceneEntry : MonoBehaviour
             return;
         }
 
-        waveSpawner.BeginWave(RunState.Instance.SelectedWave, RunState.Instance.SelectedTimeOfDay);
+        waveSpawner.BeginWave(RunState.Instance.SelectedWave);
     }
 }

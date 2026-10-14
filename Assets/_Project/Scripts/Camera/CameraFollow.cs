@@ -34,6 +34,8 @@ public class CameraFollow : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerInputLock.IsLocked) return;   // 상점 같은 UI가 열려 있는 동안에는 휠 줌을 막음
+
         Mouse mouse = Mouse.current;
         if (mouse == null) return;
 

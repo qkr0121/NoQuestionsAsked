@@ -95,7 +95,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 500
   damageNumberHeight: 1.5
-  crystalReward: 10
+  crystalReward: 500
 --- !u!114 &-186988232349598092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -110,7 +110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack
   damage: 25
   attackInterval: 1.5
-  barricadeDamage: 40
+  barricadeDamage: 80
   barricadeAttackInterval: 1
   sphereCastRadius: 0.5
   sphereCastDistance: 1.5

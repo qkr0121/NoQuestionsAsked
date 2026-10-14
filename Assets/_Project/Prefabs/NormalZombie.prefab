@@ -110,7 +110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack
   damage: 10
   attackInterval: 1
-  barricadeDamage: 10
+  barricadeDamage: 5
   barricadeAttackInterval: 1
   sphereCastRadius: 0.5
   sphereCastDistance: 1.5

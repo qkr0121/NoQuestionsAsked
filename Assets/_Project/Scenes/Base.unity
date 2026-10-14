@@ -9449,7 +9449,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_TargetDisplay: 0
 --- !u!224 &634448586
 RectTransform:
@@ -24324,20 +24324,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 68a5b656ea61b894d811608fb6f1360c, type: 2}
   - {fileID: 11400000, guid: a9061df7d9f34a943aea772ea68d6588, type: 2}
   - {fileID: 11400000, guid: 70290e292559b294eb790d8bfcff6fe6, type: 2}
-  timeOfDayOptions:
-  - {fileID: 11400000, guid: 24bf6677f94ec5b42959b9e49ff175e4, type: 2}
-  - {fileID: 11400000, guid: 79b6e5aae9e1f094f838a5f6a9b0c3dc, type: 2}
-  - {fileID: 11400000, guid: 1625c74c8a9fb1e439b31d44e82b76cd, type: 2}
+  - {fileID: 11400000, guid: ecbd983ff42976f4b9260e830509bd3e, type: 2}
+  - {fileID: 11400000, guid: 0491733483251a14ca8a640824028516, type: 2}
   waveButtonContainer: {fileID: 314645882}
   waveButtonPrefab: {fileID: 7634469672686377409, guid: cd525c5949303d141890906ed7a2f6ea, type: 3}
   valueEnemyCount: {fileID: 2008527071}
   valueDirections: {fileID: 545203146}
-  valueStrength: {fileID: 1299629000}
-  valueRareChance: {fileID: 1831169201}
-  timeOfDayIcon: {fileID: 1272790042}
-  morningIcon: {fileID: 21300000, guid: 0f7ce350a70cc6344a2c4284d397fe72, type: 3}
-  dayIcon: {fileID: 21300000, guid: 345cc8ec6d1e40149ba0485bdb567b01, type: 3}
-  nightIcon: {fileID: 21300000, guid: aef5ce6bf2bc6fc48b02d0803a4bffcf, type: 3}
 --- !u!1 &1864037625
 GameObject:
   m_ObjectHideFlags: 0

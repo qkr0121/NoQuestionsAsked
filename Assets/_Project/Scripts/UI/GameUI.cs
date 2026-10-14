@@ -33,7 +33,7 @@ public class GameUI : MonoBehaviour
         RunState run = RunState.Instance;
 
         crystalText.text = $"크리스탈 {CurrencyManager.Format(CurrencyManager.Instance.Crystal)}";
-        dateText.text = $"{GetDateLabel(run.CurrentDay)} · {GetSlotLabel()}";
+        dateText.text = GetDateLabel(run.CurrentDay);
         UpdateMission(run);
         UpdateHealth();
     }
@@ -58,7 +58,7 @@ public class GameUI : MonoBehaviour
         {
             // 마지막 미션이면 다음 미션 대신 귀환 안내, 아니면 다음 미션은 마감일 다음 날(다음 주 월요일)
             missionText.text = mission.DueDay >= run.TotalDays
-                ? $"{MissionHeader}상납 완료. {GetDateLabel(run.TotalDays + 1)} 아침, 남은 크리스탈과 함께 귀환할 수 있습니다."
+                ? $"{MissionHeader}상납 완료. {GetDateLabel(run.TotalDays + 1)}, 남은 크리스탈과 함께 귀환할 수 있습니다."
                 : $"{MissionHeader}상납 완료 다음 미션 {GetDateLabel(mission.DueDay + 1)}";
             missionText.color = missionDoneColor;
             return;
@@ -93,17 +93,6 @@ public class GameUI : MonoBehaviour
     {
         int week = (day - 1) / DaysPerWeek + 1;
         return $"{week}주차 {WeekdayNames[(day - 1) % DaysPerWeek]}";
-    }
-
-    private string GetSlotLabel()
-    {
-        return RunState.Instance.CurrentSlot switch
-        {
-            TimeSlot.Morning => "아침",
-            TimeSlot.Day => "낮",
-            TimeSlot.Night => "밤",
-            _ => ""
-        };
     }
 
     public void OnReturnToMainMenuClicked()

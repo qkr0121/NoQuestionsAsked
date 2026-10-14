@@ -2,8 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public enum TimeSlot { Morning, Day, Night }
-
 public class RunState : MonoBehaviour
 {
     public static RunState Instance { get; private set; }
@@ -24,13 +22,11 @@ public class RunState : MonoBehaviour
     public int TotalDays => totalDays;
     // 마감 실패로 게임오버가 된 경우는 탈출이 아님 - 실패 판정이 항상 먼저라 29일에 도달했다는 건 전 미션 성공이라는 뜻
     public bool IsEscapeReady => currentDay > totalDays && !GameManager.Instance.IsGameOver;
-    public TimeSlot CurrentSlot { get; private set; } = TimeSlot.Morning;
 
     // 지금은 미션 1개만 가정. 여러 미션 동시 진행(로그라이트 랜덤 미션)으로 확장 시,
     // Mission[]/List<Mission> 으로 변경하고 발급,제출,마감판정 로직을 별도 MissionManager 로 분리 예정
     public Mission CurrentMission { get; private set; }
     public WaveDefinition SelectedWave { get; private set; }
-    public TimeOfDayModifier SelectedTimeOfDay { get; private set; }
 
     public MotiveData Motives => motiveData;
     public int MotiveIndex { get; private set; } = -1;   // -1 = 아직 고르지 않음
@@ -54,10 +50,9 @@ public class RunState : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    public void SelectWave(WaveDefinition wave, TimeOfDayModifier timeOfDay)
+    public void SelectWave(WaveDefinition wave)
     {
         SelectedWave = wave;
-        SelectedTimeOfDay = timeOfDay;
     }
 
     public void SelectMotive(int index)
@@ -68,22 +63,13 @@ public class RunState : MonoBehaviour
     public void ClearSelectedWave()
     {
         SelectedWave = null;
-        SelectedTimeOfDay = null;
     }
 
-    public void AdvanceSlot()
+    // 하루 단위로 단순화 - 전투를 마치고 복귀할 때만 하루가 끝남 (시간대 구조가 필요하면 나중에 복구)
+    public void EndDay()
     {
-        ClearSelectedWave();   // 시간이 흐르면 선택해 둔 웨이브(시간대 배율 포함)는 낡은 값이 됨
-
-        if (CurrentSlot == TimeSlot.Night)
-        {
-            AdvanceDay();
-            CurrentSlot = TimeSlot.Morning;
-        }
-        else
-        {
-            CurrentSlot = CurrentSlot + 1;
-        }
+        ClearSelectedWave();   // 시간이 흐르면 선택해 둔 웨이브는 낡은 값이 됨
+        AdvanceDay();
 
         if (GameManager.Instance.IsGameOver) return;   // 마감 실패로 끝난 런은 저장하지 않음
         SaveManager.Instance.Save();
@@ -121,10 +107,8 @@ public class RunState : MonoBehaviour
     {
         currentDay = 1;
         MotiveIndex = -1;
-        CurrentSlot = TimeSlot.Morning;
         CurrentMission = null;
         SelectedWave = null;
-        SelectedTimeOfDay = null;
     }
 
     public void ResetEntireRun()
@@ -141,7 +125,6 @@ public class RunState : MonoBehaviour
     public void LoadFrom(SaveData data)
     {
         currentDay = data.currentDay;
-        CurrentSlot = (TimeSlot)data.currentSlot;
         // 동기 목록이 바뀌어 범위를 벗어난 값은 미선택으로 처리
         MotiveIndex = (data.motiveIndex >= 0 && data.motiveIndex < motiveData.Count) ? data.motiveIndex : -1;
 
