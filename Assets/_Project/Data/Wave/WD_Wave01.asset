@@ -10,24 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f5ece4cf19ee6a49b53d0a4d0b3f4fd, type: 3}
-  m_Name: WD_Wave04
+  m_Name: WD_Wave01
   m_EditorClassIdentifier: Assembly-CSharp::WaveDefinition
-  waveName: Wave4
+  waveName: Wave1
+  waveNumber: 1
   spawnSegments:
   - type: 1
     count: 4
-    directions: 0200000001000000
+    directions: 0000000002000000
     simultaneousCount: 1
     delayBefore: 0
     showWarning: 0
     waitForClear: 0
-  - type: 1
-    count: 5
-    directions: 0200000001000000
-    simultaneousCount: 5
-    delayBefore: 5
-    showWarning: 1
-    waitForClear: 1
-  spawnInterval: 5
+  spawnInterval: 6
   spawnDirections: 0
   rareCrystalDropChance: 0.05

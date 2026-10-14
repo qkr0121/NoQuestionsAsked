@@ -7,6 +7,7 @@ public class WaveDefinition : ScriptableObject
 {
     [Header("식별")]
     [SerializeField] private string waveName;
+    [SerializeField] private int waveNumber = 1;   // 해금 순서 (1~10)
 
     [System.Serializable]
     public class EnemySpawnSegment
@@ -29,6 +30,7 @@ public class WaveDefinition : ScriptableObject
     [SerializeField] private float rareCrystalDropChance = 0.05f;
 
     public string WaveName => waveName;
+    public int WaveNumber => waveNumber;
     public EnemySpawnSegment[] SpawnSegments => spawnSegments;
     public float SpawnInterval => spawnInterval;
     public SpawnDirectionPattern SpawnDirections => spawnDirections;

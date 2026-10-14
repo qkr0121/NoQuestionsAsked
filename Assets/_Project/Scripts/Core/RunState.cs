@@ -15,6 +15,10 @@ public class RunState : MonoBehaviour
     // 주기별 요구 금액 (0번 = 첫 주기) - 주기마다 증가폭이 달라야 웨이브 수입 곡선과 맞출 수 있어 배열로 둠
     [SerializeField] private int[] missionQuotas = { 6000, 9000, 12000, 15000 };
 
+    [Header("웨이브 해금")]
+    [SerializeField] private int wavesPerWeek = 3;   // 주차마다 열리는 웨이브 수
+    [SerializeField] private int lastWaveNumber = 10;
+
     [Header("지원 동기")]
     [SerializeField] private MotiveData motiveData;
 
@@ -27,6 +31,25 @@ public class RunState : MonoBehaviour
     // Mission[]/List<Mission> 으로 변경하고 발급,제출,마감판정 로직을 별도 MissionManager 로 분리 예정
     public Mission CurrentMission { get; private set; }
     public WaveDefinition SelectedWave { get; private set; }
+
+    public int ClearedWaveNumber { get; private set; }   // 가장 높이 클리어한 웨이브 번호 (0 = 아직 없음)
+
+    // 주차 상한 - 1주 3, 2주 6, 3주 9, 4주 10
+    public int WaveWeekCap
+    {
+        get
+        {
+            int week = (currentDay - 1) / missionInterval + 1;
+            return Mathf.Min(lastWaveNumber, wavesPerWeek * week);
+        }
+    }
+
+    // 주차 상한 안에서 이전 웨이브를 클리어해야 다음 웨이브가 열림 (이미 연 웨이브는 언제든 다시 선택 가능)
+    public int UnlockedWaveNumber => Mathf.Min(WaveWeekCap, ClearedWaveNumber + 1);
+    public bool IsWaveUnlocked(WaveDefinition wave) => wave.WaveNumber <= UnlockedWaveNumber;
+
+    // 웨이브가 처음 열리는 주차 - 1~3은 1주, 4~6은 2주, 7~9는 3주, 10은 4주
+    public int GetWaveUnlockWeek(int waveNumber) => (waveNumber - 1) / wavesPerWeek + 1;
 
     public MotiveData Motives => motiveData;
     public int MotiveIndex { get; private set; } = -1;   // -1 = 아직 고르지 않음
@@ -63,6 +86,11 @@ public class RunState : MonoBehaviour
     public void ClearSelectedWave()
     {
         SelectedWave = null;
+    }
+
+    public void MarkWaveCleared(WaveDefinition wave)
+    {
+        if (wave != null && wave.WaveNumber > ClearedWaveNumber) ClearedWaveNumber = wave.WaveNumber;
     }
 
     // 하루 단위로 단순화 - 전투를 마치고 복귀할 때만 하루가 끝남 (시간대 구조가 필요하면 나중에 복구)
@@ -109,6 +137,7 @@ public class RunState : MonoBehaviour
         MotiveIndex = -1;
         CurrentMission = null;
         SelectedWave = null;
+        ClearedWaveNumber = 0;
     }
 
     public void ResetEntireRun()
@@ -127,6 +156,7 @@ public class RunState : MonoBehaviour
         currentDay = data.currentDay;
         // 동기 목록이 바뀌어 범위를 벗어난 값은 미선택으로 처리
         MotiveIndex = (data.motiveIndex >= 0 && data.motiveIndex < motiveData.Count) ? data.motiveIndex : -1;
+        ClearedWaveNumber = Mathf.Max(0, data.clearedWaveNumber);
 
         if(data.missions != null && data.missions.Length > 0)
         {

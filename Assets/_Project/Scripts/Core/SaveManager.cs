@@ -27,6 +27,7 @@ public class SaveManager : MonoBehaviour
             barricades = BuildBarricadeEntries(),
             grenadeCounts = PlayerConsumables.Instance.GetGrenadeCounts(),
             potionCounts = PlayerConsumables.Instance.GetPotionCounts(),
+            clearedWaveNumber = RunState.Instance.ClearedWaveNumber,
             missions = BuildMissionEntries(),
             player = new PlayerSaveData
             {

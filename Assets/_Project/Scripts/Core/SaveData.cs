@@ -51,6 +51,7 @@ public class SaveData
     public BarricadeSaveEntry[] barricades;   // BarricadeDirection 순서 (North, East, South, West)
     public int[] grenadeCounts;   // 소모품 개수 - 종류 순서는 PlayerConsumables의 배열 순서
     public int[] potionCounts;
+    public int clearedWaveNumber;   // 가장 높이 클리어한 웨이브 번호 - 옛 세이브는 0(없음)으로 읽힘
 
     public MissionSaveEntry[] missions;
     public PlayerSaveData player;
