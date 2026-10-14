@@ -65,6 +65,7 @@ public class MainMenuUI : MonoBehaviour
         // 영속 매니저들의 메모리 상태를 전부 새 런 기준을 리셋(세이브 파일 삭제와 메모리 상태 리셋은 별개)
         RunState.Instance.SelectMotive(motiveIndex);   // 리셋한 뒤에 설정해야 지워지지 않음
 
+        PendingTutorial.MarkForShow();   // 새 게임으로 기지에 들어오면 안내 패널을 자동으로 띄움
         SceneTransitioner.GoTo("Base");
     }
 

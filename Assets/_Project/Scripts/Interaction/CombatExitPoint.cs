@@ -6,6 +6,19 @@ public class CombatExitPoint : MonoBehaviour
 {
     [SerializeField] private WaveSpawner waveSpawner;
 
+    private InteractableStructure structure;
+
+    private void Awake()
+    {
+        structure = GetComponent<InteractableStructure>();
+    }
+
+    private void Update()
+    {
+        // 남은 좀비가 있으면 나갈 수 없다는 이유가 안내에 바로 보이게 함
+        structure.SetPromptText(waveSpawner.CanExit ? "기지로 복귀" : "좀비를 모두 처치해야 한다");
+    }
+
     public void TryExit()
     {
         // 모든 좀비를 처치하지 않으면 나갈 수 없음

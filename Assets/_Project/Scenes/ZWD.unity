@@ -3872,8 +3872,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  interactPrompt: {fileID: 0}
   availability: 0
+  labelPrefab: {fileID: 5625420747842751302, guid: e02ce527efc1f7044b2081fde9b69462, type: 3}
+  displayName: "\uADC0\uD658 \uC9C0\uC810"
+  promptText: "\uAE30\uC9C0\uB85C \uBCF5\uADC0"
+  labelOffset: {x: 0, y: 3, z: 0}
 --- !u!4 &2004477341
 Transform:
   m_ObjectHideFlags: 0
@@ -3975,8 +3978,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  interactPrompt: {fileID: 0}
   availability: 2
+  labelPrefab: {fileID: 5625420747842751302, guid: e02ce527efc1f7044b2081fde9b69462, type: 3}
+  displayName: "\uB85C\uCF13"
+  promptText: "\uC9C0\uAD6C\uB85C \uADC0\uD658"
+  labelOffset: {x: 0, y: 3, z: 0}
 --- !u!136 &2107842985
 CapsuleCollider:
   m_ObjectHideFlags: 0

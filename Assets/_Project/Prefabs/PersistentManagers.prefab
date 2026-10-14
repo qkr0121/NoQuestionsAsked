@@ -2051,6 +2051,8 @@ MonoBehaviour:
   totalDays: 28
   missionInterval: 7
   missionQuotas: 88130000401f0000e02e0000f0550000
+  wavesPerWeek: 3
+  lastWaveNumber: 10
   motiveData: {fileID: 11400000, guid: f9c5d22b5f8c535449fe281172b3f1c0, type: 2}
 --- !u!1 &9142951311836180778
 GameObject:

@@ -53,6 +53,15 @@ public static class PendingRunReset
     }
 }
 
+// MainMenu에서 새 게임을 시작했을 때, Base 씬의 TutorialUI가 안내 패널을 자동으로 띄우게 하는 플래그
+public static class PendingTutorial
+{
+    public static bool ShouldShow { get; private set; }
+
+    public static void MarkForShow() => ShouldShow = true;
+    public static void Reset() => ShouldShow = false;
+}
+
 // SceneTransitioner 가 Loading 씬으로 넘어가기 직전, 실제로 로드할 목표 씬 이름을 적어두는 용도
 public static class SceneTransitionRequest
 {

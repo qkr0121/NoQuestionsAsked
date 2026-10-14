@@ -7179,8 +7179,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  interactPrompt: {fileID: 0}
   availability: 1
+  labelPrefab: {fileID: 5625420747842751302, guid: e02ce527efc1f7044b2081fde9b69462, type: 3}
+  displayName: "\uBBF8\uC158\uBCF4\uB4DC"
+  promptText: "\uC0C1\uB0A9 \uD655\uC778"
+  labelOffset: {x: 0, y: 3, z: 0}
 --- !u!4 &467736100
 Transform:
   m_ObjectHideFlags: 0
@@ -13648,8 +13651,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  interactPrompt: {fileID: 0}
   availability: 1
+  labelPrefab: {fileID: 5625420747842751302, guid: e02ce527efc1f7044b2081fde9b69462, type: 3}
+  displayName: "\uCE68\uB300"
+  promptText: "\uD734\uC2DD"
+  labelOffset: {x: 0, y: 3, z: 0}
 --- !u!65 &1054794451
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -16261,8 +16267,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  interactPrompt: {fileID: 0}
   availability: 0
+  labelPrefab: {fileID: 5625420747842751302, guid: e02ce527efc1f7044b2081fde9b69462, type: 3}
+  displayName: "\uCD9C\uAD6C"
+  promptText: "\uC9C0\uC0C1\uC73C\uB85C"
+  labelOffset: {x: 0, y: 3, z: 0}
 --- !u!4 &1260550918
 Transform:
   m_ObjectHideFlags: 0
@@ -21242,8 +21251,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  interactPrompt: {fileID: 0}
   availability: 1
+  labelPrefab: {fileID: 5625420747842751302, guid: e02ce527efc1f7044b2081fde9b69462, type: 3}
+  displayName: "\uC0C1\uC810"
+  promptText: "\uAC70\uB798"
+  labelOffset: {x: 0, y: 3, z: 0}
 --- !u!1 &1664984798
 GameObject:
   m_ObjectHideFlags: 0
@@ -22938,8 +22950,11 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  interactPrompt: {fileID: 0}
   availability: 1
+  labelPrefab: {fileID: 5625420747842751302, guid: e02ce527efc1f7044b2081fde9b69462, type: 3}
+  displayName: "\uC18C\uD658\uAE30"
+  promptText: "\uC6E8\uC774\uBE0C \uC120\uD0DD"
+  labelOffset: {x: 0, y: 3, z: 0}
 --- !u!4 &1798806343
 Transform:
   m_ObjectHideFlags: 0
