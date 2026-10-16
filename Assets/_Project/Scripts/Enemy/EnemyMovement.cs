@@ -27,6 +27,8 @@ public class EnemyMovement : MonoBehaviour
 
     public bool IsBlocked { get; set; } // 방어벽에 막혀 공격 중일 때 EnemyAttack이 세팅
 
+    public float SpeedRatio => Time.time < slowUntil ? slowMultiplier : 1f;   // 슬로우 중 현재 속도 ÷ 기본 속도 - 걷는 모션이 실제 이동 속도를 따라가게 공개
+
     public void SetTarget(Transform target)
     {
         this.target = target;

@@ -17,6 +17,8 @@ public class EnemyAttack : MonoBehaviour
     private bool nearWall;
     private EnemyMovement enemyMovement;
 
+    public float BarricadeAttackInterval => barricadeAttackInterval;   // 공격 모션 배속(EnemyAnimation)이 피해 주기를 따라가도록 공개
+
     private void Awake()
     {
         enemyMovement = GetComponent<EnemyMovement>();

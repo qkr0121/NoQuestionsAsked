@@ -4,7 +4,24 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
-## ⭐ 로우폴리 전환 시작 — 총 3종·플레이어 모델, 핫바 2D 아이콘, 무기 모델 데이터화 (2026-10-15~16) — 코드·프리팹·데이터 적용, 플레이 확인 전, 커밋 전
+## ⭐ 일반 좀비 로우폴리 교체 + 걷기/달리기·공격 애니메이션 (2026-10-16) — 코드·프리팹·컨트롤러 적용, 플레이로 동작 확인(사용자), 커밋 전
+
+**디자인(좀비 이미지)**: 플레이어와 구분되도록 **회색 녹색 피부 + 어두운 갈색 작업복 + 마젠타 크리스탈 덩어리(어깨·등·팔) + 갈색 광부 헬멧(랜턴)**. Nano Banana Pro(단순한 면, 안정적인 T-pose)와 GPT Image 2.5(광부 헬멧 컨셉, 하지만 가는 옷자락·벨트·주머니 디테일이 많아 3D에서 지저분해질 위험)를 비교해 **Nano Banana 방식에 헬멧만 단순하게 합침**. 프롬프트 핵심: `realistic human proportions, simple geometric face, simple brown hard hat with small round lamp, a few large torn patches only, a few large magenta crystal clusters, T-pose, flat even lighting, no shadows, pure white background` + Negative에 `shredded cloth, thin torn strips, belt, chest pocket`. 헤비도 이 계열(더 크고 두꺼운 체형)로 맞출 예정.
+- VARCO 플로우(커넥터)는 노드 구조·설정·상태만 읽을 수 있고 **3D 결과의 생김새는 볼 수 없음**(다운로드 후 렌더링해야 하며 파일 다운로드는 확인 필요).
+
+**모델·애니메이션(`Models/NormalZombie/`)**: `Zombie Walk.fbx`가 메시 포함(4,194 tris, 본 40개), `Zombie Attack.fbx`·`Zombie Run.fbx`는 애니메이션만. 셋 다 **Humanoid**(아바타는 Walk에서 생성, 나머지는 Copy From Other), 클립 `Zombie_Walk/Zombie_Attack/Zombie_Run`(4.03/2.63/0.80초), Loop 켬, 루트는 Rotation·XZ Bake 끄고 Y만(플레이어와 동일). **`normal.png`는 매번 Normal map으로 바꿔야 함**.
+- **컨트롤러는 일반 좀비 전용 `NormalZombieController`로 분리** — 기존 `HeavyZombieController`는 일반·헤비가 공유하고 있어 거기에 상태를 넣으면 헤비가 영향받음. 상태 `Run`(기본, 모션은 `Zombie_Run`; 상태 이름은 Walk에서 변경)·`Attack`, 파라미터 `IsAttacking`(bool), `AttackSpeed`·`WalkSpeed`(float, 각 상태의 Speed Multiplier 파라미터로 연결).
+- `NormalZombie.prefab`: 기존 모델(헤비 FBX 재사용)을 `NormalZombieModel`(`Zombie Walk.fbx`)로 교체, `applyRootMotion` 끔(`EnemyMovement`가 위치를 직접 옮기므로). 크기·발 높이는 기존 모델과 같게 계산해 맞추고 플레이어·헤비와 나란히 렌더해 비율 확인(콜라이더 높이: 플레이어 3.0, 일반 2.1, 헤비 2.8).
+
+**코드**: 새 **`EnemyAnimation`**(`NormalZombie` 루트) — 매 프레임 ① `IsAttacking = EnemyMovement.IsBlocked`(방어벽에 막혀 공격 중일 때만 공격 모션), ② `AttackSpeed = 공격 클립 길이 ÷ EnemyAttack.BarricadeAttackInterval`(클립 한 바퀴를 방어벽 피해 주기와 같게 배속: 2.63초 ÷ 1초 = 2.63배, 간격을 바꾸면 자동 추종), ③ `WalkSpeed = walkAnimationSpeed × EnemyMovement.SpeedRatio`(피격 슬로우 중에는 모션도 같이 느려짐, 헤비는 슬로우 면역이라 항상 1). 파라미터는 풀에서 재사용될 때 Animator가 초기화할 수 있어 **매 프레임 지정**. 공개 속성 추가: `EnemyAttack.BarricadeAttackInterval`, `EnemyMovement.SpeedRatio`. 기존 이동·피해 로직은 변경 없음.
+- **`walkAnimationSpeed`**(프리팹, 필드 이름은 그대로): 걷기 클립(4.03초)일 때는 이동 속도 5 대비 너무 느려 **사용자가 7로 조절**, 달리기 클립(0.8초)으로 교체하면서 한 바퀴 시간이 비슷한 **1.3**으로 낮춤(확인 없이 덮어썼음을 알림, 필요하면 올릴 것). 걷기 클립 발 이동량은 한 바퀴에 약 1.5~2 유닛이라 이동 속도 5에 정확히 맞추려면 10배 안팎이 필요(동작이 떨림처럼 보임) → 속도감은 눈으로 조절.
+- **공격 타격 시점**: 피해는 모션이 시작되는 순간(`CheckWallAndAttack`) 들어가 팔을 휘두르는 순간과 어긋날 수 있음 → `NormalZombieController`의 `Attack` 상태 **Cycle Offset**을 눈으로 조절.
+
+**함정/주의**: 정지 거리 안에서 서 있을 때도 달리기 모션이 계속 재생됨(필요하면 같은 구조로 멈춤 추가 가능). `Assets/Screenshots`의 `ZombieSizeCheck.png`는 확인용.
+
+**남은 일**: **헤비 좀비 로우폴리 교체**(일반과 같은 컴포넌트·컨트롤러 구성, 헤비용 배속은 이동 속도 2.5에 맞게 낮게), 공격 모션 타격 타이밍 미세 조정, 총 위치·방향 조절과 `FirePoint`, 기지 건물·바닥 로우폴리 통일, 재질 개선, 수류탄 던지기 애니메이션(폴리싱 막판).
+
+## ⭐ 로우폴리 전환 시작 — 총 3종·플레이어 모델, 핫바 2D 아이콘, 무기 모델 데이터화 (2026-10-15~16) — 코드·프리팹·데이터 적용, 플레이 확인 전, 커밋 완료(5e25184)
 
 **방향 결정(사용자)**: 비주얼을 카툰에서 **로우폴리**로 전환(장르 변경 대비 + 탑다운에서는 실루엣·색 덩어리가 중요 + 크리스탈 같은 각진 소재와 궁합 + 적이 많아지면 폴리 수가 유리 + AI 생성 모델의 품질 편차가 덜 드러남). **총 3종(권총·저격총·수류탄)과 플레이어를 먼저 교체**했고 **좀비·기지 건물·바닥은 아직 이전 스타일**이라 한 화면에서 섞여 보임 → **영상 전에 전부 교체하거나 통일 필요**(좀비는 일반/헤비 모델 분리와 같이). 재질은 `Metallic 0`/`Smoothness 0`이라 종이처럼 보임 → **지금은 그대로 두고 나중에 머티리얼 수정**(PBR 재생성 또는 Metallic·Smoothness 올리기, 보석 Emission).
 
@@ -31,7 +48,7 @@
 
 **함정/주의**: **`PersistentManagers.prefab`의 `Starting Crystal`이 10000(테스트 값, 원래 0) — 커밋 전에 반드시 원복.** `Base.unity`에 HUD 인스턴스 오버라이드(아이콘 테스트 때 씬에서 직접 넣은 `m_Sprite`/`iconImage`)가 남아 있음 → 되돌리거나(Revert) Apply 후 정리, ZWD 씬의 HUD도 확인. `IconStudio.unity`(아이콘 촬영용 임시 씬)는 새로 추적되지 않은 상태 — 보관할지 결정. `Assets/Screenshots`에 테스트 이미지가 남음(정리). 한 세션에서 MCP로 임시 인스턴스를 만들었다 지워서 열린 씬에 수정됨 표시가 뜰 수 있음.
 
-**남은 일**: 총 위치·방향 조절(사용자 진행 중), `FirePoint`(`(0,0.5,0.8)`)를 새 총구 위치에 맞출지 / **좀비 로우폴리 교체(일반·헤비 모델 분리)** / 기지 건물·바닥 스타일 통일 / 재질 개선·보석 Emission / 수류탄 던지기 애니메이션(Mixamo throw + 상체 레이어 + 발사 타이밍 지연)·투척 회전 연출(폴리싱 막판) / 총 종류가 늘면 `useRifleAnimation`(bool)을 `HoldStyle` enum으로 / 수류탄 크리스탈 이펙트 보강.
+**남은 일**: 총 위치·방향 조절(사용자 진행 중), `FirePoint`(`(0,0.5,0.8)`)를 새 총구 위치에 맞출지 / **좀비 로우폴리 교체(일반 완료 — 위 섹션 / 헤비 남음)** / 기지 건물·바닥 스타일 통일 / 재질 개선·보석 Emission / 수류탄 던지기 애니메이션(Mixamo throw + 상체 레이어 + 발사 타이밍 지연)·투척 회전 연출(폴리싱 막판) / 총 종류가 늘면 `useRifleAnimation`(bool)을 `HoldStyle` enum으로 / 수류탄 크리스탈 이펙트 보강.
 
 ## ⭐ MVP 마무리 — UI 튜토리얼 + 상호작용 월드 라벨 구현 (2026-10-14) — 코드·프리팹·씬 적용, 플레이 확인까지 끝, 커밋 완료(d46b481)
 
