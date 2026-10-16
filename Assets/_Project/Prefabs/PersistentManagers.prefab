@@ -1790,7 +1790,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3b70101afc344f468a2a4e73c100bfb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
-  startingCrystal: 0
+  startingCrystal: 10000
 --- !u!1 &8645406827600742721
 GameObject:
   m_ObjectHideFlags: 0

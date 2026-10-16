@@ -1304,11 +1304,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 182502071748895756}
   - {fileID: 7995568458294023515}
   - {fileID: 2374545427002479389}
   - {fileID: 5329405939707552433}
   - {fileID: 1248327263652451763}
-  - {fileID: 182502071748895756}
   - {fileID: 1840222705635407629}
   m_Father: {fileID: 5315005763259751936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1367,6 +1367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8760bf8891ba7fe4eb17a9f3c930cc01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HotbarSlotUI
+  iconImage: {fileID: 6154684734206019283}
   reserveText: {fileID: 3909968680486336031}
   mainText: {fileID: 28022717285617201}
   selectedMark: {fileID: 7452016956997366399}
@@ -1481,11 +1482,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 7675996525013757312}
   - {fileID: 7976054996589630633}
   - {fileID: 4472337731948773534}
   - {fileID: 3115093447086732314}
   - {fileID: 8367359486268074503}
-  - {fileID: 7675996525013757312}
   - {fileID: 4185454368677846192}
   m_Father: {fileID: 5315005763259751936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1544,6 +1545,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8760bf8891ba7fe4eb17a9f3c930cc01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HotbarSlotUI
+  iconImage: {fileID: 2022153457473892332}
   reserveText: {fileID: 8079948339712451726}
   mainText: {fileID: 6680529446669032288}
   selectedMark: {fileID: 5535808855730889691}
@@ -1716,11 +1718,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 6048955066929502732}
   - {fileID: 2319419369292822252}
   - {fileID: 7713254957239174614}
   - {fileID: 5199570740884593863}
   - {fileID: 4781198148788744997}
-  - {fileID: 6048955066929502732}
   - {fileID: 5353507788498504137}
   - {fileID: 9085308869072930358}
   m_Father: {fileID: 5315005763259751936}
@@ -1780,6 +1782,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8760bf8891ba7fe4eb17a9f3c930cc01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HotbarSlotUI
+  iconImage: {fileID: 1896399081988011482}
   reserveText: {fileID: 3321557630230101232}
   mainText: {fileID: 2113325107402180265}
   selectedMark: {fileID: 1529569949823324995}
@@ -2206,7 +2209,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 54, y: 54}
+  m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6278736435367660613
 CanvasRenderer:
@@ -2229,14 +2232,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6, g: 0.6, b: 0.6, a: 0.35}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: c9aa3c63e39b63f4a8826f37e06a9446, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -3199,11 +3202,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 3928900178988816921}
   - {fileID: 5203988957754472360}
   - {fileID: 9043207404747770286}
   - {fileID: 7927493586675149646}
   - {fileID: 58642185455052105}
-  - {fileID: 3928900178988816921}
   - {fileID: 7029851774323051839}
   m_Father: {fileID: 5315005763259751936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3262,6 +3265,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8760bf8891ba7fe4eb17a9f3c930cc01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HotbarSlotUI
+  iconImage: {fileID: 2666954022546743410}
   reserveText: {fileID: 3028833800849388959}
   mainText: {fileID: 8919367805014821663}
   selectedMark: {fileID: 1548388744232164238}
@@ -4436,11 +4440,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 33777379700752066}
   - {fileID: 9077959917955283599}
   - {fileID: 2281082122170385820}
   - {fileID: 1879142765725488759}
   - {fileID: 329323950526537934}
-  - {fileID: 33777379700752066}
   - {fileID: 2234994477788739175}
   m_Father: {fileID: 5315005763259751936}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4499,6 +4503,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8760bf8891ba7fe4eb17a9f3c930cc01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HotbarSlotUI
+  iconImage: {fileID: 5823124542146989439}
   reserveText: {fileID: 3405254734012726546}
   mainText: {fileID: 8196622151797551437}
   selectedMark: {fileID: 5118404863940150611}
@@ -5175,7 +5180,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 54, y: 54}
+  m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7234496143864093257
 CanvasRenderer:
@@ -5198,7 +5203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6, g: 0.6, b: 0.6, a: 0.35}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5462,7 +5467,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 54, y: 54}
+  m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5061812972609155664
 CanvasRenderer:
@@ -5485,14 +5490,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6, g: 0.6, b: 0.6, a: 0.35}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 599168f4dd85cb84f8644806807ca689, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -6594,7 +6599,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 54, y: 54}
+  m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1130049226355350786
 CanvasRenderer:
@@ -6617,7 +6622,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6, g: 0.6, b: 0.6, a: 0.35}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -7475,7 +7480,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 5}
-  m_SizeDelta: {x: 54, y: 54}
+  m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5030910493908387499
 CanvasRenderer:
@@ -7498,7 +7503,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6, g: 0.6, b: 0.6, a: 0.35}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

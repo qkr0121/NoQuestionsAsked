@@ -27,7 +27,10 @@ public class WeaponData : ScriptableObject
 
     [Header("표시 / 해금")]
     public string displayName = "무기";
-    public int unlockCost;  // 0이면 처음부터 해금(권총). 상점에서 사서 여는 무기만 값을 넣음
+    public Sprite icon;     // 핫바 슬롯에 표시할 아이콘
+    public bool useRifleAnimation;  // 소총 자세 애니메이션 사용 (저격총). 권총은 기본값 false
+    public GameObject heldModel;    // 손에 쥘 모델 프리팹 - 위치/회전/크기 보정은 이 프리팹 안에서 맞춤
+    public int unlockCost; // 0이면 처음부터 해금(권총). 상점에서 사서 여는 무기만 값을 넣음
 
     [Header("계열 고유 특성(강화 대상 아님)")]
     public int startingReserveAmmo = 60;

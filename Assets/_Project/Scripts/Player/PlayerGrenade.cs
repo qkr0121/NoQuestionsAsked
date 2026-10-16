@@ -49,7 +49,7 @@ public class PlayerGrenade : MonoBehaviour
         }
     }
 
-    private bool HasGrenade() => InfiniteAmmoZone.IsActive || PlayerConsumables.Instance.GetGrenadeCount(selectedIndex) > 0;
+    public bool HasGrenade() => InfiniteAmmoZone.IsActive || PlayerConsumables.Instance.GetGrenadeCount(selectedIndex) > 0;
 
     // 입력은 PlayerHotbar가 받아서 호출함
     public void OnGrenadeKey()

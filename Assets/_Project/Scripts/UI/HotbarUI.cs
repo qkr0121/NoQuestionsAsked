@@ -39,7 +39,12 @@ public class HotbarUI : MonoBehaviour
             weaponSlots[i].ShowWeapon(weapon.GetSlot(i), !holdingGrenade && i == weapon.EquippedIndex);
         }
 
+        GrenadeData grenadeData = PlayerConsumables.Instance.GetGrenadeData(GrenadeIndex);
+        grenadeSlot.SetIcon(grenadeData != null ? grenadeData.icon : null);
         grenadeSlot.ShowCount(PlayerConsumables.Instance.GetGrenadeCount(GrenadeIndex), holdingGrenade);
+
+        PotionData potionData = PlayerConsumables.Instance.GetPotionData(PotionIndex);
+        potionSlot.SetIcon(potionData != null ? potionData.icon : null);
         potionSlot.ShowPotion(PlayerConsumables.Instance.GetPotionCount(PotionIndex), playerPotion.CooldownRemaining);
     }
 }

@@ -1,10 +1,39 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-10-13
+마지막 업데이트: 2026-10-16
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
-## ⭐ MVP 마무리 — UI 튜토리얼 + 상호작용 월드 라벨 구현 (2026-10-14) — 코드·프리팹·씬 적용, 플레이 확인까지 끝, 커밋 전
+## ⭐ 로우폴리 전환 시작 — 총 3종·플레이어 모델, 핫바 2D 아이콘, 무기 모델 데이터화 (2026-10-15~16) — 코드·프리팹·데이터 적용, 플레이 확인 전, 커밋 전
+
+**방향 결정(사용자)**: 비주얼을 카툰에서 **로우폴리**로 전환(장르 변경 대비 + 탑다운에서는 실루엣·색 덩어리가 중요 + 크리스탈 같은 각진 소재와 궁합 + 적이 많아지면 폴리 수가 유리 + AI 생성 모델의 품질 편차가 덜 드러남). **총 3종(권총·저격총·수류탄)과 플레이어를 먼저 교체**했고 **좀비·기지 건물·바닥은 아직 이전 스타일**이라 한 화면에서 섞여 보임 → **영상 전에 전부 교체하거나 통일 필요**(좀비는 일반/헤비 모델 분리와 같이). 재질은 `Metallic 0`/`Smoothness 0`이라 종이처럼 보임 → **지금은 그대로 두고 나중에 머티리얼 수정**(PBR 재생성 또는 Metallic·Smoothness 올리기, 보석 Emission).
+
+**VARCO 3D 파이프라인 노하우(이번에 얻은 것)**
+- 흐름: 이미지 생성 모델(Nano Banana Pro 등, 레퍼런스 이미지 넣기) → VARCO **이미지 1장 입력** → Generate 3D → Remesh → 텍스처 → 리깅.
+- **변색·겹침의 주원인은 이미지에 구워진 조명·그라데이션**. 프롬프트에 `flat even lighting, no shadows, no gradients, uniform color fills`, **순백 배경**, **얇은 디테일(핀·레버·가는 손가락) 피하기**. 카툰의 큰 머리·큰 눈을 빼고 `realistic human proportions, simple geometric face`로 바꾸자 3D가 깔끔해짐. 팔은 수평·다리는 벌린 T-pose(리깅 안정). 뒷면은 AI가 추정하므로 앞뒤 대칭 복제(총구가 뒤에도 있음)가 생기면 **뒤쪽이 보이는 비스듬한 각도 이미지**로 다시 생성.
+- 설정: Generate 3D 폴리는 **3만~5만**(10만은 노이즈), 텍스처는 확인용으로만 켜고 **최종은 Remesh 후 재생성**, Remesh 권총 약 3,000 / 저격총 3,700 / 플레이어 5,000 / 수류탄 1,758, 텍스처 1k(얼굴이 있으면 2k). **모델은 길이 1.0 단위로 정규화돼 나옴 → Unity에서 스케일 보정**. 손가락은 3D에서 뭉개져 **손가락 리깅은 쓰지 않기로 함**(총을 쥐면 가려짐). 작은 소품의 보석 색(수류탄 크리스탈이 올리브색)은 텍스처 한계 → 그대로 쓰고 필요하면 이펙트.
+- Unity: 가져온 `normal.png`는 **매번 Default 타입** → 반드시 `Normal map`으로(안 하면 음영이 지저분하고 어두움).
+
+**무기 모델 장착(코드 구조 — 무기가 늘어도 `Player.prefab` 수정 불필요)**
+- `WeaponData`: `icon`, `useRifleAnimation`(저격총만 true), **`heldModel`**(손에 쥘 모델 프리팹). `GrenadeData.icon`, `PotionData.icon`도 추가.
+- **`PlayerWeaponVisual`**(`Player` 루트): 장착 무기가 바뀔 때만 `heldModel`을 `weaponSocket` 아래에 생성(한 번 만든 것은 `Dictionary`로 재사용, 꺼 둠). 수류탄(4번)을 든 동안은 총을 숨기고 **권총 자세 유지(`IsRifle` false)** + `grenadeModel`은 **남은 수류탄이 있을 때만**(`PlayerGrenade.HasGrenade()`를 public으로) 표시.
+- 프리팹: `Prefabs/Weapons/Pistol_Held`, `Sniper_Held`, `Grenade_Held`(루트 + **`Model` 자식**에 위치·회전·크기 보정). `Player.prefab`의 `PlayerModel/…/mixamorig:RightHand` 아래 `WeaponSocket` 하나만 있고 총은 데이터가 가짐. **새 무기 = `XXX_Held` 프리팹 + `WeaponData.heldModel`.** 위치·방향 조절은 **사용자가 `*_Held`의 `Model`에서** 진행 중(계산된 시작값만 넣어 둠).
+- 던져지는 수류탄 `Grenade.prefab`: `Sphere` 자식을 `Grenade.fbx`로 교체(같은 위치·높이 0.5, 회전 연출은 없음).
+
+**플레이어 모델·애니메이션 교체**
+- 새 모델 = **`Pistol Run.fbx`**(메시+스켈레톤, 5,000 tris, 34본. `Pistol Idle`·`Rifle Idle/Run`은 애니메이션만). 4개 모두 **Humanoid**(아바타는 `Pistol Run.fbx`에서 생성, 나머지는 Copy From Other), 클립 이름 `Pistol_Idle/Pistol_Run/Rifle_Idle/Rifle_Run`, Loop Time 켬. **루트 트랜스폼은 Rotation·XZ Bake를 끄고 Y만 켬**(XZ를 켜면 Mixamo Idle의 체중 이동 흔들림이 그대로 보임 — `applyRootMotion=false`면 끄는 쪽이 제자리).
+- `PlayerCharacterController`: 상태 4개(Pistol/Rifle × Idle/Run), 파라미터 `MoveSpeed`(float, 기존)·**`IsRifle`**(bool, `PlayerWeaponVisual`이 설정). 기존 `Idle`/`Walk` 상태 제거.
+- `Player.prefab`: 기존 `PlayerCharacterPistolIdle` 인스턴스를 `PlayerModel`(`Pistol Run.fbx`)로 교체, 위치 (0,-1.5,0). FBX 연결은 **Unpack 하지 않음**(오버라이드는 `Player.prefab`에만 저장되고 FBX 원본에는 영향 없음, 같은 파일 덮어쓰기 교체 시 자동 반영). **본 구조가 다른 새 FBX로 바꾸면 `WeaponSocket`(과 `*_Held`는 유지)만 새 오른손 본 밑에 다시 만들면 됨.** 구 모델 폴더(`PistolIdle`, `PistolWalk`)는 이제 안 쓰임(삭제는 사용자).
+- 리깅은 사용자가 관절 위치를 찍어 자동 리깅해서 **위치가 약간 어긋나 미세하게 흔들려 보일 수 있음**(거슬리지 않는 수준 확인).
+
+**핫바 2D 아이콘(3D 스크린샷 방식 폐기)**: 3D 스크린샷 아이콘은 어두운 건메탈 색이 어두운 슬롯 배경과 구분이 안 됨 → **원본 이미지를 레퍼런스로 이미지 모델에 "UI 아이콘, 흰 외곽선, 초록(#00FF00) 크로마키 배경"으로 재생성**(흰 외곽선과 흰 배경이 구분 안 돼 초록 사용) → Pillow로 배경 제거(몸통과 배경색의 거리 기준 **전역 제거**: 가장자리와 이어진 영역만 지우면 핀 고리 구멍 같은 닫힌 영역이 남음) → **외곽선 굵게(알파 약 4px 확장) + 160×160으로 미리 축소**(512에서 80으로 줄이면 외곽선이 0.5px로 가늘어져 점선처럼 끊김) — 파일 `Sprites/Pistol_Icon.png`, `Sniper_Icon.png`(원본을 **직접 30° 회전**: 이미지 모델이 기울이라는 지시를 무시함), `Grenade.png`, `Potion.png`(SF 주사기형). PPU는 UI `Image`라 상관없음.
+- 코드: `HotbarSlotUI.iconImage`(무기 칸만 연결, 없으면 기존 동작) + `ShowWeapon`/`ShowLocked`/**`SetIcon(Sprite)`**(수류탄·회복약 칸), `HotbarUI`가 `GrenadeData.icon`/`PotionData.icon` 지정. **아이콘이 없으면 이미지를 숨겨 빈 칸**. HUD 프리팹의 슬롯 5개 모두 `Icon Image` 연결, 슬롯 `Icon` 80×80, **`SelectedMark`가 `Icon`보다 위에 그려져 총을 가리던 문제 → `SelectedMark`를 자식 맨 위(뒤)로 옮기거나 알파를 낮추도록 안내함**(적용 여부는 HUD 프리팹에서 확인).
+
+**함정/주의**: **`PersistentManagers.prefab`의 `Starting Crystal`이 10000(테스트 값, 원래 0) — 커밋 전에 반드시 원복.** `Base.unity`에 HUD 인스턴스 오버라이드(아이콘 테스트 때 씬에서 직접 넣은 `m_Sprite`/`iconImage`)가 남아 있음 → 되돌리거나(Revert) Apply 후 정리, ZWD 씬의 HUD도 확인. `IconStudio.unity`(아이콘 촬영용 임시 씬)는 새로 추적되지 않은 상태 — 보관할지 결정. `Assets/Screenshots`에 테스트 이미지가 남음(정리). 한 세션에서 MCP로 임시 인스턴스를 만들었다 지워서 열린 씬에 수정됨 표시가 뜰 수 있음.
+
+**남은 일**: 총 위치·방향 조절(사용자 진행 중), `FirePoint`(`(0,0.5,0.8)`)를 새 총구 위치에 맞출지 / **좀비 로우폴리 교체(일반·헤비 모델 분리)** / 기지 건물·바닥 스타일 통일 / 재질 개선·보석 Emission / 수류탄 던지기 애니메이션(Mixamo throw + 상체 레이어 + 발사 타이밍 지연)·투척 회전 연출(폴리싱 막판) / 총 종류가 늘면 `useRifleAnimation`(bool)을 `HoldStyle` enum으로 / 수류탄 크리스탈 이펙트 보강.
+
+## ⭐ MVP 마무리 — UI 튜토리얼 + 상호작용 월드 라벨 구현 (2026-10-14) — 코드·프리팹·씬 적용, 플레이 확인까지 끝, 커밋 완료(d46b481)
 
 **방향 결정(사용자) — 이후 순서**: 현재 게임(슈팅 디펜스)을 **MVP로 마무리하고 폴리싱 → 홍보영상·발표자료 → 그 뒤에 핵앤슬래시 전환 검토**. 목표는 포트폴리오 완성이 아니라 **홍보영상(플레이 시연보다 홍보 쪽)과 발표**. 튜토리얼은 처음 계획(0일차 전투 튜토리얼 + 카메라 연출 + 기지 실습, 약 12h)을 **새 게임 시작 때 UI 설명 패널만 빠르게 보여주는 형태**로 대폭 축소. 폴리싱은 대부분 전환 후에도 재사용 가능하다고 판단. **웨이브 6~10 가능성 점검과 시연용 도구(HUD 숨김·디버그 점프·슬로모션, 약 1h)는 폴리싱 전후로 선택**, 맵 확장은 MVP 이후(전환 시 함께 재검토). **전환 전에 영상·발표용 빌드를 git 태그/브랜치로 고정**(예: `mvp-shooting-defense`)하고 전환은 별도 브랜치에서.
 - **핵앤슬래시 전환 검토 메모(사용자 질문에 대한 판단, 지금 변경 안 함)**: 가능성 있고 스토리와 구조가 더 잘 맞음(구역 = 지하 층, "이 아래에 뭐가 있을까" 동기와 연결, 탐사 1회 = 하루, 상납 = 마감 유지). 밸런스는 **웨이브별 손계산이 구역 티어 파라미터로 단순화**되고 업그레이드를 ×2~3으로 키울 수 있으며 낮은 무기의 상위 구역 효율 게이트가 구조적으로 생김. 대신 **드랍/파밍 경제, 쉬운 구역 반복 파밍 방지(체감 감소·요구 금액), 적 행동 다양성(같은 모델에 색/파티클 + 수치 프리셋), 손맛 연출(사용자 구현), 장애물이 있는 맵의 이동 AI(NavMesh 재검토)** 가 새 비용. **킬 보상 고정 + 상자 파밍 확률(보너스로만, 기대값을 고정 수입의 몇 %로)** 이 경제 안정에 좋고, 방어벽은 **휴대용 설치물**로 재사용 가능, 웨이브 관련(`WaveSpawner`·선발/돌격/경고·웨이브 선택 UI)만 교체 대상(재사용 약 60~70%). 최소 프로토타입(구역 티어 + 밀도 스폰 + 제한 시간, 약 1~2일)로 손맛부터 검증 → 루팅 → 맵 순서 권장. 탄 소진 귀환은 "탄 걱정 없는 시원함"과 부딪혀 **제한 시간을 주 제약**으로.

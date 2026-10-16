@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GD_Basic
   m_EditorClassIdentifier: Assembly-CSharp::GrenadeData
   prefab: {fileID: 6757648878840057709, guid: 11a5e9db4baadeb42ab19940bcb6fbd9, type: 3}
+  icon: {fileID: 21300000, guid: 415c1e2a27476c54f9253b49096cfdf3, type: 3}
   damage: 80
   explosionRadius: 2
   fuseTime: 1.5

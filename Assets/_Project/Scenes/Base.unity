@@ -649,6 +649,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -6885073326787540606, guid: da2b80a66898bae45832ec23420cc41e, type: 2}
+    - target: {fileID: 1896399081988011482, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: f5931b3c65de9cf40af2b45a3512cf78, type: 3}
+    - target: {fileID: 2022153457473892332, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: cb1b37e7c37830a44b4f8d00fe6acf10, type: 3}
+    - target: {fileID: 2022153457473892332, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2045218360520157197, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -729,6 +741,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2626005326944021250, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: iconImage
+      value: 
+      objectReference: {fileID: 26440197}
     - target: {fileID: 4360508745836056762, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -805,6 +821,22 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5823124542146989439, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 415c1e2a27476c54f9253b49096cfdf3, type: 3}
+    - target: {fileID: 6004813639029594052, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: iconImage
+      value: 
+      objectReference: {fileID: 26440198}
+    - target: {fileID: 6154684734206019283, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 286011c9b7c131e4eba1dcc422b1936c, type: 3}
+    - target: {fileID: 6154684734206019283, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6820892676524069718, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -829,6 +861,26 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7337323841982760883, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7976054996589630633, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 7976054996589630633, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 7995568458294023515, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 7995568458294023515, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 80
+      objectReference: {fileID: 0}
     - target: {fileID: 8045569278634189257, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -853,6 +905,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8148050172663290573, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: iconImage
+      value: 
+      objectReference: {fileID: 26440195}
+    - target: {fileID: 8250461145866850516, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+      propertyPath: iconImage
+      value: 
+      objectReference: {fileID: 26440196}
     - target: {fileID: 8344704222337046335, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
       propertyPath: m_Name
       value: HUD
@@ -877,6 +937,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4557ea1782a687148808da48d67af65e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HotbarUI
+--- !u!114 &26440195 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6154684734206019283, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+  m_PrefabInstance: {fileID: 26440193}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &26440196 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2022153457473892332, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+  m_PrefabInstance: {fileID: 26440193}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &26440197 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2666954022546743410, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+  m_PrefabInstance: {fileID: 26440193}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!114 &26440198 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5823124542146989439, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
+  m_PrefabInstance: {fileID: 26440193}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!1 &26530934
 GameObject:
   m_ObjectHideFlags: 0

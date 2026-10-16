@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 105eaa849a078d449b024a6078671016, type: 3}
   m_Name: WD_Potion
   m_EditorClassIdentifier: Assembly-CSharp::PotionData
+  icon: {fileID: 21300000, guid: f5931b3c65de9cf40af2b45a3512cf78, type: 3}
   healAmount: 30
   bundleCost: 200
   maxCount: 10

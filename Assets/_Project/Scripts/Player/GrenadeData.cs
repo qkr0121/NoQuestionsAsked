@@ -5,6 +5,7 @@ public class GrenadeData : ScriptableObject
 {
     [Header("연출")]
     public Grenade prefab;
+    public Sprite icon;     // 핫바 슬롯에 표시할 아이콘
 
     [Header("폭발")]
     public int damage = 30;
