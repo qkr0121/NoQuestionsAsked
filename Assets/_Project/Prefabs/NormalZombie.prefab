@@ -113,6 +113,7 @@ MonoBehaviour:
   attackInterval: 1
   barricadeDamage: 5
   barricadeAttackInterval: 1
+  contactCheckInterval: 0.25
   sphereCastRadius: 0.5
   sphereCastDistance: 1.5
   obstacleLayer:
@@ -234,8 +235,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: af0d0dc808473004abb11b24177b854f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6799712989836567148}
   m_SourcePrefab: {fileID: 100100000, guid: af0d0dc808473004abb11b24177b854f, type: 3}
+--- !u!1 &415196890804937746 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: af0d0dc808473004abb11b24177b854f, type: 3}
+  m_PrefabInstance: {fileID: 649216049556445507}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6799712989836567148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415196890804937746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1711b22dfcab1c478b3c7530f977f41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimationEvents
 --- !u!4 &1047302365280353960 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: af0d0dc808473004abb11b24177b854f, type: 3}

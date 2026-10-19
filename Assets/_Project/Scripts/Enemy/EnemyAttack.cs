@@ -7,13 +7,14 @@ public class EnemyAttack : MonoBehaviour
 
     [Header("방어벽 공격")]
     [SerializeField] private int barricadeDamage = 10;
-    [SerializeField] private float barricadeAttackInterval = 1f;
+    [SerializeField] private float barricadeAttackInterval = 1f;   // 공격 모션 한 바퀴 시간 = 피해 주기 (EnemyAnimation 이 모션 배속을 이 값에 맞춤)
+    [SerializeField] private float contactCheckInterval = 0.25f;   // 막힌 뒤 막힘이 풀렸는지 확인하는 주기
     [SerializeField] private float sphereCastRadius = 0.5f; // 좀비 몸통 반경 정도 - 대각선으로 접근해도 벽을 감지하기 위함
     [SerializeField] private float sphereCastDistance = 1.5f;
     [SerializeField] private LayerMask obstacleLayer;
 
     private float attackTimer;
-    private float barricadeAttackTimer;
+    private float contactCheckTimer;
     private bool nearWall;
     private EnemyMovement enemyMovement;
 
@@ -27,7 +28,7 @@ public class EnemyAttack : MonoBehaviour
     private void OnEnable()
     {
         attackTimer = 0f;
-        barricadeAttackTimer = 0f;
+        contactCheckTimer = 0f;
         nearWall = false;
     }
 
@@ -41,29 +42,24 @@ public class EnemyAttack : MonoBehaviour
             return;
         }
 
-        barricadeAttackTimer -= Time.deltaTime;
-        if (barricadeAttackTimer > 0f) return;
+        // 막히기 전에는 매 프레임 확인(벽에 파고들지 않게), 막힌 뒤에는 주기적으로만 확인(풀렸는지)
+        contactCheckTimer -= Time.deltaTime;
+        if (enemyMovement.IsBlocked && contactCheckTimer > 0f) return;
+        contactCheckTimer = contactCheckInterval;
 
-        CheckWallAndAttack();
+        enemyMovement.IsBlocked = Physics.SphereCast(transform.position, sphereCastRadius, transform.forward, out _, sphereCastDistance, obstacleLayer);
     }
 
-    private void CheckWallAndAttack()
+    // 공격 모션의 내려찍는 프레임에서 Animation Event 로 호출됨 (EnemyAnimationEvents 가 전달)
+    public void OnBarricadeHit()
     {
+        if (!enemyMovement.IsBlocked) return;
+
+        // 이벤트 순간에도 벽이 앞에 있는지 다시 확인 - 모션 도중 벽이 부서졌으면 피해 없음
         if (Physics.SphereCast(transform.position, sphereCastRadius, transform.forward, out RaycastHit hit, sphereCastDistance, obstacleLayer))
         {
-            enemyMovement.IsBlocked = true;
-
             BarricadeSlot slot = hit.collider.GetComponent<BarricadeSlot>();
-            if (slot != null)
-            {
-                slot.TakeDamage(barricadeDamage);
-            }
-
-            barricadeAttackTimer = barricadeAttackInterval;
-        }
-        else
-        {
-            enemyMovement.IsBlocked = false;
+            if (slot != null) slot.TakeDamage(barricadeDamage);
         }
     }
 

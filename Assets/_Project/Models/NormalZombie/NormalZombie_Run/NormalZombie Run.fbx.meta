@@ -32,7 +32,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Zombie_Run
+      name: NormalZombie_Run
       takeName: mixamo.com
       internalID: -203655887218126122
       firstFrame: 0
