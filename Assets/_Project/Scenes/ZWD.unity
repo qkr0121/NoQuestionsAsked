@@ -4019,6 +4019,8 @@ MonoBehaviour:
   baseScale: 1
   referenceDepth: 14.4
   spread: 0.4
+  rewardPrefab: {fileID: 721226061744749552, guid: f370938a62993dc4fae26811eaa98e6d, type: 3}
+  rewardHeight: 0.6
 --- !u!1 &1566847931
 GameObject:
   m_ObjectHideFlags: 0

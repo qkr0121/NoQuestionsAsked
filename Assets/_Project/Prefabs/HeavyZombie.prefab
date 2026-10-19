@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: -186988232349598092}
   - component: {fileID: 8471098570978375226}
   - component: {fileID: 7292634602635671317}
+  - component: {fileID: 845728804572231460}
   m_Layer: 7
   m_Name: HeavyZombie
   m_TagString: Enemy
@@ -97,6 +98,8 @@ MonoBehaviour:
   maxHealth: 500
   damageNumberHeight: 1.5
   crystalReward: 500
+  deathEffect: {fileID: 4715764042231763082, guid: 2ff19070753b5dd4b929e38f2bfa4b58, type: 3}
+  deathEffectHeight: 1.3
 --- !u!114 &-186988232349598092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,6 +163,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimation
   attackClip: {fileID: -203655887218126122, guid: 98acc4f24cb117c44ae6a6ebfe9302e5, type: 3}
   walkAnimationSpeed: 2
+--- !u!114 &845728804572231460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8327412163514838340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa3f5187fb71e44b920de9f0b1c88c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHitFeedback
+  renderers: []
+  punchTarget: {fileID: 0}
+  flashColor: {r: 2.5, g: 2.5, b: 2.5, a: 1}
+  flashDuration: 0.08
+  punchScale: 0.08
+  punchDuration: 0.12
 --- !u!1001 &1679719376135931438
 PrefabInstance:
   m_ObjectHideFlags: 0

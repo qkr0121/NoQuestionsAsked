@@ -4,7 +4,24 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
-## ⭐ 폴리싱 ④ 전투 피드백 시작 — WarFX 폭발·총구 화염, 무기별 총구 위치, 소총 조준 자세 (2026-10-20~21) — 코드·프리팹·컨트롤러 적용, 플레이 확인 중(사용자), 커밋 전
+## ⭐ 폴리싱 ④ 전투 피드백 2단계 — 좀비 피격 번쩍임·펀치, 사망 크리스탈 파편, 킬 보상 텍스트 (2026-10-21) — 코드·프리팹 적용, 플레이로 이펙트 확인(사용자), 킬 보상 텍스트는 프리팹 연결 대기, 커밋 전
+
+**결정(사용자 미응답 항목은 Claude 권장안으로 진행)**: 사망 = 크리스탈 파편 터짐(A안), 피격 = 번쩍임 + 작은 펀치(**헤비는 번쩍임만**), 킬 보상 `+N` 텍스트는 **일반·헤비 같은 크기**(사용자 지정, 숫자만 `crystalReward`대로 다름), 스폰 연출은 후순위. 피격 이펙트에 WarFX는 쓰지 않음.
+
+**피격 반응**: 새 `EnemyHitFeedback`(좀비 루트) — `MaterialPropertyBlock`으로 `_BaseColor`를 (2.5, 2.5, 2.5)로 0.08초 밝힘(머티리얼 `_BaseColor`가 흰색이고 Emission 키워드가 없어서 곱해져 하얗게 번쩍임, `SetPropertyBlock(null)`로 원복), `punchTarget`이 있으면 0.12초 동안 8% 커졌다가 돌아옴(일반은 `NormalZombieModel`, 헤비는 비움). **풀에서 재사용되므로 `OnEnable`에서 번쩍임·크기 초기화.** `EnemyHealth.TakeDamage`에서 **죽지 않는 타격일 때만** `Play()` 호출(죽는 타격은 사망 이펙트가 대신함).
+**사망 이펙트**: `EnemyHealth`에 `deathEffect`(`PooledEffect`)·`deathEffectHeight` 추가, `Die()`에서 `EffectPool.Instance.Play(deathEffect, 위치 + 위로 높이, identity)`. 프리팹 `Prefabs/Effects/CrystalShatter.prefab`(일반: 파편 12개, 높이 1)·`CrystalShatter_Heavy.prefab`(헤비: 24개, 높이 1.3) — 구형 Burst, 중력 2, 3D 랜덤 회전, 수명 동안 0으로 줄어듦, World 공간, Stop Action = Callback(`PooledEffect`가 풀 반납). 메시 `Models/Effects/CrystalShard.asset`(길쭉한 팔면체 0.7×1.6×0.7), 머티리얼 `Materials/Effects/M_CrystalShard.mat`(Particles/Unlit, Base Color 마젠타 HDR (3, 0.5, 3)라 Bloom이 먹음). 두 좀비 프리팹에 `EnemyHitFeedback`·`deathEffect` 연결 확인.
+- **크기 조정(사용자 요청)**: 빨간 피격 이펙트(`Projectile`의 `HitEffect.prefab`, 크기 0.1~0.2·속도 2~5·15개, 빌보드, 줄어들지 않음, 밝은 HDR)보다 사망 파편이 작아 보여 **사망 Start Size 일반 0.25~0.5(원래 0.12~0.24)·헤비 0.45~0.8(원래 0.2~0.4), `HitEffect`는 0.06~0.12(원래 0.1~0.2)로 축소**.
+**킬 보상 텍스트**: `DamageNumber`에 문자열을 받는 `Show(string, ...)` 추가(기존 `Show(int, ...)`가 호출), `DamageNumberPool`에 `rewardPrefab`·`rewardHeight`(0.6, 기준 크기 기준)와 보상용 풀·`ShowReward(int, Vector3)`(깊이 보정은 데미지 숫자와 동일, 위치를 `rewardHeight × scale`만큼 위로 띄움, **동시 표시 상한 없음** — 수류탄으로 여러 마리를 잡아도 보상 표시가 빠지지 않게, 풀 최대 30). `EnemyHealth.Die()`에서 `AddKillReward` 직후 호출, 위치는 `damageNumberHeight`. **`rewardPrefab`이 비어 있으면 보상 텍스트는 안 나옴.** 색 추천은 파편과 같은 마젠타 (255, 90, 255), 데미지 숫자와 비슷하면 시안 (90, 240, 255), 바닥에 묻히면 어두운 보라 Outline.
+
+**사용자 진행**: DamageNumber 프리팹을 복제해 `KillRewardNumber`(색, Lifetime 1.2 정도) → 씬 `DamageNumberPool`의 `Reward Prefab`에 연결 → 플레이로 위치·색·크기 확인(데미지 숫자와 겹치면 `Reward Height` 조절).
+
+**함정/주의**: MCP `execute_code`(CodeDom)에서 `AssetDatabase.DeleteAsset`은 차단됨(이번엔 새 에셋이라 불필요). 텍스처가 `_BaseColor`를 쓰지 않는 머티리얼로 바뀌면 번쩍임이 안 보일 수 있음. 확인용 임시 오브젝트 없음.
+
+**남은 일**: 사격 피드백 추가(무기별 궤적 길이, 총 모델 반동) / 스폰 연출(후순위) / 사운드(④ 이후 병행) / 미사용 `IsFiring`·`fireHoldTime` 정리(승인 후) / `M_Zombie.mat` 미참조(사용자 결정) / 다음 순서 ⑤ 플레이어 피격·사망, ⑥ ZWD 맵 구성.
+
+## ⭐ 폴리싱 ④ 전투 피드백 시작 — WarFX 폭발·총구 화염, 무기별 총구 위치, 소총 조준 자세 (2026-10-20~21) — 코드·프리팹·컨트롤러 적용, 플레이 확인 중(사용자), 커밋 완료(aa519f9)
+
+**WarFX 정리 완료(사용자, 커밋 전에 삭제)**: `Assets/JMO Assets/WarFX`에는 `Scripts`·`Shaders`·Readme만 남기고(`Cartoon FX Easy Editor` 폴더는 남김) 나머지(Demo, Desktop, Mobile, `_Effects` 등)를 삭제 — `_Project`/`Settings` 에셋 100개의 의존성을 확인했을 때 `Desktop` 아래 파일을 쓰는 것은 0개였음. **피격 이펙트에는 WarFX `Bullet Impacts`를 쓰지 않기로 결정(사용자).** `_Project/Materials`의 `M_Zombie.mat`은 아무 에셋도 참조하지 않는 옛 머티리얼(정리 후보).
 
 **WarFX(Jean Moreno, Asset Store 무료) 적용 가능성 확인**: `Assets/JMO Assets/WarFX`(**78MB, 파일 401개** — 데모, Mobile 버전, 안 쓰는 이펙트 포함)의 셰이더는 Built-in용 CG 언릿 파티클이지만 **URP에서 렌더링됨**(컴파일 오류 없음, 편집 모드에서 파티클을 `Simulate`해 사진으로 확인). 머티리얼 중 `Standard` 셰이더 10개는 URP에서 분홍색이 될 수 있으나 쓰는 이펙트(폭발, 총구 화염)에는 없음. 콘솔 경고는 데모 씬을 열 때 컴포넌트 로드 실패 한 건뿐. 폭발 연기에 쓰이는 `Legacy Particles/Additive (Soft)`는 시뮬레이션 중 흰 사각형이 한 프레임 보임(플레이 확인 필요). 크레딧에 출처 표기 권장. **원본 폴더를 직접 쓰지 않고 복사본을 `_Project`에 만들어 연결**(사용자 요청).
 - 수류탄 폭발: `WFX_Explosion Simple`(시각 반경 약 3, `Small`은 2.2, 큰 것은 4.4) → **`Prefabs/Effects/Explosion_Grenade.prefab`**(머티리얼 5개 `Materials/Effects/`, 텍스처 5개 `Textures/Effects/`로 복사·재연결) → `Grenade.prefab`의 `Explosion Effect`에 연결(이전엔 비어 있었음). **`Grenade.cs`가 이펙트를 2초 뒤 `Destroy`하는데 연기는 3초까지 가서 약 1초 일찍 끊길 수 있음 — 사용자가 2초 그대로 두기로 함.**

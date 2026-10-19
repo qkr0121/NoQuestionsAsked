@@ -11,7 +11,11 @@ public class DamageNumberPool : MonoBehaviour
     [SerializeField] private float referenceDepth = 14.4f;     // 기본 줌에서 카메라와 대상 사이 깊이 (offset 크기)
     [SerializeField] private float spread = 0.4f;              // 가로 흩뿌림 (기준 크기 기준)
 
+    [SerializeField] private DamageNumber rewardPrefab;        // 킬 보상용 (색·수명은 이 프리팹에서 조절), 비워두면 보상 텍스트 없음
+    [SerializeField] private float rewardHeight = 0.6f;        // 데미지 숫자와 겹치지 않게 위로 띄우는 높이 (기준 크기 기준)
+
     private ObjectPool<DamageNumber> pool;
+    private ObjectPool<DamageNumber> rewardPool;
     private int activeCount;
 
     private void Awake()
@@ -30,6 +34,20 @@ public class DamageNumberPool : MonoBehaviour
             actionOnDestroy: number => Destroy(number.gameObject),
             defaultCapacity: 20,
             maxSize: 50);
+
+        if (rewardPrefab == null) return;
+        rewardPool = new ObjectPool<DamageNumber>(
+            createFunc: () =>
+            {
+                DamageNumber number = Instantiate(rewardPrefab, transform);
+                number.SetPool(rewardPool);
+                return number;
+            },
+            actionOnGet: number => number.gameObject.SetActive(true),
+            actionOnRelease: number => number.gameObject.SetActive(false),
+            actionOnDestroy: number => Destroy(number.gameObject),
+            defaultCapacity: 10,
+            maxSize: 30);
     }
 
     public void Show(int amount, Vector3 worldPosition)
@@ -48,5 +66,21 @@ public class DamageNumberPool : MonoBehaviour
 
         DamageNumber number = pool.Get();
         number.Show(amount, worldPosition + jitter, cam.transform.rotation, scale);
+    }
+
+    // 킬 보상은 동시에 많이 잡아도 빠지면 안 되므로 동시 표시 상한을 두지 않음
+    public void ShowReward(int amount, Vector3 worldPosition)
+    {
+        if (rewardPool == null) return;
+
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        // 데미지 숫자와 같은 깊이 보정으로 화면 크기를 일정하게 유지
+        float depth = Mathf.Max(Vector3.Dot(worldPosition - cam.transform.position, cam.transform.forward), 0.1f);
+        float scale = baseScale * depth / referenceDepth;
+
+        DamageNumber number = rewardPool.Get();
+        number.Show("+" + amount, worldPosition + Vector3.up * rewardHeight * scale, cam.transform.rotation, scale);
     }
 }

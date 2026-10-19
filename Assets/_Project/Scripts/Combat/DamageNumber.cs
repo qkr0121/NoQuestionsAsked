@@ -25,8 +25,14 @@ public class DamageNumber : MonoBehaviour
 
     public void Show(int amount, Vector3 position, Quaternion rotation, float scale)
     {
+        Show(amount.ToString(), position, rotation, scale);
+    }
+
+    // 킬 보상처럼 "+200" 형태의 문자열도 같은 연출로 띄우기 위함
+    public void Show(string label, Vector3 position, Quaternion rotation, float scale)
+    {
         this.scale = scale;
-        text.text = amount.ToString();
+        text.text = label;
         text.alpha = 1f;
         transform.SetPositionAndRotation(position, rotation);
         transform.localScale = Vector3.one * scale;
