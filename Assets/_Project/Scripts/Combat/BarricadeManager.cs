@@ -18,6 +18,7 @@ public class BarricadeManager : MonoBehaviour
     private readonly Dictionary<BarricadeDirection, SlotData> slots = new();
 
     public event Action<BarricadeDirection> OnSlotChanged;
+    public event Action<BarricadeDirection> OnSlotDamaged;   // 맞았을 때만 - 내구도 바를 보여주기 위함
 
     private void Awake()
     {
@@ -90,15 +91,15 @@ public class BarricadeManager : MonoBehaviour
         if (data.State != BarricadeState.Alive) return;
 
         data.CurrentDurability -= amount;
-        Debug.Log($"[방어벽] {direction} 피격: {amount} 데미지, 남은 내구도 {data.CurrentDurability}/{GetSlotInfo(direction).MaxDurability}");
 
         if(data.CurrentDurability <=0)
         {
             data.State = BarricadeState.Destroyed;
-            Debug.Log($"[방어벽] {direction} 파괴됨");
         }
 
+        // 변경 알림이 먼저 가야 바가 숨겨졌다가(Refresh) 곧바로 피해 알림으로 다시 나타남
         OnSlotChanged?.Invoke(direction);
+        OnSlotDamaged?.Invoke(direction);
     }
 
     public void ResetAllSlots()
