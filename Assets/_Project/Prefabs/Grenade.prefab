@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a71e3e9cb35dcb49b43659b57a078ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Grenade
-  explosionEffect: {fileID: 0}
+  explosionEffect: {fileID: 100008, guid: 44c1fdb1758afbf4bacd1bd973d0fdda, type: 3}
   landingIndicator: {fileID: 5317261898611085796}
 --- !u!1 &8624903547842155089
 GameObject:

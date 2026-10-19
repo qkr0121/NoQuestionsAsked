@@ -77,6 +77,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: cb1b37e7c37830a44b4f8d00fe6acf10, type: 3}
   useRifleAnimation: 0
   heldModel: {fileID: 8325926043423499575, guid: 8c9f96218257a384badd32246623c886, type: 3}
+  muzzleFlashPrefab: {fileID: 1431082840955291317, guid: 02f36cbf93a00d6489d09bb0890045bc, type: 3}
   unlockCost: 0
   startingReserveAmmo: 60
   ammoCostPerRound: 10

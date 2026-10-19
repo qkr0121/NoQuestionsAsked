@@ -1,10 +1,33 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-10-20
+마지막 업데이트: 2026-10-21
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
-## ⭐ 폴리싱 ③ 방어벽 — 내구도 월드 바 + 로우폴리 모델 5조각 + 레벨 발광 구분 (2026-10-20) — 코드·프리팹·씬 적용, 플레이로 동작 확인(사용자), 커밋 전
+## ⭐ 폴리싱 ④ 전투 피드백 시작 — WarFX 폭발·총구 화염, 무기별 총구 위치, 소총 조준 자세 (2026-10-20~21) — 코드·프리팹·컨트롤러 적용, 플레이 확인 중(사용자), 커밋 전
+
+**WarFX(Jean Moreno, Asset Store 무료) 적용 가능성 확인**: `Assets/JMO Assets/WarFX`(**78MB, 파일 401개** — 데모, Mobile 버전, 안 쓰는 이펙트 포함)의 셰이더는 Built-in용 CG 언릿 파티클이지만 **URP에서 렌더링됨**(컴파일 오류 없음, 편집 모드에서 파티클을 `Simulate`해 사진으로 확인). 머티리얼 중 `Standard` 셰이더 10개는 URP에서 분홍색이 될 수 있으나 쓰는 이펙트(폭발, 총구 화염)에는 없음. 콘솔 경고는 데모 씬을 열 때 컴포넌트 로드 실패 한 건뿐. 폭발 연기에 쓰이는 `Legacy Particles/Additive (Soft)`는 시뮬레이션 중 흰 사각형이 한 프레임 보임(플레이 확인 필요). 크레딧에 출처 표기 권장. **원본 폴더를 직접 쓰지 않고 복사본을 `_Project`에 만들어 연결**(사용자 요청).
+- 수류탄 폭발: `WFX_Explosion Simple`(시각 반경 약 3, `Small`은 2.2, 큰 것은 4.4) → **`Prefabs/Effects/Explosion_Grenade.prefab`**(머티리얼 5개 `Materials/Effects/`, 텍스처 5개 `Textures/Effects/`로 복사·재연결) → `Grenade.prefab`의 `Explosion Effect`에 연결(이전엔 비어 있었음). **`Grenade.cs`가 이펙트를 2초 뒤 `Destroy`하는데 연기는 3초까지 가서 약 1초 일찍 끊길 수 있음 — 사용자가 2초 그대로 두기로 함.**
+- **복사본이 아직 `WarFX` 폴더에 의존하는 파일 2개**: `Shaders/WFX_S Particle Add A8.shader`(같은 이름 셰이더를 복사하면 중복되어 모호해짐), `Scripts/CFX_AutoDestructShuriken.cs`(복사하면 클래스 이름 중복 컴파일 에러). **`WarFX`를 통째로 지우면 안 되고, 정리하려면 `Shaders`·`Scripts`만 남기고 나머지(Demo, Mobile, 안 쓰는 이펙트)를 삭제**(사용자 결정 — 커밋 전에 하면 저장소가 78MB 늘지 않음).
+- **총구 화염**: 원본 18개 프리팹이 **모두 `Loop` 켜짐, 초당 10번 재생(연사용)**이라 `Play()`하면 계속 깜빡임, `Emit(1)`만으로는 `Play On Awake`의 자동 재생과 겹침. 한 번만 터지게 하는 정석은 **`Loop` 끄기 + `Play On Awake` 끄기 + `Rate Over Time` 0 + 시간 0에 Burst 1개**(`Duration` 0.1) — 그러면 지금 `PlayerShoot`의 `Play()` 호출이 그대로 쓰임. 측정: `Play()` 한 번에 파티클 4개(자식마다 1개), 1초 뒤 0개. **`Sprites` 시리즈 추천**(어느 각도에서나 좋음). 권총 `RIFLE2`(0.7, 노랑), 저격총 `RIFLE1`(1.0, 후광이 큼) → **`Prefabs/Effects/MuzzleFlash_Pistol/Sniper.prefab`**(WarFX 프리팹과 연결을 끊고 `UnpackPrefabInstance`로 독립 프리팹으로 만듦, 머티리얼·텍스처·메시 `Models/Effects/Plane1x1.FBX` 복사). **구조**: 빈 루트 + `Flash`(WarFX 파티클 4개, **Y 180도 회전** — 원본 화염은 Sprites가 -z, 4Planes가 +x로 나가서 래퍼 기준 +z가 발사 방향이 되게 함, 루트 회전을 조준 방향으로 덮어써도 보정 유지). WFX 원본의 `WFX_LightFlicker`(영원히 켜고 끄는 스크립트)는 제거.
+- **함정**: 에디터 `Simulate(시간, withChildren, restart, fixedTimeStep=true)`는 고정 시간 단계(0.02초)보다 짧으면 아무것도 안 나옴 → 짧은 구간은 `fixedTimeStep=false`. 시뮬레이션 두 번째 `Play()`가 0개로 나온 것은 이 테스트 방식 때문으로 보임(프로젝트의 기존 `MuzzleFlash`가 같은 구조로 매 발사 `Play()`를 쓰고 있어 정상일 가능성이 높음, 연사에서 두 번째부터 안 나오면 재확인).
+- **총구 라이트**: 프리팹 라이트가 세기 12.4 / 범위 2였는데 **`FirePoint`가 바닥 위 약 2 높이라 빛이 바닥에 닿는 거리에서 끝나 쏴도 안 밝아짐**(사진으로 확인) → 올렸더니 너무 밝아서(20/6, 40/9) 낮춤. **현재 권총 4 / 5, 저격총 8 / 6, 점등 시간 0.08초**(60fps에서 3~4프레임인 0.06초는 놓치기 쉬움). 총구가 더 높아지면(소총 조준 자세에서는 바닥 위 약 2.6~3.2) 더 약해 보일 수 있음.
+- **코드**: 새 **`MuzzleFlashEffect`**(프리팹 루트, `Play(위치, 회전)`: `Stop(StopEmittingAndClear)` 후 `Play`라서 연사로 재생 중이어도 처음부터, 라이트를 `lightDuration` 동안만 켬), **`WeaponData.muzzleFlashPrefab`**, **`PlayerShoot`**에 무기별 화염을 `FirePoint` 아래에 한 번 만들어 `Dictionary`로 재사용(`GetFlash`), 무기에 프리팹이 없으면 기존 `muzzleFlash`(대체용으로 `Player.prefab`에 그대로 남김)를 씀.
+- **무기별 총구 위치**: 총 프리팹(`Pistol_Held`/`Sniper_Held`)의 `Model` 아래에 **`Muzzle`**(`WeaponMuzzle` 표식) → **`PlayerWeaponVisual.Muzzle`**(들고 있는 총의 총구, 없으면 null) → `PlayerShoot`이 발사 때 그 월드 위치에 화염을 터뜨림(없으면 `FirePoint`). 위치는 메시의 총구 쪽(-X) 끝 2% 안 정점 평균으로 계산한 시작값, 눈으로 `Muzzle`을 옮겨 조절. **탄과 궤적은 `FirePoint` 그대로**(사용자: 탄은 안 보이니 상관없음). 플레이어 기준 검증: 권총 총구 앞 0.96·바닥 위 2.17, 저격총 앞 1.31·2.18(모델 앞쪽 끝).
+- **총 위치 조절 방법(사용자 진행)**: Play 중 `WeaponSocket` 아래 `*_Held(Clone) > Model`의 Transform을 조절 → **Copy Component → Play 종료 → 해당 `*_Held.prefab`의 `Model`에 Paste Component Values**. `Ctrl+Shift+P`로 일시정지, `Ctrl+Alt+P`로 한 프레임 진행해서 원하는 자세에서 멈춤. 달리기 클립에서도 확인.
+
+**저격총 조준 자세(여러 번 바꿈 — 교훈 포함)**: 문제는 가만히 서서 쏠 때 총이 대기 자세(낮게 든 상태)에서 나가는 것.
+1. 베이스 레이어에 `Rifle_IdleAttack`(`Rifle_Run` 클립 Cycle Offset 정지)을 두고 `IsFiring`으로 전환 → **다리가 달리기 중간에 굳어(무릎 굽고 허리 낮아짐) 어색**. 측정: `Rifle_Run`의 상체(총구 앞 2.03~2.09)는 클립 내내 거의 같고 다리만 변함.
+2. 상체 마스크 레이어(`UpperBody` + `AvatarMask`) → **권총 대기 자세까지 이상해지고 소총에서 돌아오지 않음**(쏘지 않을 때도 레이어가 계속 돌아 빈 상태가 상체를 덮는 것으로 추정, 에디터에서 재현은 못 함) → **레이어·마스크 삭제**. 레이어는 권총에도 영향을 주니 새로 만들기 전에 반드시 짚을 것.
+3. **Humanoid 정지 클립을 직접 구움**(`Models/PlayerCharacter/Rifle_AimPose.anim`, 근육 95개 + `RootT`/`RootQ` 상수 곡선, `HumanPoseHandler`로 포즈에서 읽음): 다리는 `Rifle_Idle`(왼발 앞 +0.29, 오른발 뒤 -0.27, **허벅지 뼈를 대기 때의 월드 방향으로 고정해 허리 기울기를 따라가지 않게 함**), 상체·팔·허리 기울기는 `Rifle_Run` 0.17 지점, 총구 pitch 1도(수평). **좌표 보정 함정**: `HumanPoseHandler.bodyPosition/bodyRotation`은 클립 `RootT/RootQ`와 달라서 **높이 +2.764(모델 루트 -1.5 ÷ humanScale 0.5427), 회전은 `handler * inverse(clip)`의 고정 오프셋(Y 약 15도)**을 보정해야 함(idle로 구하고 run으로 검증, 오차 0도) — 안 하면 캐릭터가 바닥 아래로 가라앉음. 발이 바닥에 닿도록 `RootT.y`를 움직여 변화량을 재고 보정(월드/클립단위 비율 1.90). 최종 발 y -1.25(바닥), 허리 높이 0.26, 왼발 +0.26·오른발 -0.33.
+4. **최종 구성(사용자 결정)**: `Rifle_IdleAttack` 상태 삭제, **`Rifle_Idle` 상태의 모션을 `Rifle_AimPose`로 교체** → 저격총을 들면 쏘지 않을 때도 항상 조준 자세, 정지 클립이라 숨쉬기 없음. 원래 `Rifle_Idle` 클립은 에셋에 남아 있음. **`IsFiring` 파라미터와 `PlayerWeaponVisual`의 `IsFiring` 지정·`fireHoldTime`은 이제 쓰이지 않음(정리는 승인 후).**
+- **편집 모드의 한계(이번에 확인)**: `Animator.Update`, `PlayableGraph.Evaluate`는 본 포즈를 갱신하지 않음 — **`AnimationClip.SampleAnimation`만 동작**. 레이어와 전환의 실제 동작은 반드시 플레이로 확인. 스킨 메시 포즈 사진은 임시 인스턴스를 씬에 놓고 `SampleAnimation` + `manage_camera` 위치 지정 스크린샷(확인 후 삭제).
+
+**함정/주의**: **`WarFX` 폴더 78MB를 커밋 전에 정리**(위 참고). `PersistentManagers.prefab` 변경 없음. 확인용 임시 오브젝트(`TMP_*`)는 모두 삭제함, `Assets/Screenshots`는 사용자가 정리.
+
+**남은 일**: **④ 전투 피드백 나머지** — 좀비 사망 연출(권장: 크리스탈 파편 터짐, 지금은 즉시 사라짐), 피격 반응(번쩍임 + 작은 펀치, 헤비는 번쩍임만), 킬 보상 표시(`+200` 월드 텍스트, 일반 작게/헤비 크게), 스폰 연출(후순위), 사격 피드백 추가(무기별 궤적 길이, 총 모델 반동) — 사용자 결정 대기, 피격 이펙트에 WarFX `Bullet Impacts`(`SoftBody`·`Metal`) 사용 여부 / 사운드(④ 이후 병행) / `WarFX` 정리 / 소총 조준 자세 플레이 확인(발이 어색하면 허리 기울기·기준 프레임 조절) / 미사용 `IsFiring`·`fireHoldTime` 정리 / 다음 순서 ⑤ 플레이어 피격·사망, ⑥ ZWD 맵 구성(크리스탈 Emission·연출용 광원·먼지 파티클 포함).
+
+## ⭐ 폴리싱 ③ 방어벽 — 내구도 월드 바 + 로우폴리 모델 5조각 + 레벨 발광 구분 (2026-10-20) — 코드·프리팹·씬 적용, 플레이로 동작 확인(사용자), 커밋 완료(a8ab232)
 
 **결정(사용자)**: 방어벽은 **파손 단계 모델을 만들지 않고 "내구도 표시 + 모델 1종(레벨은 머티리얼로 구분)"**. 내구도는 **피해를 받을 때만** 월드 바로 표시(3초 유지 후 서서히 사라짐, 수치 `240/400` 포함, 낮을 때 상시 표시는 필요 시 추가). 경고 시 조명 변화·깜빡임 조명은 보류 유지.
 
