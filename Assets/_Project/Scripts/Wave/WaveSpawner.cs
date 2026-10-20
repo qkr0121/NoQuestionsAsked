@@ -21,7 +21,8 @@ public class WaveSpawner : MonoBehaviour
     }
 
     [SerializeField] private Transform[] spawnPoints; // 순서: North, East, South, West(BarricadeDirection 과 일치)
-    [SerializeField] private float spawnOffset = 1.5f;   // 같은 지점에서 한꺼번에 나와 겹치지 않도록 스폰 위치에 주는 무작위 범위
+    [SerializeField] private float spawnOffset = 1.5f;   // 변에서 안쪽/바깥쪽(깊이) 방향으로 흩뿌리는 범위 - 덤불 띠 안에서 시작 깊이를 조금씩 다르게 함
+    [SerializeField] private float edgeSpread = 22f;     // 변을 따라 좌우로 흩뿌리는 범위 - 한 곳이 아니라 맵 끝 전체의 덤불 사이에서 한 마리씩 나오게 함
 
     private Transform player;
     private WaveDefinition waveDefinition;
@@ -137,7 +138,13 @@ public class WaveSpawner : MonoBehaviour
         foreach(SpawnEvent spawnEvent in batch.events)
         {
             Transform spawnPoint = GetSpawnPoint(spawnEvent.direction);
-            Vector3 offset = new Vector3(Random.Range(-spawnOffset, spawnOffset), 0f, Random.Range(-spawnOffset, spawnOffset));
+
+            // 북·남은 x(가로), 동·서는 z 방향이 변을 따라가는 축 - 그 축으로 넓게, 나머지(깊이) 축으로는 조금만 흩뿌림
+            bool alongX = spawnEvent.direction == BarricadeDirection.North || spawnEvent.direction == BarricadeDirection.South;
+            Vector3 along = alongX ? Vector3.right : Vector3.forward;
+            Vector3 depth = alongX ? Vector3.forward : Vector3.right;
+            Vector3 offset = along * Random.Range(-edgeSpread, edgeSpread) + depth * Random.Range(-spawnOffset, spawnOffset);
+
             EnemyMovement enemy = EnemyPool.Instance.Get(spawnEvent.type, spawnPoint.position + offset, spawnPoint.rotation);
             enemy.SetTarget(player);
 

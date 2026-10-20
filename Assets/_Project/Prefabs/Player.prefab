@@ -308,7 +308,7 @@ MonoBehaviour:
     m_Bits: 512
   throwBlockLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 2048
   throwCooldown: 1
   readyColor: {r: 1, g: 0.2, b: 0.2, a: 0.34901962}
   emptyColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.34901962}
@@ -355,6 +355,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponVisual
   weaponSocket: {fileID: 2617760180082011405}
   grenadeModel: {fileID: 3136342258227916367}
+  fireHoldTime: 0.8
 --- !u!1 &2108978615262140711
 GameObject:
   m_ObjectHideFlags: 0
