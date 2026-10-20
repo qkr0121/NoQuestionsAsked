@@ -16,7 +16,9 @@
 
 **코드**: 신규 `UI/PaperCheckBox.cs`(칸 안 붉은 V의 `fillAmount`를 0→1로 그림, 체크 스프라이트 4종 중 무작위 + ±6° 회전, `unscaledTime`), 신규 `UI/PaperStamp.cs`(도장 `CanvasGroup`·`RectTransform`, 크게 내려와 찍힘 + 눌렸다 돌아오는 흔들림 + 대기 후 콜백, 시작 때 `Hide`). `DifficultySelectUI`(전체 교체; `GameDifficulty?` 선택, 줄 버튼·칸·제출 버튼·도장·뒤로, **도장 중 뒤로 막음**), `MotiveSelectUI`(`confirm*` → `signButton`/`signLabel`로 이름 변경, `[FormerlySerializedAs]`로 연결 유지, 제출 라벨 갱신 `UpdateSignLabel`), `MotiveCardUI`(`selectedMark` → `PaperCheckBox`; `Show`와 `SetSelected` 분리해 이미 체크된 칸이 다시 그려지지 않게), `SaveSlotSelectUI`(`titleText` → `sectionText`(`FormerlySerializedAs`), 선택 + 제출 + 파기, 새로고침 때 선택 초기화), `SaveSlotCardUI`(`contentGroup`·`checkBox` 추가, `SetSelected`). **`MainMenuUI`는 변경 없음(`Open` 시그니처 유지).**
 
-**씬/프리팹**: `SaveSlotCard.prefab`을 새 구조로 수정(투명 줄 버튼 루트 + `Content`(CanvasGroup: `SlotLabel`·`InfoText` 폰트 21·`CheckBox`) + 마지막 자식 `DeleteButton`(`Stamp_Rect` + 붉은 "파기" 글자)). 서류 레이아웃: 난이도 서류를 먼저 만들고 **동기·세이브 서류는 그 `Folder`를 복제**해 카드 부분만 교체(동기 카드 4줄 높이 116·설명 폰트 21 / 세이브 3줄 높이 155). 가장 긴 동기 설명(기억상실 60자)이 3줄로 들어감.
+**씬/프리팹**: `SaveSlotCard.prefab`을 새 구조로 수정(투명 줄 버튼 루트 + `Content`(CanvasGroup: `SlotLabel` 34·`InfoText` 26·`CheckBox`) + 마지막 자식 `DeleteButton`(`Stamp_Rect` + 붉은 "파기" 글자)). 서류 레이아웃: 난이도 서류를 먼저 만들고 **동기·세이브 서류는 그 `Folder`를 복제**해 카드 부분만 교체(**동기 카드 4줄 높이 134·설명 폰트 24·폭 480 / 세이브 3줄 높이 180·정보 폰트 26·폭 420**). 가장 긴 동기 설명(기억상실 60자)은 3줄에 필요 높이 85(칸 88), 세이브 정보 4줄은 필요 높이 123(칸 125)로 `TMP_Text.GetPreferredValues`로 확인.
+
+**폰트 결정(사용자)**: 서류에 어울리는 손글씨(나눔손글씨펜, `Fonts/NanumPen/`)를 검토해 **`NanumPen SDF`(Dynamic, 샘플링 48·패딩 5·1024·SDFAA·Multi Atlas)까지 만들어 난이도 서류에 적용했으나 최종적으로 전부 SCDream5로 통일하고 손글씨는 삭제**. 이유: ① 나눔손글씨펜은 글자 몸통이 작고 획이 가늘어 **같은 크기에서 SCDream5의 약 60%로 보여** 1.5배 이상 키워야 하는데 카드 줄 높이가 부족해짐, ② 난이도·세이브 설명은 꼭 읽어야 하는 정보인데 가독성이 떨어짐(한글은 글자 단위 줄바꿈이라 "다."만 떨어지는 줄도 생김), ③ 나머지 UI(HUD·상점·일시정지·설정)와 톤이 달라짐, ④ 중간안 B(양식은 SCDream5, 손글씨는 동기 지원 사유·세이브 정보만)도 시험했으나 세이브 정보가 작아 읽기 어려워 폐기. 같은 시도에서의 배운 점: **Font Asset Creator 창에는 Dynamic 선택이 없고 폰트 파일 우클릭 `Create → TextMeshPro → Font Asset`로 만들어야 Dynamic**(MCP에서는 `TMP_FontAsset.CreateFontAsset(..., Dynamic, true)` + 머티리얼·아틀라스를 서브 에셋으로 추가), **유니코드 범위(한글 11,172자 + 기호)를 Static으로 굽는 건 아틀라스가 8192² 안팎(약 64MB)이라 비현실적**(SCDream5는 `Auto Sizing`·패딩 0·Fast·1024 Static에 사용 글자 2,485자 — `creationSettings`로 확인), 나눔손글씨펜 한글 시험 추가는 정상이었음. 폰트 폴더는 참조가 없어 사용자가 삭제 예정.
 
 **함정/교훈**
 - **오버레이 캔버스는 편집 모드 스크린샷에 안 찍힘** → 임시로 `Canvas`를 `ScreenSpaceCamera`로 바꾸고 패널을 켜서 캡처한 뒤 **반드시 되돌림**(`ScreenSpaceOverlay`, 패널 끔, 임시 파일 삭제). 편집 모드에서는 `Awake`가 안 돌아 체크·도장이 항상 보이고 MainMenu 제목 텍스트가 서류 위에 보이지만 실행하면 정상.
@@ -26,7 +28,11 @@
 
 **함정/주의**: **MainMenu 씬(`Desk`·`FolderShadow` 배치 포함)과 `SaveSlotCard.prefab` 저장 필요.** 플레이 테스트로 `save_slot_0.json`이 바뀌고 `save_slot_1.json`이 새로 생겼으니 **세이브 파일은 커밋하지 말 것**(저장 경로는 아직 `Assets/_Project` 안 — 빌드 전에 `persistentDataPath`로).
 
-**남은 일**: 서류 화면이 열릴 때 `Dim`/3D 배경이 어두워지는 **페이드 전환**(코드 필요, 미승인) / 폰트 최종 결정(지금 SCDream5, 나눔손글씨펜 검토 중) / 서류 3종의 모양·도장 위치 최종 확인 / 서류 외 UI 마무리(엔딩·일시정지·세이브 칸 전체 시나리오 Play 확인) / 이후 후보: 사운드·사망 연출·사격 피드백·촬영 도구·안정화(`persistentDataPath`, `EnemyAttack.OnDrawGizmos` 삭제, 빌드 테스트).
+**참고**: 서류 화면 전환은 `MainMenuUI.Transition`이 이미 `ScreenFader`의 검은 페이드(나갔다 들어오기 각 0.4초)를 거치므로 3D 배경 → 책상 교체가 가려진 상태에서 일어남 — 별도 Dim 페이드 불필요(어색하면 `fadeDuration` 조정부터).
+
+- **함정 — 꺼 둔 `Stamp`**: 폰트 시험 중 난이도 서류의 `Stamp` 오브젝트를 꺼 둔 채 Play하면 제출 때 `Coroutine couldn't be started because the the game object 'Stamp' is inactive!` 에러가 나고 다음 단계로 못 넘어감(콜백이 도장 연출 끝에서 호출되므로). 코드 보강은 사용자가 불필요하다고 해서 안 함 — **`Stamp`는 켜 둔 채 저장**(`Hide()`가 알파를 0으로 만들어 평소엔 안 보임).
+
+**남은 일**: 서류 3종 Play 확인(글자 크기·도장 위치) / 서류 외 UI 마무리(엔딩·일시정지·세이브 칸 전체 시나리오 Play 확인) / 이후 후보: 사운드·사망 연출·사격 피드백·촬영 도구·안정화(`persistentDataPath`, `EnemyAttack.OnDrawGizmos` 삭제, 빌드 테스트).
 
 ## ⭐ UI 3단계 마무리 — 사망·엔딩·튜토리얼 스킨, HUD 프리팹 정리, 바리케이드 행 내구도 바, 레벨 드롭다운 (2026-10-21) — 프리팹·씬·`BarricadeRowUI` 적용, 사용자 확인("잘 나온다"), 커밋 전
 
