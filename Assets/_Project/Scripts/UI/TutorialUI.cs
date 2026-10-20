@@ -17,6 +17,8 @@ public class TutorialUI : MonoBehaviour
     private int pageIndex;
     private float previousTimeScale = 1f;
 
+    public bool IsOpen => panel.activeSelf;   // ESC 처리에서 먼저 닫을지 판단하려고 공개
+
     private void Awake()
     {
         panel.SetActive(false);

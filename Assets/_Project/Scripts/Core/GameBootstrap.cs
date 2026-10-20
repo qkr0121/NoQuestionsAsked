@@ -21,5 +21,6 @@ public class GameBootstrap : MonoBehaviour
         initialized = true;
         DontDestroyOnLoad(Instantiate(persistentManagersPrefab));
         MetaSaveManager.Instance.LoadAndApply();
+        GameSettings.ApplySaved();   // 저장된 해상도·전체화면·품질을 게임 시작 때 적용
     }
 }

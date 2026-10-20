@@ -5,6 +5,7 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private GameObject continueButton;
     [SerializeField] private DifficultySelectUI difficultySelectUI;
     [SerializeField] private SaveSlotSelectUI slotSelectUI;
+    [SerializeField] private SettingsUI settingsUI;
     [SerializeField] private MotiveSelectUI motiveSelectUI;
     [SerializeField] private GameObject titleText;         // 선택 패널이 열려 있는 동안 숨김
     [SerializeField] private GameObject buttonContainer;
@@ -37,6 +38,24 @@ public class MainMenuUI : MonoBehaviour
         RunState.Instance.ResetEntireRun();
         PendingLoad.MarkForLoad();
         SceneTransitioner.GoTo("Base");
+    }
+
+    public void OnSettingsClicked()
+    {
+        Transition(() =>
+        {
+            SetMainMenuVisible(false);
+            settingsUI.Open(CloseSettings);
+        });
+    }
+
+    private void CloseSettings()
+    {
+        Transition(() =>
+        {
+            settingsUI.Close();
+            SetMainMenuVisible(true);
+        });
     }
 
     // 새 게임: 난이도 -> 빈 칸 -> 동기 -> 시작

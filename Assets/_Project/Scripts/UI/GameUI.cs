@@ -118,9 +118,4 @@ public class GameUI : MonoBehaviour
         int week = (day - 1) / DaysPerWeek + 1;
         return $"{week}주차 {WeekdayNames[(day - 1) % DaysPerWeek]}";
     }
-
-    public void OnReturnToMainMenuClicked()
-    {
-        SceneTransitioner.GoTo("MainMenu");
-    }
 }

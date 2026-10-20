@@ -4,6 +4,24 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
+## ⭐ UI 1단계 — 일시정지 메뉴 + 설정 화면 (2026-10-21) — 코드·프리팹·MainMenu 씬 적용, 에디터 동작 일부 확인(사용자: 설정 들어갔다 뒤로 가기 됨), 커밋 전
+
+(아래 "UI 비주얼 착수" 항목의 남은 범위 중 **1단계(일시정지 메뉴 + 설정)를 이 항목에서 완료.** 3단계 나머지 화면 스킨은 아직.)
+
+**결정(사용자)**: 일시정지 메뉴 구성 = **계속하기 / 게임 설명 / 설정 / 메인 메뉴로**(요청으로 "게임 설명" 추가, **HUD의 `HelpButton`(?)은 삭제해 일시정지 메뉴로 이동**). "메인 메뉴로"는 **저장 없이 나가기 + 확인창("마지막 저장 이후의 진행은 사라집니다")**. 설정 항목 = **해상도 / 전체화면 / 그래픽 품질**(요청으로 **조작법 안내는 제거**, 볼륨은 사운드 작업 때). 메인 메뉴의 "설정" 버튼도 같은 설정 화면에 연결(원래 동작 없는 죽은 버튼이었음). ESC로 이미 열린 상점·미션 보드 등을 닫는 기능은 **이번에 안 함**(그 패널이 열려 있으면 ESC는 무시).
+
+**코드**: 신규 `Core/GameSettings.cs`(정적, `PlayerPrefs` 키 `Settings.ResolutionWidth/Height/Fullscreen/Quality`, `ApplySaved()`·`SetResolution`·`SetFullscreen`·`SetQuality`; **`SetFullscreen(false)`는 저장한 해상도로 창 크기를 복원**, 전체화면은 `FullScreenWindow`), 신규 `UI/SettingsUI.cs`(해상도 드롭다운 — `Screen.resolutions`에서 주사율만 다른 항목을 합침, 전체화면 토글, 품질 드롭다운, 뒤로 버튼 `Open(Action back)`/`Close()`/`IsOpen`, `Refresh`는 `SetValueWithoutNotify`로 표시만 맞춤), 신규 `UI/PauseMenuUI.cs`(ESC·`MenuButton`으로 열기, `Open`은 `GameOver`·`PlayerInputLock.IsLocked`이면 무시, `timeScale 0`/복원, **ESC 우선순위 = 설정 → 게임 설명(튜토리얼) → 일시정지 메뉴**, "게임 설명"은 `TutorialUI.Open`). 수정: `GameBootstrap`(`GameSettings.ApplySaved()`), `TutorialUI`(`IsOpen` 공개), `MainMenuUI`(`settingsUI`·`OnSettingsClicked`·`CloseSettings`), `GameUI`(임시 `OnReturnToMainMenuClicked` 삭제).
+- **함정 1 — 로딩 화면**: 일시정지가 `timeScale 0`을 쓰는데 `LoadingScreen`은 `Time.deltaTime`을 써서 0이면 멈춤 → "메인 메뉴로"는 **`timeScale`을 1로 되돌리고 `PendingRunReset.MarkForReset()` 후 이동**(`GameOverUI`와 같은 방식).
+- **함정 2 — 튜토리얼과 ESC**: `TutorialUI`는 열 때 `timeScale 0`·닫을 때 이전 값 복원이라 일시정지 중에 열고 닫아도 정지가 유지돼 문제없지만, **튜토리얼이 열린 채 ESC로 일시정지가 먼저 닫히면 `timeScale`이 1로 돌아가 튜토리얼 뒤에서 게임이 진행됨** → ESC 우선순위로 해결.
+- **함정 3 — 새 `.cs`가 안 잡힘**: 새 스크립트를 쓴 뒤 `refresh_unity`(scope `scripts`)만으로는 컴파일에 반영되지 않아 `MainMenuUI`가 `SettingsUI`를 못 찾는 오류가 났음 → **`scope: all`, `mode: force`로 새로고침**해야 새 파일이 인식됨.
+
+**프리팹/씬(Claude가 사용자 요청으로 만듦, 새 스프라이트 스타일)**: `Prefabs/UI/SettingsPanel.prefab`(전체 화면 어두운 배경 알파 0.96 + `UI_Panel` 창 1100×380에 행 3개(라벨 + `TMP_Dropdown`·`Toggle` — 기본 컨트롤을 `UI_Card` 스프라이트·SCDream5·크림색으로 스타일링) + 뒤로 버튼). `HUD.prefab`에 **`PauseMenu`**(꺼진 `Panel`: 반투명 검정 0.6 + `LocksInputWhileActive` + `UI_Panel` 창 640×700 + 제목 + 버튼 4개 SpriteSwap)와 `SettingsPanel` 인스턴스 추가, **`MenuButton`의 클릭을 `PauseMenuUI.Open`으로 교체**, `HelpButton` 삭제, 게임 설명이 일시정지 위에 보이도록 `TutorialUI`를 맨 뒤 형제로(튜토리얼 패널은 자체 Canvas 정렬 순서 20). MainMenu `Canvas`에 `SettingsPanel` 인스턴스 + `MainMenuUI.settingsUI` + 설정 버튼 연결. 확인창 캔버스(`ConfirmationCanvas` 정렬 500)가 HUD(0)보다 위라 일시정지 위에 정상 표시.
+- **전체화면·해상도 한계(결정)**: `FullScreenWindow`(테두리 없는 전체 창)는 바탕화면 해상도에 맞춰져 **전체화면 중에는 해상도 선택이 적용되지 않음** → 선택지 중 **1번(전체화면이 켜져 있으면 해상도 드롭다운 비활성화)** 선택(`ExclusiveFullScreen`으로 바꾸는 안은 Alt+Tab·모니터 해상도 변경 때문에 채택 안 함). **에디터에서는 `Screen.SetResolution`·`fullScreenMode`가 Game 뷰에 적용되지 않아 효과가 안 보임 — 빌드에서 확인해야 함**(에디터에서는 값이 `PlayerPrefs`에 저장되는지와 드롭다운 비활성화만 확인 가능; 확인 결과 1920×1080·전체화면 끔이 저장돼 있었음).
+
+**함정/주의**: **HUD가 프리팹이라 Base·ZWD 양쪽에 반영**되고 MainMenu는 씬에 직접 넣었으므로 **MainMenu·Base·ZWD 씬과 `HUD.prefab` 저장 필요.** 컴파일은 `read_console`로 에러 0 확인(사용자 규칙상 평소엔 사용자가 확인). 일시정지 메뉴와 `MenuButton`(왼쪽 아래 "메뉴")의 새 스킨은 3단계.
+
+**남은 일**: 일시정지(ESC, 계속하기/게임 설명/설정/메인 메뉴로+확인창)·설정 화면(메인·일시정지 양쪽)의 플레이 확인, **빌드에서 전체화면·해상도 동작 확인** / 3단계 나머지 화면 스킨(확인창 `ConfirmationPanel`·토스트·상점·미션 보드·웨이브 선택·튜토리얼·사망·엔딩·HUD 체력 바·`MenuButton`) / ESC로 상점·미션 보드 등 닫기(필요하면) / 씬·프리팹 저장.
+
 ## ⭐ UI 비주얼 착수 — 스프라이트 키트 + 서류 소품 + 메인 메뉴 3D 배경 (2026-10-21) — 에셋·메인 메뉴 씬 적용, 배치는 사용자가 마무리, 커밋 전
 
 **남은 UI 범위(Claude 제안, 사용자는 방향만 확정)**: **1단계 기능** = 일시정지 메뉴(ESC, HUD의 임시 `MenuButton` — 지금은 확인 없이 바로 메인 메뉴로 나감 — 교체)와 설정 화면(메인·일시정지 공용; 해상도·전체화면·품질·조작법, `PlayerPrefs`; 볼륨은 사운드 작업 때), **2단계 기반** = 공용 스프라이트·버튼 프리팹·색 토큰, **3단계 스킨 일괄** = 확인창·토스트·상점·미션 보드·웨이브 선택·튜토리얼·사망·엔딩·HUD 체력 바. **보류**: 볼륨/사운드 연동, 키 리바인딩, 다국어, 로딩 화면 팁·아트, 데미지 숫자 폰트, 웨이브 클리어 UI(`WaveClearUI`가 씬에 배치돼 있는지 확인 필요). 일시정지의 "메인 메뉴로"는 **저장 없이 나가기 + 경고**를 제안했으나 **사용자 답 없음 — 미정**. **현재 시점에 1단계(일시정지·설정)와 3단계(나머지 화면 스킨)는 아직 안 함.**
