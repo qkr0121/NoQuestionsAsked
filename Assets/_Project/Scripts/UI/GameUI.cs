@@ -22,6 +22,13 @@ public class GameUI : MonoBehaviour
     [SerializeField] private Color hpNormalColor = new Color(0.35f, 0.8f, 0.35f);
     [SerializeField] private Color hpLowColor = new Color(0.9f, 0.2f, 0.2f);
     [SerializeField] private float lowHealthRatio = 0.3f;
+    [SerializeField] private RectTransform hpTrail;          // 체력 바 뒤의 잔상 바 (피벗 왼쪽), 비워둬도 동작
+    [SerializeField] private float trailDelay = 0.4f;        // 피해를 받은 뒤 잔상이 줄어들기 시작하기까지의 대기
+    [SerializeField] private float trailSpeed = 1.5f;        // 잔상이 줄어드는 속도 (초당 비율)
+
+    private float trailRatio = -1f;     // -1 = 아직 정하지 않음, 첫 프레임에 현재 값으로 맞춤
+    private float lastRatio;
+    private float lastDamageTime = -999f;
 
     private const int DaysPerWeek = 7;   // 미션 주기와 "일주일"을 일치시키기 위한 요일 표시용 (1일차 = 월요일)
     private const int WarningDaysLeft = 2;
@@ -86,6 +93,23 @@ public class GameUI : MonoBehaviour
         hpFill.localScale = new Vector3(ratio, 1f, 1f);
         hpFillImage.color = ratio <= lowHealthRatio ? hpLowColor : hpNormalColor;
         hpText.text = $"{current} / {max}";
+
+        if (hpTrail != null) UpdateTrail(ratio);
+    }
+
+    private void UpdateTrail(float ratio)
+    {
+        // 처음에는 현재 값에서 시작 - 불러온 체력에서 줄어드는 것처럼 보이지 않게
+        if (trailRatio < 0f) trailRatio = ratio;
+        else if (ratio < lastRatio) lastDamageTime = Time.unscaledTime;
+        lastRatio = ratio;
+
+        // 회복·리셋으로 늘어난 값은 바로 따라가고, 줄어든 값만 잠시 뒤 천천히 따라감 (게임오버로 timeScale 이 0이어도 따라가게 unscaled)
+        if (ratio >= trailRatio) trailRatio = ratio;
+        else if (Time.unscaledTime - lastDamageTime >= trailDelay)
+            trailRatio = Mathf.MoveTowards(trailRatio, ratio, trailSpeed * Time.unscaledDeltaTime);
+
+        hpTrail.localScale = new Vector3(trailRatio, 1f, 1f);
     }
 
     // RunState는 건드리지 않고 표시 로직에서만 주차/요일로 가공함

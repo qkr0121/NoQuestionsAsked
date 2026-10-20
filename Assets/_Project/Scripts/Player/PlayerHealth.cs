@@ -3,6 +3,7 @@ using UnityEngine;
 public class PlayerHealth : MonoBehaviour
 {
     [SerializeField] private float invincibleTime = 0.2f;   // 피격 후 무적 시간 - 여러 좀비가 동시에 때려도 피해량의 상한이 됨
+    [SerializeField] private EnemyHitFeedback hitFeedback;   // 피격 번쩍임, 비워둬도 동작
     private float invincibleUntil;
 
     public void TakeDamage(int amount)
@@ -17,6 +18,10 @@ public class PlayerHealth : MonoBehaviour
         if (PlayerManager.Instance.CurrentHealth <= 0)
         {
             GameManager.Instance.GameOver();
+        }
+        else if (hitFeedback != null)
+        {
+            hitFeedback.Play();   // 죽는 타격은 게임오버 화면이 대신함
         }
     }
 

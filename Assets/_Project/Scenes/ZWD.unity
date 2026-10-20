@@ -5957,7 +5957,7 @@ MonoBehaviour:
   - {fileID: 288689632}
   - {fileID: 560745437}
   spawnOffset: 4
-  edgeSpread: 22
+  edgeSpread: 12
 --- !u!4 &1206912861
 Transform:
   m_ObjectHideFlags: 0
