@@ -4,6 +4,23 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
+## ⭐ UI 3단계 마무리 — 사망·엔딩·튜토리얼 스킨, HUD 프리팹 정리, 바리케이드 행 내구도 바, 레벨 드롭다운 (2026-10-21) — 프리팹·씬·`BarricadeRowUI` 적용, 사용자 확인("잘 나온다"), 커밋 전
+
+(이 항목으로 **UI 3단계는 끝**. 남은 UI 관련 일은 아래 "남은 일".)
+
+**사망 화면(`HUD.prefab`의 `GameOverPanel`)**: 흰 반투명 전체 화면이었던 것을 **"전체 화면 말고 창으로"** 요청에 따라 **가운데 `Window`(1200×660, `UI_Panel`) 안에 "Final Crystal"(금색)·"Survived"(크림)·메인 메뉴 버튼(버튼 스프라이트 `SpriteSwap`)을 넣고**, 전체 화면 패널은 입력 차단·분위기용으로 알파 0.55의 약한 어두운 배경만 남김(`GameOverUI` 연결·버튼의 `OnReturnToMainMenuClicked`는 유지). 사용자가 ZWD에서 `MainMenuButton` 위치를 (0,-320)으로 조정 — **버튼이 창 아래로 약 55px 걸쳐 나가는 걸 알린 뒤 사용자가 "그대로(3번)"로 결정**, 이 위치를 프리팹에 적용해 Base·ZWD가 같게 함.
+**튜토리얼(`TutorialUI`)**: 창 `UI_Panel`, 이전·다음·건너뛰기 버튼 스프라이트, 제목 금색·본문 크림. **`Data/TutorialData.asset`의 "조작" 페이지에 `ESC  메뉴` 한 줄 추가**(설정에서 조작법을 뺐고 HUD `MenuButton`을 삭제해 ESC가 유일한 진입이라서, 9줄 → 10줄 — 본문 영역 440에 다 들어가는지 확인 필요, 넘치면 글자 34).
+**엔딩(`EndingUI`, ZWD 씬)**: 전체 화면은 그대로(동기 선택 화면과 같은 구성), 버튼 스프라이트 + 글자 색 정리.
+
+**HUD 프리팹 ↔ 씬 구조 일치(사용자 지적: "Base의 HUD만 변경해서 ZWD와 구조가 다르다")**: Base의 HUD 인스턴스에 **오버라이드 22개**(추가/삭제 오브젝트·컴포넌트는 0)가 있었음 — `TopLeftPlate` 폭 560 → 480, `MissionPlate` 720×150(사용자가 키움), 텍스트 색(크리스탈 금색·날짜 크림·키 번호·체력 글자), **핫바 아이콘 연결(슬롯 1~5 = `Pistol_Icon`/`Sniper_Icon`/(3은 꺼짐)/`Grenade`/`Potion`, 크기 80×80)**. `PrefabUtility.ApplyPrefabInstance`로 **전부 `HUD.prefab`에 반영**(ZWD에 핫바 아이콘이 없던 것이 가장 큰 차이). ZWD 인스턴스는 `GetObjectOverrides`로 확인해 **중복 오버라이드 14개를 `RevertObjectOverride`로 정리**(텍스트 색이 프리팹과 같은 값으로 한 번 더 저장된 것, TMP가 편집 중 저장하는 `LiberationSans SDF Material (Instance)` 폰트 머티리얼 항목들, 편집하려고 켜 둔 `GameOverPanel`의 `m_IsActive=True`). 교훈: TMP 글자를 건드리면 같은 중복 오버라이드가 다시 생기므로 변경 후 인스턴스 오버라이드를 정리하고, `GameOverPanel` 같은 꺼진 패널을 켜 둔 채 저장하지 말 것. **HUD가 프리팹이 아닌 씬 오브젝트였다면 이런 불일치는 더 크게 났을 것 — 프리팹/인스턴스 구분 필수.**
+
+**바리케이드 행(`BarricadeRowUI`, Base 씬 상점 방어벽 탭)**: 기존에는 **`rowBackground.color`를 내구도에 따라 빨강→초록으로 직접 칠하고**(설치 안 됨은 회색) 있어서 다른 줄에 입힌 어두운 카드 스프라이트에 곱하면 거의 검게 됨 → 사용자가 **"줄은 어두운 카드로 두고 내구도를 작은 바로 표시(3번)"** 선택. **코드(`BarricadeRowUI.cs`)**: `rowBackground`를 삭제하고 `durabilityFill`(`RectTransform`, 피벗 왼쪽)·`durabilityFillImage`(`Image`) 필드 추가, `RefreshDurabilityDisplay`가 설치 안 됨이면 바 스케일 0, 아니면 스케일 = 내구도 비율 + 색 `Color.Lerp(red, green, ratio)`. **씬(Row_North/East/South/West)**: 줄 배경을 `UI_Card`(흰색), 줄 아래쪽 안쪽에 `DurabilityTrack`(검은 반투명, 아래 4px·높이 6·좌우 여백 24)와 그 안의 `DurabilityFill` 추가, `BarricadeRowUI` 필드 연결. 이 줄들은 Base 씬에만 있어 ZWD에는 영향 없음.
+**`LevelDropdown`(방어벽 레벨, 4개)**: 글자 caption 14 → 26·item 14 → 24, 펼친 목록 높이를 키우려고 `Template` 높이를 170 → 180 → 200으로 바꿨으나 **"170이나 200이나 달라진 게 없다"** — **펼친 목록 높이는 `Template` 높이(최대 높이 상한)가 아니라 항목 수 × 항목 높이로 정해지기 때문**(항목 3개 × 40 = 120대). **항목(`Item`) 높이 40 → 56**으로 키우자 **첫 항목 위와 마지막 항목 아래가 잘림 → 원인: `TMP_Dropdown`이 목록 전체 높이를 "항목 수 × 항목 높이 + (`Content` 높이 − 항목 높이)"로 계산하는데 `Content`가 28 그대로여서 여백이 음수가 됨** → **`Content` 높이를 항목 높이 + 8 = 64**로 맞추자 해결. **규칙: `Content` 높이 = `Item` 높이 + 8**, `Template` 높이는 항목 수 × 항목 높이 + 8보다 크게(현재 200). 경로: `Canvas/StoreUI/StorePanel/ContentArea/BarricadeMenuGroup/Row_*/LevelDropdown/Template/Viewport/Content/Item`.
+
+**함정/주의**: **Base·ZWD·MainMenu 씬과 `HUD.prefab`·`TutorialData.asset` 저장 필요.** 엔딩 화면은 로켓 탑승 후 흐름까지 Play 확인 필요(사용자). 바리케이드 행 바는 방어벽이 맞아 내구도가 깎인 상태에서 확인해야 잘 보임.
+
+**남은 일**: 엔딩·일시정지·세이브 칸 전체 시나리오 Play 확인(사용자) / SessionLog 이후의 **다음 단계 후보 = 사운드(가장 큰 공백, 설정의 볼륨도 이때), 사망 연출(`timeScale 0` 대신), 사격 피드백·스폰 연출, 영상 촬영 도구(HUD 숨김·디버그 점프·슬로모션), 정리·안정화(세이브 경로 `persistentDataPath`, `EnemyAttack.OnDrawGizmos` 삭제, 빌드 테스트, 성능, 웨이브 5~10 밸런스)**.
+
 ## ⭐ UI 3단계(일부) — HUD·기지 UI·확인창/토스트 스킨 (2026-10-21) — 프리팹·Base 씬 적용, 사용자가 일부 확인하며 조정, 커밋 전
 
 (남은 3단계 화면: **사망·엔딩·튜토리얼**, 바리케이드 행 처리. 이 항목에서 **HUD, 기지 UI(상점·미션 보드·웨이브 선택), 확인창·토스트**를 마침. **이 화면들은 편집 모드에서 캡처되지 않아(오버레이 캔버스) Claude가 모양을 못 보고 색·위치를 건드리지 않는 기계적 스킨 + 사용자 확인으로 진행.**)

@@ -6,7 +6,8 @@ using System.Collections.Generic;
 public class BarricadeRowUI : MonoBehaviour
 {
     [SerializeField] private BarricadeDirection direction;
-    [SerializeField] private Image rowBackground;
+    [SerializeField] private RectTransform durabilityFill;   // 줄 안쪽 얇은 내구도 바 (피벗 왼쪽) - 가로 스케일로 채움
+    [SerializeField] private Image durabilityFillImage;      // 비율에 따라 빨강~초록으로 칠함
     [SerializeField] private TMP_Text directionText;
     [SerializeField] private TMP_Text durabilityText;
     [SerializeField] private TMP_Text levelText;
@@ -63,7 +64,7 @@ public class BarricadeRowUI : MonoBehaviour
         {
             durabilityText.text = "-/-";
             levelText.text = "-";
-            rowBackground.color = Color.gray;
+            durabilityFill.localScale = new Vector3(0f, 1f, 1f);   // 설치 안 됨: 바가 비어 있음
             return;
         }
 
@@ -71,7 +72,8 @@ public class BarricadeRowUI : MonoBehaviour
         levelText.text = $"{info.CurrentLevel}단계";
 
         float ratio = (float)info.CurrentDurability / info.MaxDurability;
-        rowBackground.color = Color.Lerp(Color.red, Color.green, ratio);
+        durabilityFill.localScale = new Vector3(ratio, 1f, 1f);
+        durabilityFillImage.color = Color.Lerp(Color.red, Color.green, ratio);
     }
 
     private int GetSelectedLevel()
