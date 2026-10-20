@@ -1,7 +1,7 @@
 {
-    "currentDay": 8,
+    "currentDay": 1,
     "currentSlot": 0,
-    "crystal": 10000,
+    "crystal": 100000,
     "rareCrystal": 0,
     "weapons": [
         {
@@ -18,7 +18,7 @@
         }
     ],
     "equippedIndex": 0,
-    "motiveIndex": 5,
+    "motiveIndex": -1,
     "barricades": [
         {
             "state": 0,
@@ -49,7 +49,7 @@
     ],
     "clearedWaveNumber": 0,
     "difficulty": 0,
-    "savedAtTicks": 639280912117432755,
+    "savedAtTicks": 639281107342066898,
     "missions": [
         {
             "missionName": "크리스탈 상납",

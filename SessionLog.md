@@ -4,6 +4,30 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
+## ⭐ 서류 UI 개편 — 난이도·동기·세이브 칸을 "서류철 위 근무계약서"로 (2026-10-21) — 에셋·코드·프리팹·MainMenu 씬 적용, 사용자 Play 확인("잘 작동한다", 도장 진하게 확인), 커밋 전
+
+**MainMenu 정리**: `Canvas` 아래를 `MainMenuGroup`(메인 메뉴 UI)·`BackgroundGroup`(`Background`·`PropCorners` 등)으로 묶음(기능 변화 없음, 사용자 요청).
+
+**컨셉(사용자 결정)**: 동기 선택·난이도 선택·세이브 칸 선택 3화면을 **서류철(클립보드) 위 계약서**로 통일 — 제목 "근무계약서", **ㅁ 칸을 누르면 붉은 V 체크 → "제출" 버튼 → 큰 붉은 "승인" 도장이 서류에 쾅 찍힘 → 다음 단계**. 세 화면 모두 **"체크 → 제출" 순서**, **한 번에 하나만 체크·같은 칸을 다시 누르면 해제**. 동기는 "임무 : 크리스탈 상환" 줄 + 지원 사유 4문장(제목 굵게 + 설명, 줄 오른쪽 끝에 ㅁ), **체크 없이도 제출 가능**(버튼 글자가 "답하지 않고 제출"로 바뀜, 이때 `-1` = 답하지 않음), 난이도는 체크가 있어야 제출 가능, 세이브 칸은 **새 게임 = 빈 칸만 / 이어하기 = 채워진 칸만** 체크 가능(선택 불가 줄은 알파 0.4 + ㅁ 칸 숨김), **삭제는 사각 "파기" 도장 버튼**(기존 확인창 → `DeleteSlot` → 목록 새로고침, 선택 초기화). 서류는 세로 A4 모양을 화면 가운데에 두고 양옆은 어두운 배경(스토리 연출처럼).
+- **"서명" → "제출" + 승인 도장 크게(사용자 제안)**: 처음엔 "서명 :" 줄과 "서명" 버튼이었으나 **플레이어가 아무것도 쓰지 않는데 서명이라는 말이 어색**하다는 지적. 검토안(날인·무기명·무명 인장 / 진짜 서명 연출 / 동의 문구) 중 **버튼은 "제출", 도장은 회사의 "승인" 도장을 서류에 크게**(420, 기울기 ±10° 랜덤, 서류 가운데 아래)로 결정 → `SignLabel`·`SignLine` 삭제. 도장은 마지막 자식이라 제출 버튼 위에 찍힘, 이미지·글자 알파 1.0(처음 0.85였다가 "더 진하게"로 올림). `PaperStamp`의 `startScale` 1.5·`holdTime` 0.6.
+- **MainMenu에서 `LocksInputWhileActive` 불필요**: 이 컴포넌트는 플레이어 입력 잠금(`PlayerInputLock`)용이고 MainMenu 씬엔 플레이어가 없음 — CLAUDE.md의 규칙은 Base/ZWD의 UI 패널에 해당.
+
+**에셋(`Sprites/PaperUI/`, 소스는 사용자가 `Sprites/`에 둔 AI 이미지 `ClipBoard`·`Red Circular Stamp`·`Red Square Stamp`·`Red Check Marks`)**: `scratchpad/key_paperui.py`(순수 PIL) — 초록 키 + 번짐 제거 + 트림, **붉은 도장·체크는 순빨강을 크림 종이에 맞는 탁한 잉크색(약 184,23,28)으로 보정**, 체크 시트는 2×2로 잘라 `Check_0~3`, `Paper_Folder`(723×1040 표시)·`Stamp_Circle`·`Stamp_Rect`(849×499, 기울기 약 7° — "파기" 글자 +7° 회전으로 맞춤), 칸/줄 `Paper_Box`·`Paper_Line`·`Paper_LineDotted`(코드로 생성, 점선은 `Image.Type.Tiled`). **책상 `Desk_Wood.png`(1920×1080)**: 사용자가 "3D 배경 때문에 책상 느낌이 안 난다"고 지적 → 단색은 허공처럼 보여 부족하다고 설명 후 **PIL로 어두운 호두색 판자 7장 + 세로 나뭇결 노이즈 + 이음선 + 비네트**를 생성(AI 이미지는 필요하면 나중에). 서류 뒤에 `Desk`(전체)·`FolderShadow`(서류철 복제, 검정 알파 0.45, 오른쪽 아래 (14,-14))를 사용자가 배치. **메인 메뉴 3D 배경은 메인 메뉴 화면에서만 쓰이고 서류 화면은 "책상 클로즈업 장면"으로 전환** — 전환 페이드는 아직 없음.
+
+**코드**: 신규 `UI/PaperCheckBox.cs`(칸 안 붉은 V의 `fillAmount`를 0→1로 그림, 체크 스프라이트 4종 중 무작위 + ±6° 회전, `unscaledTime`), 신규 `UI/PaperStamp.cs`(도장 `CanvasGroup`·`RectTransform`, 크게 내려와 찍힘 + 눌렸다 돌아오는 흔들림 + 대기 후 콜백, 시작 때 `Hide`). `DifficultySelectUI`(전체 교체; `GameDifficulty?` 선택, 줄 버튼·칸·제출 버튼·도장·뒤로, **도장 중 뒤로 막음**), `MotiveSelectUI`(`confirm*` → `signButton`/`signLabel`로 이름 변경, `[FormerlySerializedAs]`로 연결 유지, 제출 라벨 갱신 `UpdateSignLabel`), `MotiveCardUI`(`selectedMark` → `PaperCheckBox`; `Show`와 `SetSelected` 분리해 이미 체크된 칸이 다시 그려지지 않게), `SaveSlotSelectUI`(`titleText` → `sectionText`(`FormerlySerializedAs`), 선택 + 제출 + 파기, 새로고침 때 선택 초기화), `SaveSlotCardUI`(`contentGroup`·`checkBox` 추가, `SetSelected`). **`MainMenuUI`는 변경 없음(`Open` 시그니처 유지).**
+
+**씬/프리팹**: `SaveSlotCard.prefab`을 새 구조로 수정(투명 줄 버튼 루트 + `Content`(CanvasGroup: `SlotLabel`·`InfoText` 폰트 21·`CheckBox`) + 마지막 자식 `DeleteButton`(`Stamp_Rect` + 붉은 "파기" 글자)). 서류 레이아웃: 난이도 서류를 먼저 만들고 **동기·세이브 서류는 그 `Folder`를 복제**해 카드 부분만 교체(동기 카드 4줄 높이 116·설명 폰트 21 / 세이브 3줄 높이 155). 가장 긴 동기 설명(기억상실 60자)이 3줄로 들어감.
+
+**함정/교훈**
+- **오버레이 캔버스는 편집 모드 스크린샷에 안 찍힘** → 임시로 `Canvas`를 `ScreenSpaceCamera`로 바꾸고 패널을 켜서 캡처한 뒤 **반드시 되돌림**(`ScreenSpaceOverlay`, 패널 끔, 임시 파일 삭제). 편집 모드에서는 `Awake`가 안 돌아 체크·도장이 항상 보이고 MainMenu 제목 텍스트가 서류 위에 보이지만 실행하면 정상.
+- **TMP를 코드로 만들면 기본이 `NoWrap`** → 줄바꿈이 필요한 설명은 `textWrappingMode = Normal`.
+- **앵커가 부모를 꽉 채우는 자식은 `sizeDelta`가 "부모 크기에 더하는 값"** — 도장 이미지에 210을 넣었더니 부모 210 + 210 = 420으로 커짐 → 0으로. **`PaperStamp`가 `localScale`을 1로 되돌리므로 크기를 줄이려면 스케일이 아니라 RectTransform 크기를 바꿔야 함.**
+- 프리팹 내부 구조를 바꾸면 씬 인스턴스의 오버라이드 경로가 깨지므로 인스턴스를 지우고 새로 배치. 임시로 넣은 미리보기 문구는 `RevertObjectOverride`로 되돌림.
+
+**함정/주의**: **MainMenu 씬(`Desk`·`FolderShadow` 배치 포함)과 `SaveSlotCard.prefab` 저장 필요.** 플레이 테스트로 `save_slot_0.json`이 바뀌고 `save_slot_1.json`이 새로 생겼으니 **세이브 파일은 커밋하지 말 것**(저장 경로는 아직 `Assets/_Project` 안 — 빌드 전에 `persistentDataPath`로).
+
+**남은 일**: 서류 화면이 열릴 때 `Dim`/3D 배경이 어두워지는 **페이드 전환**(코드 필요, 미승인) / 폰트 최종 결정(지금 SCDream5, 나눔손글씨펜 검토 중) / 서류 3종의 모양·도장 위치 최종 확인 / 서류 외 UI 마무리(엔딩·일시정지·세이브 칸 전체 시나리오 Play 확인) / 이후 후보: 사운드·사망 연출·사격 피드백·촬영 도구·안정화(`persistentDataPath`, `EnemyAttack.OnDrawGizmos` 삭제, 빌드 테스트).
+
 ## ⭐ UI 3단계 마무리 — 사망·엔딩·튜토리얼 스킨, HUD 프리팹 정리, 바리케이드 행 내구도 바, 레벨 드롭다운 (2026-10-21) — 프리팹·씬·`BarricadeRowUI` 적용, 사용자 확인("잘 나온다"), 커밋 전
 
 (이 항목으로 **UI 3단계는 끝**. 남은 UI 관련 일은 아래 "남은 일".)
