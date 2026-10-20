@@ -65,7 +65,7 @@ public class GameUI : MonoBehaviour
         {
             // 마지막 미션이면 다음 미션 대신 귀환 안내, 아니면 다음 미션은 마감일 다음 날(다음 주 월요일)
             missionText.text = mission.DueDay >= run.TotalDays
-                ? $"{MissionHeader}상납 완료. {GetDateLabel(run.TotalDays + 1)}, 남은 크리스탈과 함께 귀환할 수 있습니다."
+                ? $"{MissionHeader}상납 완료. {GetDateLabel(run.TotalDays + 1)}에 남은 크리스탈과 함께 귀환할 수 있습니다."
                 : $"{MissionHeader}상납 완료 다음 미션 {GetDateLabel(mission.DueDay + 1)}";
             missionText.color = missionDoneColor;
             return;
