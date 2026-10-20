@@ -51,6 +51,8 @@ public class RunState : MonoBehaviour
     // 웨이브가 처음 열리는 주차 - 1~3은 1주, 4~6은 2주, 7~9는 3주, 10은 4주
     public int GetWaveUnlockWeek(int waveNumber) => (waveNumber - 1) / wavesPerWeek + 1;
 
+    public GameDifficulty Difficulty { get; private set; } = GameDifficulty.Normal;
+
     public MotiveData Motives => motiveData;
     public int MotiveIndex { get; private set; } = -1;   // -1 = 아직 고르지 않음
     public MotiveData.Motive CurrentMotive => MotiveIndex >= 0 ? motiveData.Get(MotiveIndex) : null;
@@ -81,6 +83,11 @@ public class RunState : MonoBehaviour
     public void SelectMotive(int index)
     {
         MotiveIndex = index;
+    }
+
+    public void SetDifficulty(GameDifficulty difficulty)
+    {
+        Difficulty = difficulty;
     }
 
     public void ClearSelectedWave()
@@ -138,6 +145,7 @@ public class RunState : MonoBehaviour
         CurrentMission = null;
         SelectedWave = null;
         ClearedWaveNumber = 0;
+        Difficulty = GameDifficulty.Normal;
     }
 
     public void ResetEntireRun()
@@ -157,6 +165,7 @@ public class RunState : MonoBehaviour
         // 동기 목록이 바뀌어 범위를 벗어난 값은 미선택으로 처리
         MotiveIndex = (data.motiveIndex >= 0 && data.motiveIndex < motiveData.Count) ? data.motiveIndex : -1;
         ClearedWaveNumber = Mathf.Max(0, data.clearedWaveNumber);
+        Difficulty = Enum.IsDefined(typeof(GameDifficulty), data.difficulty) ? (GameDifficulty)data.difficulty : GameDifficulty.Normal;
 
         if(data.missions != null && data.missions.Length > 0)
         {
@@ -195,6 +204,7 @@ public class RunState : MonoBehaviour
         }
 
         IssueNewMission();
+        SaveManager.Instance.Save();   // 새 런의 복원 지점 - 첫날 전투 중 사망해도 이어하기할 세이브가 있게 함 (미션이 발급된 뒤여야 미션이 저장됨)
     }
 
     private bool IsMissionIssueDay()

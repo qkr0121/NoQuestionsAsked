@@ -5,18 +5,29 @@ public class SaveManager : MonoBehaviour
 {
     public static SaveManager Instance { get; private set; }
 
-    //private string SavePath => Path.Combine(Application.persistentDataPath, "save.json");
+    public const int SlotCount = 3;
+
+    public int ActiveSlot { get; private set; } = -1;   // 지금 런이 쓰는 칸 - 메인 메뉴에서 고를 때 정해지고, -1이면 저장하지 않음
+
+    //private string GetSlotPath(int slot) => Path.Combine(Application.persistentDataPath, $"save_slot_{slot}.json");
     // 임시 : 에디터에서 세이브 파일을 직접 열어 확인하기 위해 Assets 폴더 하위에 저장 중
     // Application.dataPath 는 빌드에서는 다른 경로를 가리키므로, 빌드 전 반드시 위 줄(persistentDataPath)로 되돌릴 것
-    private string SavePath => Path.Combine(Application.dataPath, "_Project", "save.json");
+    private string GetSlotPath(int slot) => Path.Combine(Application.dataPath, "_Project", $"save_slot_{slot}.json");
 
     private void Awake()
     {
         Instance = this;
     }
 
+    public void SetActiveSlot(int slot)
+    {
+        ActiveSlot = slot;
+    }
+
     public void Save()
     {
+        if (ActiveSlot < 0) return;   // 메인 메뉴를 거치지 않고 씬을 바로 실행한 경우 등 - 칸이 없으면 저장하지 않음
+
         SaveData data = new SaveData
         {
             currentDay = RunState.Instance.CurrentDay,
@@ -34,10 +45,12 @@ public class SaveManager : MonoBehaviour
                 currentHealth = PlayerManager.Instance.CurrentHealth,
                 maxHealth = PlayerManager.Instance.MaxHealth
             },
+            difficulty = (int)RunState.Instance.Difficulty,
+            savedAtTicks = System.DateTime.Now.Ticks,
         };
 
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SavePath, json);
+        File.WriteAllText(GetSlotPath(ActiveSlot), json);
     }
 
     private WeaponSaveEntry[] BuildWeaponEntries()
@@ -96,22 +109,49 @@ public class SaveManager : MonoBehaviour
         };
     }
 
-    public bool HasSave()
+    public bool HasSave(int slot)
     {
-        return File.Exists(SavePath);
+        return slot >= 0 && slot < SlotCount && File.Exists(GetSlotPath(slot));
     }
 
-    public SaveData Load()
+    public bool HasAnySave()
     {
-        if (!HasSave()) return null;
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (HasSave(i)) return true;
+        }
+        return false;
+    }
 
-        string json = File.ReadAllText(SavePath);
+    public SaveData Load(int slot)
+    {
+        if (!HasSave(slot)) return null;
+
+        string json = File.ReadAllText(GetSlotPath(slot));
         return JsonUtility.FromJson<SaveData>(json);
+    }
+
+    // 칸 목록에 보여줄 요약 - 빈 칸이면 null
+    public SaveSlotSummary GetSummary(int slot)
+    {
+        SaveData data = Load(slot);
+        if (data == null) return null;
+
+        MotiveData motives = RunState.Instance.Motives;
+        bool hasMotive = data.motiveIndex >= 0 && data.motiveIndex < motives.Count;
+        return new SaveSlotSummary
+        {
+            day = data.currentDay,
+            difficulty = (GameDifficulty)data.difficulty,
+            motiveName = hasMotive ? motives.Get(data.motiveIndex).displayName : "답하지 않음",
+            crystal = data.crystal,
+            savedAt = new System.DateTime(data.savedAtTicks)
+        };
     }
 
     public bool TryLoadAndApply()
     {
-        SaveData data = Load();
+        SaveData data = Load(ActiveSlot);
         if (data == null) return false;
 
         RunState.Instance.LoadFrom(data);
@@ -126,11 +166,17 @@ public class SaveManager : MonoBehaviour
         return true;
     }
 
+    // 로켓 엔딩, 서바이벌 사망처럼 "지금 런의 칸"을 지울 때
     public void DeleteSave()
     {
-        if(HasSave())
+        DeleteSlot(ActiveSlot);
+    }
+
+    public void DeleteSlot(int slot)
+    {
+        if (HasSave(slot))
         {
-            File.Delete(SavePath);
+            File.Delete(GetSlotPath(slot));
         }
     }
 }

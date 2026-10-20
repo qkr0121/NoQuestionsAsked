@@ -4,6 +4,29 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
+## ⭐ UI 착수 전 선행 작업 — 난이도(노말/서바이벌) + 세이브 칸 3개 (2026-10-21) — 코드·MainMenu 씬 UI 적용, 플레이 확인 중(사용자), 커밋 전
+
+(폴리싱 ⑥ 맵·로켓·연출용 크리스탈은 사용자가 로켓 해치 방향을 돌려 저장하고 **커밋 완료**. 폴리싱 세 가지가 끝나 UI로 넘어가면서 먼저 난이도·세이브 칸이 필요하다고 판단.)
+
+**결정(사용자, 모두 Claude 추천안)**:
+- **새로 시작하기**: 난이도(노말/서바이벌) → **빈 세이브 칸** 선택 → **지원 동기** 선택(기존 마지막 단계 유지) → 시작. 단계마다 뒤로 가기. **이어하기**: 채워진 칸 목록에서 선택 → 그 런 시작.
+- **노말**: 사망 → 사망 화면 → 메인 → 이어하기로 **마지막 저장**에서 재개(사망해도 세이브 유지). **서바이벌**: 사망 → 사망 화면 → **메인으로 이동하면서 그 칸의 세이브 삭제.** 마감 실패(미션 마감 초과)도 같은 경로. 로켓 엔딩은 난이도와 무관하게 해당 칸 삭제(기존 동작).
+- 칸은 **3개**, 칸이 다 찼을 때를 위해 **카드에 삭제 버튼(확인창)**, 새 런 시작 직후(첫 미션 발급 직후) **첫 저장**으로 복원 지점 확보, **서바이벌 꼼수(전투 중 껐다가 이어하기로 그 날 시작 시점 복귀)는 허용**(사망 시 삭제만), 기존 `save.json`은 읽지 않음(개발용 파일, 삭제해도 됨). 메타 세이브(`meta_save.json`, 도면 해금)는 **칸과 무관하게 전역 그대로**.
+- **칸 정보**: `N일차 · 노말/서바이벌` / `동기: …` / `크리스탈 N` / `저장 시각`. 동기를 넣을지 논의 → **넣고 "동기:" 라벨을 붙임**(런 구분과 개성, 줄 하나), 고르지 않으면 `동기: 답하지 않음`.
+
+**코드**: 신규 `Core/GameDifficulty.cs`(`Normal, Survival`), `UI/DifficultySelectUI.cs`, `UI/SaveSlotSelectUI.cs`(새 게임·이어하기 공용), `UI/SaveSlotCardUI.cs`.
+- `SaveData`: `difficulty`(옛 세이브는 0 = 노말로 읽힘), `savedAtTicks`, 칸 요약 `SaveSlotSummary`(직렬화 안 함) 추가.
+- `SaveManager`: `SlotCount = 3`, `ActiveSlot`(**-1이면 저장하지 않음**), 칸별 파일 **`save_slot_0~2.json`**(여전히 `Assets/_Project`의 임시 경로, **빌드 전 `persistentDataPath`로 되돌릴 것 — 기존 TODO 그대로**), `SetActiveSlot`, `HasSave(slot)`, `HasAnySave()`, `Load(slot)`, `GetSummary(slot)`, `TryLoadAndApply()`는 `ActiveSlot` 기준, `DeleteSave()` = 현재 칸 삭제, `DeleteSlot(slot)`. 기존 인자 없는 `HasSave()`/`Load()`는 삭제.
+- `RunState`: `Difficulty`/`SetDifficulty`, `ResetForNewRun`에서 노말로, `LoadFrom`에서 복원(범위를 벗어나면 노말), **`OnSceneLoaded`의 `IssueNewMission()` 직후 `SaveManager.Save()`** — **새 런 시작 시점에 저장하면 아직 미션이 없어 이어하기 때 첫날 미션이 비게 되므로 첫 미션 발급 직후여야 함.**
+- `GameOverUI`: 서바이벌이면 `DeleteSave()`, 노말이면 유지. **난이도는 `LoadingScreen`이 런을 리셋하기 전(버튼 클릭 시점)에 읽어야 함**(리셋 후엔 노말로 돌아가 있음). 선택 필드 `saveNoticeText`("서바이벌 - 세이브가 삭제됩니다." / "마지막 저장 시점부터 이어하기로 다시 시작할 수 있습니다.").
+- `MainMenuUI`: 흐름 전체 교체(`Transition(Action)`로 페이드 중 패널 교체, `pendingDifficulty`·`pendingSlot` 보관, `StartNewRun`이 `SetActiveSlot` + 난이도 지정, 이어하기는 `SetActiveSlot` + `ResetEntireRun` + `PendingLoad.MarkForLoad`). 기존 "저장된 진행이 삭제됩니다" 확인창 분기와 `OpenMotiveSelect/CloseMotiveSelect`는 삭제.
+
+**MainMenu 씬 UI(Claude가 사용자 요청으로 만듦, `Canvas` 아래 `MotiveSelect` 뒤)**: `DifficultySelect`(`DifficultySelectUI`, 꺼진 자식 `Panel`: 배경 (0.06,0.06,0.07), 제목 "난이도 선택", 700×420 카드형 버튼 `NormalButton`/`SurvivalButton`(이름 색 금색/붉은색 + 설명), `BackButton`은 `MotiveSelect`의 것을 복제), `SaveSlotSelect`(`SaveSlotSelectUI`, 꺼진 `Panel`: 제목, `Cards`에 카드 3개(540×600, 가로 간격 580), `BackButton`), **카드 프리팹 `Prefabs/UI/SaveSlotCard.prefab`**(카드 전체가 선택 버튼, `SlotLabel`, `InfoText`, 우측 하단 붉은 `DeleteButton`). 폰트 SCDream5 SDF·스프라이트·색은 `MotiveSelect`와 같은 스타일, `MainMenuUI`에 `Difficulty Select UI`·`Slot Select UI` 연결(기존 필드는 유지). **`LocksInputWhileActive`는 붙이지 않음**(MainMenu에는 플레이어 입력이 없고 `MotiveSelect` 패널도 없음). 화면 모양은 사진으로 확인하지 않음.
+
+**함정/주의**: **`ActiveSlot`이 -1이면(메인 메뉴를 거치지 않고 Base/ZWD를 바로 실행하면) 저장이 안 됨** — 이어하기 테스트는 메인에서 시작. 칸 카드의 선택 불가(`interactable false`)는 기본 `ColorTint` 회색이라 약해 보일 수 있음. **MainMenu 씬을 저장 전에 다른 씬으로 바꾸면 만든 UI가 사라질 수 있음.** 컴파일 확인은 Claude가 하지 않고 사용자가 Console로 확인.
+
+**남은 일**: 새 게임(난이도 → 빈 칸 → 동기 → Base 진입 후 `save_slot_N.json` 생성), 이어하기, 서바이벌 사망 시 칸 삭제 / 노말 사망 시 이어하기 재개, 마감 실패 후 이어하기(마감 전날 저장에서 시작), 칸 삭제·뒤로 가기, 사망 화면 안내 텍스트 연결(선택) 플레이 확인(사용자) / MainMenu 씬 저장 / 나머지 UI 작업(범위는 시작할 때 정함).
+
 ## ⭐ 폴리싱 ⑥ ZWD 맵 구성 시작 — 외곽 바닥·크리스탈 클러스터·이동 차단 벽·안개 (2026-10-21) — 씬·프리팹 적용, 배치·안개 확인 중(사용자), 커밋 전
 
 **결정(사용자)**: 플레이 영역은 **지금 `Ground`(50×50, ±25) 그대로**. 바깥은 skybox가 안 보일 만큼만 바닥을 붙이고 **크리스탈로 맵 끝을 표시**(마젠타 비중 높게, 눕히지 않음, 뒤쪽은 듬성듬성 → 이후 "앞 두 줄만, 뒤는 안개"로 변경). **크리스탈에는 콜라이더를 달지 않고 이동을 막는 벽은 따로**(전부 콜라이더를 달면 성능만 나빠짐). **외곽 바닥은 더 어둡게**, 단 질감은 보여야 함. 클러스터 크기는 **최소 1 이상**.

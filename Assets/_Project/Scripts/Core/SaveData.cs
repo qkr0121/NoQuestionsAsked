@@ -52,7 +52,19 @@ public class SaveData
     public int[] grenadeCounts;   // 소모품 개수 - 종류 순서는 PlayerConsumables의 배열 순서
     public int[] potionCounts;
     public int clearedWaveNumber;   // 가장 높이 클리어한 웨이브 번호 - 옛 세이브는 0(없음)으로 읽힘
+    public int difficulty;          // GameDifficulty 값 - 이 필드가 생기기 전의 옛 세이브는 0(노말)으로 읽힘
+    public long savedAtTicks;       // 칸 목록에 마지막 저장 시각을 보여주기 위함
 
     public MissionSaveEntry[] missions;
     public PlayerSaveData player;
+}
+
+// 세이브 칸 목록 표시용 요약 - 디스크에 저장되는 형태가 아니라 직렬화하지 않음
+public class SaveSlotSummary
+{
+    public int day;
+    public GameDifficulty difficulty;
+    public string motiveName;
+    public int crystal;
+    public System.DateTime savedAt;
 }

@@ -1,0 +1,66 @@
+{
+    "currentDay": 1,
+    "currentSlot": 0,
+    "crystal": 10000,
+    "rareCrystal": 0,
+    "weapons": [
+        {
+            "level": 1,
+            "magazineAmmo": 12,
+            "reserveAmmo": 60,
+            "isUnlocked": true
+        },
+        {
+            "level": 1,
+            "magazineAmmo": 4,
+            "reserveAmmo": 12,
+            "isUnlocked": false
+        }
+    ],
+    "equippedIndex": 0,
+    "motiveIndex": 5,
+    "barricades": [
+        {
+            "state": 0,
+            "level": 0,
+            "durability": 0
+        },
+        {
+            "state": 0,
+            "level": 0,
+            "durability": 0
+        },
+        {
+            "state": 0,
+            "level": 0,
+            "durability": 0
+        },
+        {
+            "state": 0,
+            "level": 0,
+            "durability": 0
+        }
+    ],
+    "grenadeCounts": [
+        0
+    ],
+    "potionCounts": [
+        0
+    ],
+    "clearedWaveNumber": 0,
+    "difficulty": 0,
+    "savedAtTicks": 639280912117432755,
+    "missions": [
+        {
+            "missionName": "크리스탈 상납",
+            "requiredCrystal": 5000,
+            "issuedDay": 1,
+            "dueDay": 7,
+            "isSubmitted": false
+        }
+    ],
+    "player": {
+        "currentHealth": 100,
+        "maxHealth": 100
+    }
+}
