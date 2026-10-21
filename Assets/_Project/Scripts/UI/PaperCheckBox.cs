@@ -7,6 +7,7 @@ public class PaperCheckBox : MonoBehaviour
     [SerializeField] private Image checkImage;          // 칸 안의 붉은 V (평소 꺼 둠), Image Type은 Filled/Horizontal/Left
     [SerializeField] private Sprite[] checkSprites;     // 손으로 하나씩 그은 느낌이 나도록 번갈아 사용
     [SerializeField] private float drawDuration = 0.18f;
+    [SerializeField] private SoundData checkSound;      // V를 긋기 시작할 때 나는 소리, 비워도 동작
 
     private Coroutine routine;
 
@@ -40,6 +41,7 @@ public class PaperCheckBox : MonoBehaviour
             checkImage.fillAmount = 1f;
             return;
         }
+        AudioManager.PlaySfx(checkSound);
         routine = StartCoroutine(Draw());
     }
 

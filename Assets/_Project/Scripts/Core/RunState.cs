@@ -131,7 +131,7 @@ public class RunState : MonoBehaviour
     {
         // 미션이 없거나 이미 제출됐거나, 크리스탈이 부족하면 실패
         if (CurrentMission == null || CurrentMission.IsSubmitted) return false;
-        if (!CurrencyManager.Instance.TrySpend(CurrentMission.RequiredCrystal)) return false;
+        if (!CurrencyManager.Instance.TrySpendQuietly(CurrentMission.RequiredCrystal)) return false;
 
         CurrentMission.IsSubmitted = true;
         OnMissionResolved?.Invoke(true);

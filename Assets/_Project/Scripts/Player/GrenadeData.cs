@@ -17,6 +17,10 @@ public class GrenadeData : ScriptableObject
     public float flightTime = 0.8f;     // 거리와 무관하게 고정 - 멀리 던질수록 빠르게 날아감
     public float arcHeight = 3f;        // 포물선 최고점 높이
 
+    [Header("소리")]
+    public SoundData throwSound;        // 던질 때
+    public SoundData explosionSound;    // 폭발할 때
+
     [Header("구매")]
     public int bundleCost = 80;
     public int maxCount = 5;

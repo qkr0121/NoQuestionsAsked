@@ -12,6 +12,7 @@ public class EnemyAttack : MonoBehaviour
     [SerializeField] private float sphereCastRadius = 0.5f; // 좀비 몸통 반경 정도 - 대각선으로 접근해도 벽을 감지하기 위함
     [SerializeField] private float sphereCastDistance = 1.5f;
     [SerializeField] private LayerMask obstacleLayer;
+    [SerializeField] private SoundData barricadeHitSound;   // 방어벽을 칠 때 나는 소리 (일반/헤비 프리팹마다 다르게), 비워도 동작
 
     private float attackTimer;
     private float contactCheckTimer;
@@ -59,7 +60,11 @@ public class EnemyAttack : MonoBehaviour
         if (Physics.SphereCast(transform.position, sphereCastRadius, transform.forward, out RaycastHit hit, sphereCastDistance, obstacleLayer))
         {
             BarricadeSlot slot = hit.collider.GetComponent<BarricadeSlot>();
-            if (slot != null) slot.TakeDamage(barricadeDamage);
+            if (slot != null)
+            {
+                slot.TakeDamage(barricadeDamage);
+                AudioManager.PlaySfx(barricadeHitSound);   // 공격과 피격이 같은 순간이라 소리 하나로 통일
+            }
         }
     }
 

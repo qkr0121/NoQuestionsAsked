@@ -72,6 +72,7 @@ public class PlayerShoot : MonoBehaviour
         isReloading = true;
         reloadDuration = PlayerWeapon.Instance.ReloadTime;
         reloadTimer = reloadDuration;
+        AudioManager.PlaySfx(PlayerWeapon.Instance.Data.reloadSound);
     }
 
     private void Fire()
@@ -103,6 +104,8 @@ public class PlayerShoot : MonoBehaviour
             muzzleFlash.transform.rotation = rot; // 캐릭터 회전이 늦게 따라와도 화염이 탄 방향을 향하게 함
             muzzleFlash.Play();
         }
+
+        AudioManager.PlaySfx(data.fireSound);
 
         playerAim.ApplyRecoil(data);
     }

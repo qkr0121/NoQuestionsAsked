@@ -9,6 +9,7 @@ public class PaperStamp : MonoBehaviour
     [SerializeField] private float startScale = 2.2f;
     [SerializeField] private float slamDuration = 0.12f;
     [SerializeField] private float holdTime = 0.45f;   // 찍힌 도장을 잠깐 보여 주는 시간
+    [SerializeField] private SoundData stampSound;     // 도장이 종이에 닿는 순간 나는 소리, 비워도 동작
 
     private Coroutine routine;
 
@@ -47,6 +48,7 @@ public class PaperStamp : MonoBehaviour
         }
         stamp.localScale = Vector3.one;
         group.alpha = 1f;
+        AudioManager.PlaySfx(stampSound);
 
         // 찍힌 직후 살짝 눌렸다 돌아오는 느낌
         elapsed = 0f;

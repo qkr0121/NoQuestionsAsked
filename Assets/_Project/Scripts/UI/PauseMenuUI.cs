@@ -43,6 +43,7 @@ public class PauseMenuUI : MonoBehaviour
 
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
+        AudioManager.PlayPanel();
         panel.SetActive(true);
     }
 
@@ -50,6 +51,7 @@ public class PauseMenuUI : MonoBehaviour
     {
         if (!panel.activeSelf) return;
 
+        AudioManager.PlayPanel();
         panel.SetActive(false);
         Time.timeScale = previousTimeScale;
     }

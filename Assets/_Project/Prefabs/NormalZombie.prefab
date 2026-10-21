@@ -100,6 +100,9 @@ MonoBehaviour:
   crystalReward: 200
   deathEffect: {fileID: 5643182554102090413, guid: f02747c7b91d16346bc6681e0b307af7, type: 3}
   deathEffectHeight: 1
+  hitSound: {fileID: 11400000, guid: fa16cc33f6b320643aedffd846e5f052, type: 2}
+  deathSound: {fileID: 11400000, guid: 78f49710331a9d1419e7aa177b055363, type: 2}
+  deathCrystalSound: {fileID: 11400000, guid: 778b94321c8d17845a90df2c6ea8247a, type: 2}
 --- !u!114 &-186988232349598092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,6 +125,7 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 256
+  barricadeHitSound: {fileID: 11400000, guid: a8ba12312d6c5f4458316e68a8f8fb0c, type: 2}
 --- !u!54 &2000934514790923256
 Rigidbody:
   m_ObjectHideFlags: 0

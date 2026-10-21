@@ -4,6 +4,47 @@
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
 
+## ⭐ 사운드 시스템 구축 + 전투·UI 효과음 20개 연결 + BGM 파일 확보(연결 전) (2026-10-21) — 코드·프리팹·에셋·프로젝트 설정 적용, 사용자가 일부 Play로 듣고 값 조정, 커밋 전
+
+(사운드는 이전까지 **오디오 코드·파일이 하나도 없던 상태**(씬의 `AudioListener`만 있음)에서 시작.)
+
+**결정(사용자)**
+- 소리 출처 = **무료 에셋팩(Kenney·Sonniss·Freesound 등) + Varco3D Sound**. **fal.ai `generate_audio`는 충전이 필요해 쓰지 않기로 함**(`configured: false` 상태로 둠). A급 **29개 목록**(표는 메모 `project_sound_checklist.md`에 상태와 함께 보관, "표 띄워줘" 요청 시 현재 상태로 보여줌).
+- 볼륨 슬라이더 **마스터/음악/효과음 3개**(효과음 슬라이더가 World·UI·Ambient를 함께 조절).
+- 서류 화면(새 게임 난이도·동기·세이브 칸)만 **사무용품 소리(펜·도장), 나머지 UI는 전자음**.
+- 방어벽 **공격음과 피격음은 하나로 합침**(일반/헤비는 다르게). 좀비 피격은 "살덩이 + rock hit 무작위", 사망은 "wet impact + crystal break 동시", 플레이어 피격은 "신음(작게) + 물리는 소리 2개 중 하나 동시", 사망은 `Player Die`. 헤비는 같은 소리를 피치만 낮춤.
+- 소리는 **총소리 등과 겹치지 않게 조정**: 좀비 피격은 볼륨 0.3·피치 1.05-1.25·동시 2(맞을 때 소리가 총소리와 같은 순간이라 묻힘). 방어벽 타격은 **때릴 때마다 소리가 나게** 동시 6·최소 간격 0.
+
+**구조(코드)**
+- `SoundData`(ScriptableObject: 클립 여러 개 무작위·버스 World/UI/Ambient·볼륨·피치 범위·동시 재생 수·최소 간격), `AudioManager`(`PersistentManagers.prefab`, 효과음 풀 40개·음악/앰비언스 2소스 크로스페이드·`PlaySfx/PlayPanel/PlayClick` 정적 도우미·믹서 볼륨 적용은 **Start에서**(Awake는 첫 프레임에 안 먹는 경우가 있음)), `SceneMusic`(씬마다 음악·앰비언스 지정, **Start에서** 호출 — AudioManager가 `GameBootstrap` Awake에서 만들어지기 때문), `UIButtonSound`(클릭·호버, `clickOverride`·`playHover`), `GameSettings.GetVolume/SetVolume/SaveVolumes`(`PlayerPrefs`, 슬라이더 드래그 중에는 저장 안 하고 설정 화면을 닫을 때 한 번), `SettingsPanel.prefab`에 슬라이더 3줄(`SettingsUI` 연결).
+- 믹서 `Audios/MainMixer.mixer`: Master → Music / SFX → (World, UI, Ambient), 노출 파라미터 `MasterVolume`·`MusicVolume`·`SfxVolume`(**Expose 해야 코드에서 `SetFloat`로 바꿀 수 있음** — 믹서 파일에서 그룹-파라미터 GUID 매핑까지 확인).
+- 프로젝트 설정(`ProjectSettings/AudioManager.asset`): **DSP 버퍼 1024 → 256(Best latency)**, **Real Voices 32 → 64**(풀 40개인데 기본 32라 동시에 많이 나면 조용히 빠짐). DSP 변경은 에디터 재시작 필요, 지직거리면 512.
+- 소리 연결은 **데이터 필드 + `AudioManager.PlaySfx(필드)`**: `WeaponData.fireSound/reloadSound`(`PlayerShoot`), `GrenadeData.throwSound/explosionSound`(`PlayerGrenade`·`Grenade`), `PlayerHealth.hitSound/biteSound/deathSound`, `EnemyHealth.hitSound/deathSound/deathCrystalSound`(죽는 타격은 피격음 생략), `EnemyAttack.barricadeHitSound`(`OnBarricadeHit` — 공격과 피격이 같은 순간), `PaperStamp.stampSound`·`PaperCheckBox.checkSound`, `CurrencyManager.purchaseSound/purchaseFailSound/upgradeSound`(`TrySpend`가 구매·실패 소리를 내고 무기 강화만 강화음, **미션 상납은 `TrySpendQuietly`**로 무음).
+- **확인창 "예" 버튼은 클릭음을 뺌**: 구매·강화는 모두 확인창 "예"에서 일어나므로 `ConfirmationDialog.OnYesClicked`가 `CurrencyManager.SoundCount`로 구매/강화/실패 소리가 났는지 보고, 안 난 확인(침대 휴식·삭제·메인으로)에만 기본 클릭음을 냄. 서류 줄 버튼·제출 버튼도 체크·도장 소리가 대신해 클릭음 제거.
+- 패널 열기/닫기 소리(`SD_UIPanel`, 피치 0.96-0.98): 상점·미션 보드·웨이브 선택·일시정지·튜토리얼·설정, 이미 닫힌 패널에 `Close`가 불려도 안 나게 가드(확인창·서류는 제외).
+- 전체 버튼에 `UIButtonSound` 일괄 부착(프리팹 14개 + MainMenu 16 + Base 27 + ZWD 1, 중첩 프리팹 인스턴스는 원본 프리팹에서 처리). 버튼 소리는 코드에서 프리팹/씬마다 일일이 붙이는 방식이라 **새 버튼은 직접 붙여야 함**(자동 부착 방식은 보류).
+
+**오디오 파일 다듬기(Unity 안에서, 스크립트로)**
+- **MP3는 디코딩 때 앞에 무음이 붙어 지연이 생김**(호버 25ms, 클릭 23-49ms) → 첫 타격음 직전까지 자른 `*_Trim.wav`를 만들어 `SoundData`에 연결. `Stamp.mp3`는 **소리가 시작되고 540ms 뒤에야 쾅**이라 잘라서 도장이 찍히는 순간과 맞춤. 호버 원본이 풀스케일(peak 1.0)이라 볼륨 0.28.
+- 피치를 낮춘 변형 WAV(리샘플링): 일반 방어벽 타격 0.85, 헤비 Hit1·Hit2 각각 0.9. 헤비는 Hit1 묶음(`SD_BarricadeHitHeavy`)이 기본, Hit2 묶음(`_B`)은 비교용.
+- 임포트 설정은 효과음 전부 **모노 + 로드 시 압축 해제(Vorbis 0.7)**. `AudioClip.GetData`는 `LoadAudioData` 뒤에 가능(Vorbis 압축 클립은 PCM으로 복원됨). 편집 환경에 ffmpeg 없음 → **MP3는 편집 불가**, Unity 안에서 읽어 WAV로 쓰는 방식만 가능.
+- 측정 도구: 파이썬 표준 라이브러리로 MP3 프레임 헤더를 읽어 길이 추정, WAV 헤더(float 포맷 포함) 읽기.
+
+**함정/교훈**
+- MCP `execute_code`(CodeDom): **로컬 함수 문법 불가**(`System.Func/Action` 델리게이트로), `AudioImporter.preloadAudioData`는 obsolete라 컴파일 에러.
+- 사용자가 에셋 폴더를 옮기거나 이름을 바꾸면(`Data` → `Datas`, `Charater` → `Player`, `Sound` 하위 `Combat/Player/Zombie/UI`, 클립 이름 `Pistol Shot1` → `Pistol Shot`) **경로로 `LoadAssetAtPath`하면 null** → `FindAssets("이름 t:타입")`로 찾아야 함. 에디터에서 옮기면 GUID라 연결은 유지됨.
+- 같은 소리가 겹치면 볼륨이 커짐(2개 +6dB, 3개 +9.5dB) → 겹침이 많은 소리는 볼륨을 낮게, 동시 재생 수로 상한. 소리가 빠지면 `maxConcurrent`·`minInterval`·풀 크기·Real Voices를 함께 봄.
+- 파일이 비어 있는 필드는 에러 없이 조용히 넘어가도록 모든 호출을 `PlaySfx`(null 안전)로 통일.
+- **Windows에서 Bash `cd`는 작업 디렉터리를 바꿔 놓음** — 파일 측정 뒤 프로젝트 루트로 반드시 복귀.
+
+**BGM(파일은 `Audios/MP3/BGM/`에 확보, 연결은 안 함 — 사용자가 "지금은 하지 말고")**: `MainMenu BGM`, `Base BGM1`·`Base BGM2`, `ZWD BGM`(각 약 5-6MB, 합계 22MB — **저장소 용량 주의**). Varco3D Sound 음악 프롬프트 방향 = 메인 메뉴(서류의 무심한 불안, 피아노 몇 음 + 차가운 패드, 70BPM), 기지(전기 부족한 지하, **쉬는 곳이라 차분하게 — 금속음·박자·갑작스러운 소리 제거**, 60BPM 미만, 드론 위주), 전투(둔탁한 신스 베이스 펄스 + 절제된 타악, 효과음을 가리지 않게 중·고역을 비움, 110BPM). 연결은 각 씬 `SceneMusic`의 Music 칸에 클립을 넣으면 됨(씬 전환 크로스페이드).
+
+**외부 작업**: Notion "진행과정"에 30-38번 항목 추가(SessionLog 17개 섹션 요약, 목록은 이름 오름차순 정렬로 설정).
+
+**함정/주의**: **MainMenu·Base·ZWD 씬과 수정한 프리팹(`HUD`·`PersistentManagers`·`SaveSlotCard`·`SettingsPanel`·`WaveButton`·`NormalZombie`·`HeavyZombie`·`Player`)·`Datas/Sound` 에셋 저장 필요.** `save_slot_0.json`은 플레이 테스트 세이브라 **커밋 제외**. BGM 22MB는 커밋할지 결정(git 용량).
+
+**남은 일**: 방어벽 파괴(15)·웨이브 경고 사이렌(16) / **BGM 연결**(MainMenu·Base(1·2 중 선택)·ZWD) 후 곡 볼륨·이어붙는 지점 확인 / 기지·전투 앰비언스(25-26) / 게임오버 스팅(27)·로켓(28)·엔딩 BGM(29) / 서류 "뒤로" 버튼에 사무용품 소리(필요 시) / 재장전 소리가 장전 시간보다 길 때(권총 2.4초 대 1.5초 등) **길이에 맞춰 재생하는 기능**(필요 시) / 전투 중 재장전 취소 때 소리 멈추기(필요 시) / 크레딧에 무료 에셋 라이선스·출처 표기 확인 / 헤비 방어벽 `Hit2` 2.4초 길이(다음 타격과 겹침) 판단.
+
 ## ⭐ 서류 UI 개편 — 난이도·동기·세이브 칸을 "서류철 위 근무계약서"로 (2026-10-21) — 에셋·코드·프리팹·MainMenu 씬 적용, 사용자 Play 확인("잘 작동한다", 도장 진하게 확인), 커밋 전
 
 **MainMenu 정리**: `Canvas` 아래를 `MainMenuGroup`(메인 메뉴 UI)·`BackgroundGroup`(`Background`·`PropCorners` 등)으로 묶음(기능 변화 없음, 사용자 요청).

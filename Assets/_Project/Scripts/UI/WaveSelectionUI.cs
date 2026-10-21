@@ -34,6 +34,7 @@ public class WaveSelectionUI : MonoBehaviour
 
     public void Open()
     {
+        AudioManager.PlayPanel();
         panel.SetActive(true);
         BuildWaveButtons();
         ShowWaveInfo(GetHighestUnlockedWave());   // 열자마자 정보 카드가 비어 있지 않게
@@ -41,6 +42,7 @@ public class WaveSelectionUI : MonoBehaviour
 
     public void Close()
     {
+        if (panel.activeSelf) AudioManager.PlayPanel();
         panel.SetActive(false);
     }
 

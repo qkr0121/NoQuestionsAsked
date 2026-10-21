@@ -13,6 +13,14 @@ public class CurrencyManager : MonoBehaviour
 
     [SerializeField] private int startingCrystal = 0; // 테스트용 - 빌드 전 0으로 되돌릴 것
 
+    [Header("소리")]
+    [SerializeField] private SoundData purchaseSound;       // 구매 성공
+    [SerializeField] private SoundData purchaseFailSound;   // 크리스탈 부족
+    [SerializeField] private SoundData upgradeSound;        // 강화 성공
+    public SoundData UpgradeSound => upgradeSound;
+
+    public int SoundCount { get; private set; }   // 구매·강화·실패 소리를 낸 횟수 - 확인창이 클릭음을 낼지 판단하는 데 씀
+
     public int Crystal { get; private set; }
 
     private void Awake()
@@ -26,7 +34,23 @@ public class CurrencyManager : MonoBehaviour
         Crystal += amount;
     }
 
-    public bool TrySpend(int amount)
+    public bool TrySpend(int amount, SoundData successSound = null)
+    {
+        if (Crystal < amount)
+        {
+            SoundCount++;
+            AudioManager.PlaySfx(purchaseFailSound);
+            return false;
+        }
+
+        Crystal -= amount;
+        SoundCount++;
+        AudioManager.PlaySfx(successSound != null ? successSound : purchaseSound);
+        return true;
+    }
+
+    // 미션 상납처럼 구매가 아닌 지출은 구매 소리를 내지 않음
+    public bool TrySpendQuietly(int amount)
     {
         if (Crystal < amount) return false;
 

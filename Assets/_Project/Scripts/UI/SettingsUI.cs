@@ -10,6 +10,9 @@ public class SettingsUI : MonoBehaviour
     [SerializeField] private TMP_Dropdown resolutionDropdown;
     [SerializeField] private Toggle fullscreenToggle;
     [SerializeField] private TMP_Dropdown qualityDropdown;
+    [SerializeField] private Slider masterSlider;           // 0~1
+    [SerializeField] private Slider musicSlider;
+    [SerializeField] private Slider sfxSlider;
     [SerializeField] private Button backButton;
 
     private readonly List<Vector2Int> resolutions = new List<Vector2Int>();
@@ -29,6 +32,9 @@ public class SettingsUI : MonoBehaviour
             resolutionDropdown.interactable = !on;   // 테두리 없는 전체화면은 바탕화면 해상도에 맞춰져 해상도 선택이 적용되지 않음
         });
         qualityDropdown.onValueChanged.AddListener(GameSettings.SetQuality);
+        masterSlider.onValueChanged.AddListener(v => GameSettings.SetVolume(VolumeChannel.Master, v));
+        musicSlider.onValueChanged.AddListener(v => GameSettings.SetVolume(VolumeChannel.Music, v));
+        sfxSlider.onValueChanged.AddListener(v => GameSettings.SetVolume(VolumeChannel.Sfx, v));
         backButton.onClick.AddListener(() => onBack?.Invoke());
         panel.SetActive(false);
     }
@@ -36,12 +42,15 @@ public class SettingsUI : MonoBehaviour
     public void Open(Action back)
     {
         onBack = back;
+        AudioManager.PlayPanel();
         panel.SetActive(true);
         Refresh();
     }
 
     public void Close()
     {
+        GameSettings.SaveVolumes();   // 슬라이더를 움직인 값을 한 번에 저장
+        if (panel.activeSelf) AudioManager.PlayPanel();
         panel.SetActive(false);
     }
 
@@ -74,5 +83,8 @@ public class SettingsUI : MonoBehaviour
         fullscreenToggle.SetIsOnWithoutNotify(Screen.fullScreen);
         resolutionDropdown.interactable = !Screen.fullScreen;
         qualityDropdown.SetValueWithoutNotify(QualitySettings.GetQualityLevel());
+        masterSlider.SetValueWithoutNotify(GameSettings.GetVolume(VolumeChannel.Master));
+        musicSlider.SetValueWithoutNotify(GameSettings.GetVolume(VolumeChannel.Music));
+        sfxSlider.SetValueWithoutNotify(GameSettings.GetVolume(VolumeChannel.Sfx));
     }
 }

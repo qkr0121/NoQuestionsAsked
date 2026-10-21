@@ -18,7 +18,7 @@
         }
     ],
     "equippedIndex": 0,
-    "motiveIndex": -1,
+    "motiveIndex": 5,
     "barricades": [
         {
             "state": 0,
@@ -49,7 +49,7 @@
     ],
     "clearedWaveNumber": 0,
     "difficulty": 0,
-    "savedAtTicks": 639281107342066898,
+    "savedAtTicks": 639281998806320752,
     "missions": [
         {
             "missionName": "크리스탈 상납",

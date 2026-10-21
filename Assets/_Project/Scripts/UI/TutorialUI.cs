@@ -45,6 +45,7 @@ public class TutorialUI : MonoBehaviour
         pageIndex = 0;
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;   // 전투 중에 ? 버튼으로 열어도 좀비에게 맞지 않도록 멈춤
+        AudioManager.PlayPanel();
         panel.SetActive(true);
         Refresh();
     }
@@ -53,6 +54,7 @@ public class TutorialUI : MonoBehaviour
     {
         if (!panel.activeSelf) return;
 
+        AudioManager.PlayPanel();
         panel.SetActive(false);
         Time.timeScale = previousTimeScale;
     }

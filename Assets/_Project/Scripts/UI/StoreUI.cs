@@ -34,12 +34,14 @@ public class StoreUI : MonoBehaviour
 
     public void Open()
     {
+        AudioManager.PlayPanel();
         panel.SetActive(true);
         ShowWeaponUpgrade();
     }
 
     public void Close()
     {
+        if (panel.activeSelf) AudioManager.PlayPanel();   // 이미 닫힌 상태에서 불려도 소리가 나지 않게
         panel.SetActive(false);
     }
 

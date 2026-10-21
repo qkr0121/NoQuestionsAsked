@@ -374,6 +374,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: b7263ea66326a064b83a6cbd72825306, type: 3}
   - {fileID: 21300000, guid: 6f39df5fc0a6df74b80db004e2843fbb, type: 3}
   drawDuration: 0.18
+  checkSound: {fileID: 11400000, guid: b45a77fb4d056d241bbaea4d9a81fd0e, type: 2}
 --- !u!1 &4538462902646324972
 GameObject:
   m_ObjectHideFlags: 0
@@ -523,6 +524,7 @@ GameObject:
   - component: {fileID: 6273141311746516029}
   - component: {fileID: 5877294850629975820}
   - component: {fileID: 2792992219422044169}
+  - component: {fileID: 8597281296807030371}
   m_Layer: 5
   m_Name: DeleteButton
   m_TagString: Untagged
@@ -632,6 +634,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8597281296807030371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6882284836048079356}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14b3d31cec943174ab2f461b75b684ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
+  clickOverride: {fileID: 0}
+  playHover: 1
 --- !u!1 &7228500074099363784
 GameObject:
   m_ObjectHideFlags: 0

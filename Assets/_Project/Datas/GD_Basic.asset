@@ -20,5 +20,7 @@ MonoBehaviour:
   maxThrowRange: 12
   flightTime: 0.8
   arcHeight: 3
+  throwSound: {fileID: 11400000, guid: 0df365e182b3d1a44947273f24a7aeec, type: 2}
+  explosionSound: {fileID: 11400000, guid: e6ed580f26311f049b730d3edc477fe0, type: 2}
   bundleCost: 800
   maxCount: 5

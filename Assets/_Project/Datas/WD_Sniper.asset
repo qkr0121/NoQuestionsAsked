@@ -78,6 +78,8 @@ MonoBehaviour:
   useRifleAnimation: 1
   heldModel: {fileID: 7962972976986759466, guid: 88c5f7efacdc9004d86ea449ae8b970d, type: 3}
   muzzleFlashPrefab: {fileID: 1024205077166862004, guid: 7cb8529be809cf04b879c1dec2ffcd9f, type: 3}
+  fireSound: {fileID: 11400000, guid: 23cd50615eef35c43af2a1f374eec059, type: 2}
+  reloadSound: {fileID: 11400000, guid: 1d6f6c62a19486c45b01000b50795a06, type: 2}
   unlockCost: 3000
   startingReserveAmmo: 12
   ammoCostPerRound: 40

@@ -286,6 +286,60 @@ Transform:
   - {fileID: 9075060306151934214}
   m_Father: {fileID: 4161960299081217102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2215100240115767746
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2289198427926826693}
+  - component: {fileID: 2222170554102055881}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2289198427926826693
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2215100240115767746}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4161960299081217102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2222170554102055881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2215100240115767746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84f8bdd1c99791d439dc75f178ec02f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  mixer: {fileID: 24100000, guid: d0a3353081e318f48a1c3d878ad7b809, type: 2}
+  musicGroup: {fileID: -6464030289883314432, guid: d0a3353081e318f48a1c3d878ad7b809, type: 2}
+  worldGroup: {fileID: 459289925726654804, guid: d0a3353081e318f48a1c3d878ad7b809, type: 2}
+  uiGroup: {fileID: 7151140892311214428, guid: d0a3353081e318f48a1c3d878ad7b809, type: 2}
+  ambientGroup: {fileID: -1608666164985184026, guid: d0a3353081e318f48a1c3d878ad7b809, type: 2}
+  poolSize: 40
+  defaultClick: {fileID: 11400000, guid: 5226ba65a35ba0b44b3a9c07759b4bb4, type: 2}
+  defaultHover: {fileID: 11400000, guid: 513cf2aa400702e4c877f993bf34f68e, type: 2}
+  panelSound: {fileID: 11400000, guid: e68b3dc3205558b498d7e7ea1bcb31e6, type: 2}
+  fadeTime: 1
 --- !u!1 &2301103507922596451
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,6 +373,7 @@ Transform:
   - {fileID: 7459854629418636817}
   - {fileID: 7846820412614771265}
   - {fileID: 3322734661928393624}
+  - {fileID: 2289198427926826693}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2436907259778878238
@@ -1487,6 +1542,7 @@ GameObject:
   - component: {fileID: 7883288479097353764}
   - component: {fileID: 546601645993440519}
   - component: {fileID: 6498441642513391753}
+  - component: {fileID: 4406301219618043312}
   m_Layer: 5
   m_Name: NoButton
   m_TagString: Untagged
@@ -1608,6 +1664,20 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &4406301219618043312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8083289729645737174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14b3d31cec943174ab2f461b75b684ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIButtonSound
+  clickOverride: {fileID: 0}
+  playHover: 1
 --- !u!1 &8182458431691960887
 GameObject:
   m_ObjectHideFlags: 0
@@ -1791,6 +1861,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
   startingCrystal: 100000
+  purchaseSound: {fileID: 11400000, guid: 0e27675a2aaeeb242b8b595ee4e486ab, type: 2}
+  purchaseFailSound: {fileID: 11400000, guid: 340d735281ddd86449f21683f730f0d2, type: 2}
+  upgradeSound: {fileID: 11400000, guid: 85b83500befe4514cb6bdade40b4114c, type: 2}
 --- !u!1 &8645406827600742721
 GameObject:
   m_ObjectHideFlags: 0

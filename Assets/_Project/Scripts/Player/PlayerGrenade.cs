@@ -142,5 +142,6 @@ public class PlayerGrenade : MonoBehaviour
         cooldownTimer = throwCooldown;
         Grenade grenade = Instantiate(data.prefab);
         grenade.Launch(playerAim.FirePoint.position, landPoint, data);
+        AudioManager.PlaySfx(data.throwSound);
     }
 }

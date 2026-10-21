@@ -69,6 +69,7 @@ public class Grenade : MonoBehaviour
         {
             Destroy(Instantiate(explosionEffect, transform.position, Quaternion.identity), 2f);
         }
+        AudioManager.PlaySfx(data.explosionSound);
         Destroy(gameObject);
     }
 

@@ -10,6 +10,11 @@ public class EnemyHealth : MonoBehaviour
     [SerializeField] private PooledEffect deathEffect;      // 죽을 때 터지는 이펙트, 비워둬도 동작
     [SerializeField] private float deathEffectHeight = 1f;  // 좀비 위치에서 몸 중심까지 높이
 
+    [Header("소리")]
+    [SerializeField] private SoundData hitSound;            // 맞을 때(살덩이/rock hit 무작위), 비워둬도 동작
+    [SerializeField] private SoundData deathSound;          // 죽을 때 몸이 터지는 소리(wet impact)
+    [SerializeField] private SoundData deathCrystalSound;   // 죽을 때 함께 나는 크리스탈 파편 소리
+
     private int currentHealth;
     private bool isDead;
     private EnemyMovement enemyMovement;
@@ -47,7 +52,11 @@ public class EnemyHealth : MonoBehaviour
         }
 
         currentHealth -= amount;
-        if (currentHealth > 0 && hitFeedback != null) hitFeedback.Play();   // 죽는 타격은 사망 이펙트가 대신함
+        if (currentHealth > 0)
+        {
+            AudioManager.PlaySfx(hitSound);   // 죽는 타격은 사망 소리가 대신함
+            if (hitFeedback != null) hitFeedback.Play();   // 죽는 타격은 사망 이펙트가 대신함
+        }
 
         if(currentHealth <= 0)
         {
@@ -65,6 +74,9 @@ public class EnemyHealth : MonoBehaviour
 
         if (deathEffect != null && EffectPool.Instance != null)
             EffectPool.Instance.Play(deathEffect, transform.position + Vector3.up * deathEffectHeight, Quaternion.identity);
+
+        AudioManager.PlaySfx(deathSound);
+        AudioManager.PlaySfx(deathCrystalSound);
 
         onDeathCallback?.Invoke();
         enemyMovement.ReturnToPool();

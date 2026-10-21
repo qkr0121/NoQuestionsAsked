@@ -22,12 +22,14 @@ public class MissionBoardUI : MonoBehaviour
 
     public void Open()
     {
+        AudioManager.PlayPanel();
         panel.SetActive(true);
         RefreshDisplay(RunState.Instance.CurrentMission);
     }
 
     public void Close()
     {
+        if (panel.activeSelf) AudioManager.PlayPanel();
         panel.SetActive(false);
     }
 

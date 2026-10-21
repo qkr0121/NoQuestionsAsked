@@ -94,7 +94,7 @@ public class PlayerWeapon : MonoBehaviour
     {
         WeaponSlot slot = weaponSlots[index];
         if (!slot.IsUnlocked || slot.IsMaxLevel) return false;
-        if (!CurrencyManager.Instance.TrySpend(slot.NextUpgradeCost)) return false;
+        if (!CurrencyManager.Instance.TrySpend(slot.NextUpgradeCost, CurrencyManager.Instance.UpgradeSound)) return false;
 
         // 탄창이 커져도 현재 탄창의 탄은 그대로 - 다음 장전부터 커진 크기가 적용됨
         slot.CurrentLevel++;

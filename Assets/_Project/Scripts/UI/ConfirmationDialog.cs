@@ -27,8 +27,13 @@ public class ConfirmationDialog : MonoBehaviour
     public void OnYesClicked()
     {
         panel.SetActive(false);
+        int soundsBefore = CurrencyManager.Instance != null ? CurrencyManager.Instance.SoundCount : 0;
         onConfirm?.Invoke();
         onConfirm = null;
+
+        // 구매·강화는 자기 소리(구매/강화/실패)가 나므로, 그런 소리가 나지 않은 확인에만 클릭음을 냄
+        bool spendSoundPlayed = CurrencyManager.Instance != null && CurrencyManager.Instance.SoundCount != soundsBefore;
+        if (!spendSoundPlayed) AudioManager.PlayClick();
     }
 
     public void OnNoClicked()

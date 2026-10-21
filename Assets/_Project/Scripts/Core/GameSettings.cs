@@ -1,5 +1,7 @@
 using UnityEngine;
 
+public enum VolumeChannel { Master, Music, Sfx }
+
 public static class GameSettings
 {
     private const string ResolutionWidthKey = "Settings.ResolutionWidth";
@@ -43,6 +45,26 @@ public static class GameSettings
     {
         QualitySettings.SetQualityLevel(level, true);
         PlayerPrefs.SetInt(QualityKey, level);
+        PlayerPrefs.Save();
+    }
+
+    private static string VolumeKey(VolumeChannel channel) => "Settings.Volume." + channel;
+
+    public static float GetVolume(VolumeChannel channel)
+    {
+        return PlayerPrefs.GetFloat(VolumeKey(channel), 1f);
+    }
+
+    // 슬라이더를 끄는 동안 계속 불리므로 여기서는 저장하지 않고, 설정 화면을 닫을 때 한 번 저장
+    public static void SetVolume(VolumeChannel channel, float value)
+    {
+        value = Mathf.Clamp01(value);
+        PlayerPrefs.SetFloat(VolumeKey(channel), value);
+        if (AudioManager.Instance != null) AudioManager.Instance.ApplyVolume(channel, value);
+    }
+
+    public static void SaveVolumes()
+    {
         PlayerPrefs.Save();
     }
 }
