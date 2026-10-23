@@ -9430,7 +9430,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ca44916b853b4547b0e13d9942b9d5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneMusic
-  music: {fileID: 0}
+  music: {fileID: 8300000, guid: bfb6eff8440a01644b34f87e4f544bec, type: 3}
   ambience: {fileID: 0}
 --- !u!4 &1301184758
 Transform:

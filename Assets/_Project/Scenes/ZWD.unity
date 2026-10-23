@@ -10035,7 +10035,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ca44916b853b4547b0e13d9942b9d5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneMusic
-  music: {fileID: 0}
+  music: {fileID: 8300000, guid: f23a42b4eea138940b78b4af3c0e662a, type: 3}
   ambience: {fileID: 0}
 --- !u!4 &2112822392
 Transform:
