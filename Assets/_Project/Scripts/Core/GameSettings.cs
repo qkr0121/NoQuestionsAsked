@@ -50,9 +50,12 @@ public static class GameSettings
 
     private static string VolumeKey(VolumeChannel channel) => "Settings.Volume." + channel;
 
+    // 처음 켰을 때 음악이 효과음을 가리지 않게 음악만 절반으로 시작 - 한 번이라도 조절하면 저장된 값을 씀
+    private static float DefaultVolume(VolumeChannel channel) => channel == VolumeChannel.Music ? 0.5f : 1f;
+
     public static float GetVolume(VolumeChannel channel)
     {
-        return PlayerPrefs.GetFloat(VolumeKey(channel), 1f);
+        return PlayerPrefs.GetFloat(VolumeKey(channel), DefaultVolume(channel));
     }
 
     // 슬라이더를 끄는 동안 계속 불리므로 여기서는 저장하지 않고, 설정 화면을 닫을 때 한 번 저장

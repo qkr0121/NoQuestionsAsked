@@ -1,13 +1,13 @@
 {
-    "currentDay": 1,
+    "currentDay": 2,
     "currentSlot": 0,
-    "crystal": 100000,
+    "crystal": 101600,
     "rareCrystal": 0,
     "weapons": [
         {
             "level": 1,
-            "magazineAmmo": 12,
-            "reserveAmmo": 60,
+            "magazineAmmo": 8,
+            "reserveAmmo": 24,
             "isUnlocked": true
         },
         {
@@ -47,9 +47,9 @@
     "potionCounts": [
         0
     ],
-    "clearedWaveNumber": 0,
+    "clearedWaveNumber": 1,
     "difficulty": 0,
-    "savedAtTicks": 639281998806320752,
+    "savedAtTicks": 639283599691723605,
     "missions": [
         {
             "missionName": "크리스탈 상납",
@@ -60,7 +60,7 @@
         }
     ],
     "player": {
-        "currentHealth": 100,
+        "currentHealth": 90,
         "maxHealth": 100
     }
 }

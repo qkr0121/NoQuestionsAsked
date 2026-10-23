@@ -76,6 +76,10 @@ crashlytics-build.properties
 # Windows
 Thumbs.db
 
-# 세이브 파일 (PC간 동기화용, 임시)
+# 에디터 실행 중 Assets 하위에 생기는 세이브 파일 (.meta 포함)
 /[Aa]ssets/_Project/save.json
 /[Aa]ssets/_Project/save.json.meta
+/[Aa]ssets/_Project/save_slot_*.json
+/[Aa]ssets/_Project/save_slot_*.json.meta
+/[Aa]ssets/_Project/meta_save.json
+/[Aa]ssets/_Project/meta_save.json.meta

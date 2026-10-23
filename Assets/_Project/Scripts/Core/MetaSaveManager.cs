@@ -5,8 +5,12 @@ public class MetaSaveManager : MonoBehaviour
 {
     public static MetaSaveManager Instance { get; private set; }
 
+#if UNITY_EDITOR
+    // SaveManager와 같은 이유로 에디터에서는 Assets 하위에 저장
     private string SavePath => Path.Combine(Application.dataPath, "_Project", "meta_save.json");
-    // SaveManager 와 동일한 임시 디버그 경로 - 빌드 전 반드시 persistentDataPath 로 되돌릴 것
+#else
+    private string SavePath => Path.Combine(Application.persistentDataPath, "meta_save.json");
+#endif
 
     private void Awake()
     {

@@ -9,10 +9,12 @@ public class SaveManager : MonoBehaviour
 
     public int ActiveSlot { get; private set; } = -1;   // 지금 런이 쓰는 칸 - 메인 메뉴에서 고를 때 정해지고, -1이면 저장하지 않음
 
-    //private string GetSlotPath(int slot) => Path.Combine(Application.persistentDataPath, $"save_slot_{slot}.json");
-    // 임시 : 에디터에서 세이브 파일을 직접 열어 확인하기 위해 Assets 폴더 하위에 저장 중
-    // Application.dataPath 는 빌드에서는 다른 경로를 가리키므로, 빌드 전 반드시 위 줄(persistentDataPath)로 되돌릴 것
+#if UNITY_EDITOR
+    // 에디터에서는 세이브 파일을 바로 열어 확인할 수 있게 Assets 하위에 저장
     private string GetSlotPath(int slot) => Path.Combine(Application.dataPath, "_Project", $"save_slot_{slot}.json");
+#else
+    private string GetSlotPath(int slot) => Path.Combine(Application.persistentDataPath, $"save_slot_{slot}.json");
+#endif
 
     private void Awake()
     {
