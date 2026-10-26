@@ -1,8 +1,25 @@
-# SessionLog — No Questions Asked (ZombieWaveDefence)
+# SessionLog — Regardless of Reason / 사유 불문 (ZombieWaveDefence)
 
 마지막 업데이트: 2026-10-26
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
+
+## ⭐ 제목 변경 + 촬영 도구 + 홍보영상 제작 + 발표자료(PPT) 계획 (2026-10-26) — 촬영 도구 코드 적용, 영상 촬영·편집(내보내기)은 사용자, PPT는 다른 세션에서 진행
+
+**제목 변경(사용자 결정)**: 게임 제목을 **"No Questions Asked" → "Regardless of Reason"**, 한글 부제 **"사유 불문"**으로 바꿈. 이유: 이전 제목은 "질문 금지"로만 읽히는데, 이 게임의 핵심은 **"왜 하는지(이유)는 중요하지 않고 상관하지 않는다"**임. "사유 불문"의 직역이라 의미가 정확하고, 끝나지 않은 문장 형태가 계약서 조항 머리말처럼 읽혀 서류 UI 콘셉트와 이어짐. 관사 `the`는 계약서 문체를 위해 뺌. 검토했다가 탈락한 후보: Reason Not Required("필요 없다"는 "중요하지 않다/상관없다" 뉘앙스와 달라 탈락), Don't Ask Why, Reason Irrelevant, No Reason Given.
+- **이 문서 아래 옛 섹션에 남아 있는 "No Questions Asked"는 당시 제목이라 그대로 둠**(기록 보존).
+- **홍보영상에서는 "이상이다. 질문은 받지 않는다." 문구를 쓰지 않기로 함.** 게임 안(튜토리얼 마지막 장, `TutorialData.asset`)의 문구는 그대로.
+- **사용자가 직접 바꿀 곳**: `MainMenu.unity`의 타이틀 텍스트(현재 "No Questions Asked"), Player Settings의 Product Name(빌드 이름), Notion "No Questions Asked" 페이지 제목, GDD Artifact 제목. 세이브 경로·내부 이름은 위험해서 바꾸지 않음.
+
+**발표·홍보영상 방향**: 수업 시간 발표, **영상은 30초~1분 홍보형**(최종 **58초**), 마감 **2026-10-27(내일)**. 발표는 **총 5분 = 영상 + 발표 약 4분**, 형식 **PPT**, 항목 자유.
+
+**촬영 도구(코드 적용, 컴파일·F5~F9 동작은 사용자가 확인함)**: `Scripts/Core/FilmingTools.cs`(새 파일) — 씬 배치 없이 `RuntimeInitializeOnLoadMethod(AfterSceneLoad)`로 `DontDestroyOnLoad` 오브젝트를 자동 생성, 새 Input System `Keyboard.current` 단일 F키: **F5** HUD 숨김/표시(`GameUI`가 있는 루트 캔버스 `enabled` 토글), **F6** 체력 회복(`PlayerManager.FillHealth`), **F7** 풀 세팅(크리스탈 +99,999, 전 무기 해금·최대 강화·탄약 가득, 수류탄·회복약 최대 — `LoadCounts`로 채워 구매 소리가 녹음에 안 섞임), **F8** 후반 점프(22일차, 웨이브 9까지 클리어 → 웨이브 10 선택 가능), **F9** 엔딩 점프(29일차 + 비활성 `RocketInteraction` 켜기). `RunState.DebugJump(int day, int clearedWave)` 추가(마감 판정·게임오버 없이 날짜·클리어 웨이브를 맞추고 해당 주기 미션을 새로 발급, 탈출 단계면 미션을 제출 처리). **`#if UNITY_EDITOR`는 걸지 않음 — 빌드로 촬영하기로 했기 때문**(개발 빌드 워터마크 회피). **→ 발표·제출이 끝나면 `FilmingTools.cs`와 `RunState.DebugJump` 삭제(CLAUDE.md "나중에 정리할 디버그 코드"에는 아직 미추가).** 슬로모션 키는 편집 프로그램에서 처리하기로 해서 뺌.
+
+**촬영·편집 결정**: 빌드(Product Name을 "Regardless of Reason"으로 바꿔 빌드)를 **Windows 게임 바(Win+Alt+R)** 또는 OBS로 녹화(1920x1080·60fps, 마이크 끔). 영상에 쓸 새 BGM을 깔기 위해 **게임의 Music 슬라이더를 0으로 두고 효과음만 녹화**. 컷 구성(약 2~3초 컷, 테이크 3회 이상 녹화): 서류(난이도·지원 동기 체크·도장) → 기지(상점·미션 보드·웨이브 선택, F8로 웨이브 10 해금) → 웨이브 경고 사이렌 → 전투(사격·저격·수류탄 슬로모션 0.4배·방어벽 타격·파괴·전경) → 로켓 엔딩(F9) → 타이틀 카드(Regardless of Reason / 사유 불문). 이동·걷기 컷은 1.5배속. **자막은 건조한 톤이 아니라 일반적인 홍보 톤**으로 결정: 서명하면, 근무가 시작된다 / 무기를 강화하고 / 미션을 확인하고, 웨이브를 고른다 / 웨이브 경고! 방어벽으로 / 방어벽을 지켜라 / 한 번에 쓸어버려라 / 방어벽이 무너지기 전에 / 28일을 버티면, 지구로 귀환 (하단 중앙, 흰 글씨 + 검정 반투명 띠 60%, 컷 앞 1.5~2초, 0.2초 페이드). **BGM은 게임 BGM 대신 Varco3D Sound로 58초짜리 새 곡을 생성해 효과음 아래에 깖**(프롬프트: `Instrumental cinematic game trailer music, 58 seconds, dark and tense, minimal industrial electronic, about 110 BPM. Starts quiet and cold, builds into a driving, intense action rhythm, then ends with one big final impact hit. No vocals.`). **믹스 원칙: 효과음이 주인공, BGM은 -12~-18dB, 도장·폭발·로켓 순간은 BGM을 더 낮추고 타이틀 카드에서만 올림**, 헤드폰·스피커로 모두 확인. 편집은 CapCut(+EditPilot AI 편집 보조)로 하고 사용자가 **내보내기 중**.
+
+**발표자료(PPT) 계획 — 다른 곳(세션/도구)에서 작업**: 발표 4분(말하는 분량 약 3분 40초) + 영상 → **총 약 4분 25초, 5분 안에 30초 여유**. 영상은 초반에 배치해 훅으로 씀. 9장 구성(시간): 1 타이틀 Regardless of Reason / 사유 불문(10초) → 2 **시연 영상**(58초로 늘었으므로 총 시간은 약 4분 40초로 재계산 필요) → 3 기획 의도(이유를 묻지 않는 회사, 서류 UI = 세계관, 30초) → 4 게임 루프(기지→미션→웨이브 선택→경고→방어벽 방어→귀환, 28일·마감 7일, 35초) → 5 핵심 시스템·밸런스(웨이브 1~10 순차 해금, 크리스탈 경제, 방어벽 등급, 미션 상납 6000/9000/12000/15000, 40초) → 6 기술적으로 한 것(오브젝트 풀링, NavMesh 없는 Transform+Raycast AI, 애니메이션 이벤트 공격, ScriptableObject 데이터, 세이브(에디터/빌드 분리), 오디오 시스템, 45초) → 7 제작 과정·시행착오(MVP→폴리싱, 30초) → 8 한계와 앞으로(핵앤슬래시 전환 검토 등, 20초) → 9 마무리·Q&A(10초). 디자인 안: **어두운 차콜 배경 + 서류 크림색 + 도장 빨강, 폰트는 학교 PC에 없어도 깨지지 않게 맑은 고딕**(SCDream5는 PPT에 포함 안 됨). 발표 원고는 슬라이드 노트에 시간 배분과 함께 작성. 슬라이드용 캡처(`01_title`·`03_paper`·`04_base`·`04_battle`·`05_store`·`08_ending`)는 영상 화면에서 뽑아 `Presentation/Images/`에 둘 계획. 내용은 이 문서와 Notion "진행과정"에서 가져오고 추측하지 않음. **발표 PC에서 영상 재생 확인 필요.**
+
+**남은 일(발표 이후/선택)**: 미션 크리스탈 반납 소리·엔딩 BGM·앰비언스(영상에 불필요하면 발표 후), `FilmingTools.cs`·`RunState.DebugJump` 삭제, 게임 안 `MainMenu.unity` 타이틀 텍스트와 Product Name 등을 "Regardless of Reason"으로 정리(사용자), Notion·GDD Artifact 제목 변경, 커밋(사운드 재분류 + 제목 변경 + 촬영 도구).
 
 ## ⭐ 사운드 2차 — 웨이브 사이렌·방어벽 파괴·게임오버·로켓 연결, BGM 정리, 경고 타이밍, 폴더 재분류 (2026-10-26) — 코드·에셋 적용, Play 확인은 일부(사용자), 커밋 전
 

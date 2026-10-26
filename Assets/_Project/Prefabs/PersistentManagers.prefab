@@ -1863,7 +1863,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3b70101afc344f468a2a4e73c100bfb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencyManager
-  startingCrystal: 100000
+  startingCrystal: 0
   purchaseSound: {fileID: 11400000, guid: 0e27675a2aaeeb242b8b595ee4e486ab, type: 2}
   purchaseFailSound: {fileID: 11400000, guid: 340d735281ddd86449f21683f730f0d2, type: 2}
   upgradeSound: {fileID: 11400000, guid: 85b83500befe4514cb6bdade40b4114c, type: 2}
@@ -2124,7 +2124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RunState
   currentDay: 1
-  totalDays: 1
+  totalDays: 28
   missionInterval: 7
   missionQuotas: 88130000401f0000e02e0000f0550000
   wavesPerWeek: 3
