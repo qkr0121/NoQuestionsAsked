@@ -95,6 +95,7 @@ public class BarricadeManager : MonoBehaviour
         if(data.CurrentDurability <=0)
         {
             data.State = BarricadeState.Destroyed;
+            AudioManager.PlaySfx(barricadeData.destroySound);
         }
 
         // 변경 알림이 먼저 가야 바가 숨겨졌다가(Refresh) 곧바로 피해 알림으로 다시 나타남

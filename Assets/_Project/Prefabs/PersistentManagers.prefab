@@ -339,6 +339,9 @@ MonoBehaviour:
   defaultClick: {fileID: 11400000, guid: 5226ba65a35ba0b44b3a9c07759b4bb4, type: 2}
   defaultHover: {fileID: 11400000, guid: 513cf2aa400702e4c877f993bf34f68e, type: 2}
   panelSound: {fileID: 11400000, guid: e68b3dc3205558b498d7e7ea1bcb31e6, type: 2}
+  warningSound: {fileID: 11400000, guid: e700d224512e7e44fa1008d01bc5306e, type: 2}
+  gameOverSound: {fileID: 11400000, guid: 80adb640eaa8ee34990ba5ac09dde2e1, type: 2}
+  rocketLaunchSound: {fileID: 11400000, guid: b307cc77591894b4990eb1efaddb4d05, type: 2}
   fadeTime: 1
 --- !u!1 &2301103507922596451
 GameObject:
@@ -2121,7 +2124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RunState
   currentDay: 1
-  totalDays: 28
+  totalDays: 1
   missionInterval: 7
   missionQuotas: 88130000401f0000e02e0000f0550000
   wavesPerWeek: 3

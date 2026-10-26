@@ -6,7 +6,7 @@ public class RocketInteraction : MonoBehaviour
 {
     [SerializeField] private Transform rocketModel;   // 날아오를 비주얼 - 루트를 움직이면 상호작용 콜라이더도 같이 떠서 분리
     [SerializeField] private EndingUI endingUI;
-    [SerializeField] private float launchDuration = 2.5f;
+    [SerializeField] private float launchSeconds = 3.2f;   // 상승에 걸리는 시간 - 길수록 천천히 오름 (로켓 소리의 절정 약 3초와 맞춤)
     [SerializeField] private float launchHeight = 40f;
 
     private GameObject player;
@@ -39,14 +39,16 @@ public class RocketInteraction : MonoBehaviour
     private IEnumerator LaunchRoutine()
     {
         PlayerInputLock.Lock();
+        AudioManager.PlayRocketLaunch();
+        AudioManager.StopMusic();
         if (player != null) player.SetActive(false);   // 탑승한 것으로 연출
 
         Vector3 start = rocketModel.position;
         float elapsed = 0f;
-        while (elapsed < launchDuration)
+        while (elapsed < launchSeconds)
         {
             elapsed += Time.deltaTime;
-            float t = elapsed / launchDuration;
+            float t = elapsed / launchSeconds;
             rocketModel.position = start + Vector3.up * (launchHeight * t * t);   // 가속하며 상승
             yield return null;
         }

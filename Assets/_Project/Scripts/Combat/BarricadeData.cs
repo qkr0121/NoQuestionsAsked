@@ -7,5 +7,8 @@ public class BarricadeData : ScriptableObject
     public int[] maxDurabilityByLevel = new int[3];
     public int[] installCostByLevel = new int[3];
 
+    [Header("소리")]
+    public SoundData destroySound;   // 내구도가 0이 되어 부서질 때, 비워도 동작
+
     public int MaxLevel => maxDurabilityByLevel.Length;
 }

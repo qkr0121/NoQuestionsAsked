@@ -25,6 +25,13 @@ public class AudioManager : MonoBehaviour
     [Header("패널")]
     [SerializeField] private SoundData panelSound;   // 패널을 열고 닫을 때
 
+    [Header("웨이브")]
+    [SerializeField] private SoundData warningSound;   // 웨이브 경고 사이렌
+
+    [Header("연출")]
+    [SerializeField] private SoundData gameOverSound;
+    [SerializeField] private SoundData rocketLaunchSound;
+
     [Header("음악·앰비언스")]
     [SerializeField] private float fadeTime = 1f;
 
@@ -85,6 +92,27 @@ public class AudioManager : MonoBehaviour
     public static void PlayClick()
     {
         if (Instance != null) Instance.Play(Instance.defaultClick);
+    }
+
+    public static void PlayWarning()
+    {
+        if (Instance != null) Instance.Play(Instance.warningSound);
+    }
+
+    public static void PlayGameOver()
+    {
+        if (Instance != null) Instance.Play(Instance.gameOverSound);
+    }
+
+    public static void PlayRocketLaunch()
+    {
+        if (Instance != null) Instance.Play(Instance.rocketLaunchSound);
+    }
+
+    // 현재 BGM을 페이드아웃해서 끔 - 엔딩·게임오버 연출 소리가 주인공이 되게
+    public static void StopMusic()
+    {
+        if (Instance != null) Instance.PlayMusic(null);
     }
 
     public void Play(SoundData sound)

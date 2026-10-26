@@ -23,6 +23,7 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private Transform[] spawnPoints; // 순서: North, East, South, West(BarricadeDirection 과 일치)
     [SerializeField] private float spawnOffset = 1.5f;   // 변에서 안쪽/바깥쪽(깊이) 방향으로 흩뿌리는 범위 - 덤불 띠 안에서 시작 깊이를 조금씩 다르게 함
     [SerializeField] private float edgeSpread = 22f;     // 변을 따라 좌우로 흩뿌리는 범위 - 한 곳이 아니라 맵 끝 전체의 덤불 사이에서 한 마리씩 나오게 함
+    [SerializeField] private float clearToWarningDelay = 1.5f;   // 마지막 좀비를 잡은 뒤 경고·대기를 시작하기까지 숨 돌리는 시간
 
     private Transform player;
     private WaveDefinition waveDefinition;
@@ -32,6 +33,7 @@ public class WaveSpawner : MonoBehaviour
     private float spawnTimer;
     private bool spawningStarted;
     private bool waitingForClear;   // 필드가 빌 때까지 다음 묶음의 대기를 시작하지 않는 상태
+    private float clearTimer;       // 필드가 빈 뒤 지난 시간 - clearToWarningDelay 만큼 지나야 경고·대기를 시작함
 
     public event Action<float> OnWarning;   // 인자: 경고 지속 시간(초)
 
@@ -75,6 +77,7 @@ public class WaveSpawner : MonoBehaviour
         aliveCount = 0;
         IsCleared = false;
         waitingForClear = false;
+        clearTimer = 0f;
         spawningStarted = true;
         ScheduleNextBatch(0f);   // 첫 묶음은 기본 대기 없이 바로, 대기가 지정돼 있으면 그만큼 뒤에
     }
@@ -113,7 +116,16 @@ public class WaveSpawner : MonoBehaviour
         {
             if (waitingForClear)
             {
-                if (aliveCount > 0) return;   // 아직 필드에 좀비가 남아 있음
+                if (aliveCount > 0)
+                {
+                    clearTimer = 0f;   // 아직 필드에 좀비가 남아 있음
+                    return;
+                }
+
+                clearTimer += Time.deltaTime;
+                if (clearTimer < clearToWarningDelay) return;   // 마지막 좀비를 잡은 직후 잠깐 쉼
+
+                clearTimer = 0f;
                 waitingForClear = false;
                 StartWait(spawnQueue.Peek(), 0f);
                 return;

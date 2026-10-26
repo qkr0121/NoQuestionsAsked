@@ -30,6 +30,8 @@ public class GameOverUI : MonoBehaviour
                 ? "서바이벌 - 세이브가 삭제됩니다."
                 : "마지막 저장 시점부터 이어하기로 다시 시작할 수 있습니다.";
         }
+        AudioManager.PlayGameOver();
+        AudioManager.StopMusic();
         gameOverPanel.SetActive(true);
     }
 

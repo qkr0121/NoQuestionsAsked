@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WallData
   maxDurabilityByLevel: 9001000020030000b0040000
   installCostByLevel: f4010000e8030000dc050000
+  destroySound: {fileID: 11400000, guid: a031960f79ba0cf4da5ce601170d4472, type: 2}

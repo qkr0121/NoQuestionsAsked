@@ -1,8 +1,26 @@
 # SessionLog — No Questions Asked (ZombieWaveDefence)
 
-마지막 업데이트: 2026-10-21
+마지막 업데이트: 2026-10-26
 
 다른 PC / 새 세션에서 이어갈 때, 이 문서 하나만 읽으면 지금까지의 결정과 현재 상태를 파악할 수 있도록 정리했습니다.
+
+## ⭐ 사운드 2차 — 웨이브 사이렌·방어벽 파괴·게임오버·로켓 연결, BGM 정리, 경고 타이밍, 폴더 재분류 (2026-10-26) — 코드·에셋 적용, Play 확인은 일부(사용자), 커밋 전
+
+(이전 섹션 "사운드 시스템 구축" 이후 사용자가 직접 커밋한 것: **BGM 연결**(MainMenu·Base·ZWD `SceneMusic.music`, **Base는 BGM1만 사용하고 BGM2 삭제**, 음악 임포트 Load Type **Streaming**), **세이브 경로를 `#if UNITY_EDITOR`로 분리**(에디터 = Assets 하위, 빌드 = `persistentDataPath`, `MetaSaveManager`도 같은 방식 — 이전 "남은 일"의 persistentDataPath 항목 완료), **음악 기본 볼륨 0.5**(저장된 값이 없을 때만, `GameSettings.DefaultVolume`), `save_slot_*.json`·`meta_save.json` gitignore.)
+
+**웨이브 경고 사이렌**: 원본 `Siren.mp3`(2.95초, 최대 음량 0.23, 앞 무음 243ms)를 분석해 **0.65초 주기의 삑 4번 패턴**임을 찾음(삑 시작 0.248/0.900/1.549/2.201초, 주기 0.652·0.650·0.652). 처음엔 2.3초 간격으로 다음 사이렌을 시작해 **박자가 깨짐** → 정확히 한 주기를 잘라 4번 이어붙인 **`Siren_Loop.wav`(2.598초, 잘라낸 앞뒤는 모두 무음 구간이라 이음매에 딸깍 소리 없음, 최대 0.9)**로 교체. `WaveWarningUI`의 `sirenLoopSeconds = 2.598`(이전 `soundRepeatInterval`에서 **이름을 바꿔** 씬에 저장된 옛 값이 무시되게 함)마다 `AudioManager.PlayWarning()`을 반복(남은 시간이 간격의 절반보다 짧으면 중단), `AudioManager.warningSound = SD_WaveWarning`. **함정: 소리를 일정한 간격으로 반복하려면 간격이 소리 패턴의 주기 정수배여야 함 — 파일 길이나 어림값으로 정하면 박자가 깨짐.**
+
+**경고 타이밍**: `WaveSpawner`에 `clearToWarningDelay = 1.5`(`waitForClear`에서 마지막 좀비를 잡은 뒤 **1.5초 쉬고** 경고·대기(`delayBefore` 5초)를 시작) — 마지막 좀비를 잡자마자 경고가 터져 정신없던 문제. 지연은 대기 시간과 별개라 경고 5초는 그대로 확보, 웨이브 전체 시간은 `waitForClear` 구간마다 1.5초 늘어남.
+
+**방어벽 파괴·게임오버·로켓**: 방어벽 파괴 = `BarricadeData.destroySound`(내구도가 0이 되는 타격에서 타격음과 함께, `BarricadeManager.TakeDamage`), 파일은 **Collapse 1**(첫 소리 18ms로 바로 터짐, Collapse 3은 앞 무음 320ms라 부적합)을 모노·앞 무음 제거로 다듬은 `Barricade Collapse_Trim.wav`(1.51초, `SD_BarricadeBreak`). 게임오버 = `AudioManager.gameOverSound`(`GameOverUI.Show`에서, 플레이어 사망음과 같은 시점), 로켓 = `AudioManager.rocketLaunchSound`(`RocketInteraction.LaunchRoutine` 시작에서). **게임오버·로켓 소리를 2배로** 다시 만든 Trim(평균 음량 약 1.9배, 0.7 넘는 구간은 **소프트 리미터**(tanh)로 눌러 클리핑 방지, 눌린 샘플 약 5%). **BGM 정리**: `AudioManager.StopMusic()`(`PlayMusic(null)` = 현재 곡 페이드아웃)을 로켓 발사·게임오버 때 호출해 연출 소리가 주인공이 되게 함. **로켓 상승 시간 2.5 → 3.2초**(`launchDuration` → **`launchSeconds`로 이름을 바꿔** 씬의 옛 값 무시, 소리 절정 약 3초와 맞춤).
+
+**MP3·SoundData 폴더 재분류(`MoveAsset`, GUID 유지, 끊긴 클립 0개 확인)**: `Audios/MP3/{BGM, Barricade, Combat, Event, Player, UI, Wave, Zombie}` — Wave = 사이렌, Barricade = 방어벽 파괴 + **방어벽 타격 오디오 6개**(`Zombie`에서 이동), Event = 게임오버·로켓. `Datas/Sound/{Barricade, Combat, Event, Player, UI, Wave, Zombie}` — `World` 폴더는 비어 `SD_BarricadeHit*` 3개를 Barricade로 이동(**빈 `World` 폴더는 사용자가 삭제**). **헤비 좀비 프리팹의 방어벽 타격은 `SD_BarricadeHitHeavy_B`(Hit2 묶음, 2.4초)로 사용자가 바꿔 둠.**
+
+**확인한 것(변경 없음)**: 일반 좀비 체력 100, 수류탄 데미지 80(한 방에 안 죽는 게 정상 — 총에 먼저 맞은 상태에서만 죽음), EnemyPool 프리팹 연결 정상(`EnemyType` Heavy=0, Normal=1).
+
+**함정/교훈**: **씬에 저장된 필드 값은 코드 기본값을 바꿔도 안 바뀜** → 값이 바뀌어야 하면 필드 이름을 바꿔 옛 값을 무시시킴(`sirenLoopSeconds`, `launchSeconds`). 반복 소리의 간격은 패턴 주기에 맞출 것. 소리 파일을 다듬을 때 **앞 무음 제거 + 음량 정규화** 없이는 지연·작은 소리 문제가 반복됨(MP3 디코딩 지연, 원본이 작게 녹음된 경우).
+
+**남은 일(사운드)**: **미션 크리스탈 반납(상납 제출) 소리 추가 필요** — 지금 `RunState.TrySubmitMission`이 `CurrencyManager.TrySpendQuietly`를 써서 **무음**이라(구매음이 안 맞아서 일부러 뺌) 미션 보드에서 상납해도 소리가 없음. 크리스탈을 내는 느낌의 소리를 구해(`coin`, `deposit`, `payment`, `submit` 등) `MissionBoardUI.OnSubmitClicked`의 성공 분기에서 재생하는 걸 제안(또 실패/금액 부족 소리는 구매 실패음 재사용 가능) / 엔딩 BGM(29)과 필요하면 앰비언스(25-26) / 서류 "뒤로" 버튼의 사무용품 소리 / 재장전 소리가 장전 시간보다 길 때 길이에 맞춰 재생하는 기능 / 게임오버 소리와 사망음이 겹쳐 어색하면 게임오버 소리 지연 / 쓰지 않는 원본·중간 파일(`Siren.mp3`, `Siren 1.mp3`, `Siren_Trim.wav`, `Siren_Trim2.wav`, `Barricade Collpase 1.mp3`, `Game Over.mp3`, `Rocket Launch.mp3`) 정리(사용자) / 크레딧에 무료 에셋 라이선스·출처 표기 확인 / **씬(ZWD `WaveSpawner`·`WaveWarningUI`·`RocketInteraction` 새 값)과 `PersistentManagers`·`WD_Barricade`·새 `SoundData`·재분류된 폴더 저장.**
 
 ## ⭐ 사운드 시스템 구축 + 전투·UI 효과음 20개 연결 + BGM 파일 확보(연결 전) (2026-10-21) — 코드·프리팹·에셋·프로젝트 설정 적용, 사용자가 일부 Play로 듣고 값 조정, 커밋 전
 
