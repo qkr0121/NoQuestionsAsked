@@ -1,0 +1,30 @@
+Regardless of Reason (사유 불문)
+Credits / 제작 및 사용 에셋
+
+[Sound Effects]
+- "Flesh Bite.wav" by jgriffie919
+  https://freesound.org/s/400174/
+  Licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  Modified: trimmed and edited for use in this game.
+- "m4a1 or m16 reload sound.mp3" by GFL7 (CC0)
+  https://freesound.org/people/GFL7/sounds/276964/
+- "pistol reload sound.mp3" by GFL7 (CC0)
+- Additional sound effects from Pixabay (Pixabay Content License)
+
+[Music]
+- BGM: generated with VARCO 3D Sound
+
+[Visual Effects]
+- WarFX by Jean Moreno (Unity Asset Store, free)
+
+[Animation]
+- Character animations from Mixamo (Adobe)
+
+[Models / Images]
+- 3D models and UI illustrations: AI-generated
+  (VARCO 3D, VARCO Image, GPT Image)
+
+[Fonts]
+- S-Core Dream (S-Core)
+
+Made with Unity.
