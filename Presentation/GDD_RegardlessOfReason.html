@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regardless of Reason GDD</title>
+<style>
+  :root {
+    --bg: #f4efe4;
+    --surface: #fffaf0;
+    --surface-2: #ebe3d0;
+    --fg: #23211e;
+    --muted: #6b655a;
+    --line: #d6ccb6;
+    --accent: #c8372d;
+    --accent-fg: #fffaf0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1e1d1b;
+      --surface: #2b2926;
+      --surface-2: #35322e;
+      --fg: #f7f2e7;
+      --muted: #b4ae9f;
+      --line: #46423b;
+      --accent: #e5483c;
+      --accent-fg: #f7f2e7;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1e1d1b;
+    --surface: #2b2926;
+    --surface-2: #35322e;
+    --fg: #f7f2e7;
+    --muted: #b4ae9f;
+    --line: #46423b;
+    --accent: #e5483c;
+    --accent-fg: #f7f2e7;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .page { max-width: 980px; margin: 0 auto; padding: 40px 20px 64px; }
+
+  header { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; justify-content: space-between; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.15; margin: 0; text-wrap: balance; }
+  h1 .ko { display: block; color: var(--accent); font-size: .62em; margin-top: 6px; }
+  .lede { margin: 16px 0 0; max-width: 56ch; color: var(--muted); font-size: 16px; }
+  .stamp { border: 3px solid var(--accent); color: var(--accent); font-weight: 700; font-size: 20px; padding: 6px 16px; transform: rotate(4deg); letter-spacing: .12em; white-space: nowrap; }
+
+  section { margin-top: 44px; }
+  h2 { font-size: 22px; margin: 0 0 14px; display: flex; align-items: baseline; gap: 12px; text-wrap: balance; }
+  h2 .no { color: var(--accent); font-size: 14px; font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+  h3 { font-size: 16px; margin: 22px 0 8px; }
+  p { margin: 0 0 12px; max-width: 70ch; }
+  ul { margin: 0 0 12px; padding-left: 1.2em; }
+  li { margin: 3px 0; }
+  .muted { color: var(--muted); }
+
+  .glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 0; }
+  .glance div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  .glance dt { font-size: 12px; color: var(--muted); letter-spacing: .06em; }
+  .glance dd { margin: 4px 0 0; font-weight: 700; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+  .card h3 { margin-top: 0; }
+
+  .loop { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; counter-reset: step; }
+  .loop li { counter-increment: step; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
+  .loop li::before { content: counter(step); display: block; color: var(--accent); font-weight: 700; font-size: 20px; }
+  .loop b { display: block; }
+  .loop span { font-size: 13px; color: var(--muted); }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { background: var(--surface-2); font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; }
+
+  .done, .later { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; margin-right: 6px; }
+  .done { background: var(--accent); color: var(--accent-fg); }
+  .later { border: 1px solid var(--line); color: var(--muted); }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+  @media print {
+    :root { --bg: #fff; --surface: #fff; --surface-2: #eee; --fg: #000; --muted: #444; --line: #bbb; --accent: #b3261e; }
+    .page { padding: 0; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div>
+      <p class="eyebrow">Game Design Document · One-page</p>
+      <h1>Regardless of Reason<span class="ko">사유 불문</span></h1>
+      <p class="lede">이유는 묻지 않고, 대답도 필요 없다. 크리스탈 좀비 행성에서 28일 동안 방어벽 뒤에서 버티고 지구로 귀환하는 탑다운 웨이브 디펜스.</p>
+    </div>
+    <div class="stamp">접 수</div>
+  </header>
+
+  <section>
+    <h2><span class="no">01</span>한눈에 보기</h2>
+    <dl class="glance">
+      <div><dt>장르</dt><dd>탑다운 웨이브 디펜스 슈터 · 로그라이트 구조</dd></div>
+      <div><dt>플랫폼</dt><dd>PC (Windows)</dd></div>
+      <div><dt>엔진</dt><dd>Unity 6 (6000.3) · URP · New Input System</dd></div>
+      <div><dt>한 판 길이</dt><dd>28일 (웨이브 28회 클리어)</dd></div>
+      <div><dt>목표</dt><dd>4번의 미션 마감을 넘기고 29일 아침 로켓으로 귀환</dd></div>
+      <div><dt>조작</dt><dd>WASD 이동 · 마우스 조준 · 좌클릭 사격</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <h2><span class="no">02</span>컨셉과 세계관</h2>
+    <p>인류는 크리스탈로 가득한 행성을 발견하지만, 그곳엔 크리스탈 좀비가 살고 있다. 크리스탈은 무엇이든 만들어 내는 제작기의 연료라서 막대한 양이 필요하고, 채굴 인력이 전멸하자 회사는 누구든 받는 지원자 모집을 시작한다.</p>
+    <p>이 게임의 핵심 톤은 <b>"왜 하는지는 중요하지 않고 상관하지 않는다"</b>는 회사의 태도다. 제목 <b>사유 불문</b>은 그 뜻을 그대로 옮긴 이름이고, 난이도와 지원 동기를 "근무계약서"에 체크하고 도장을 찍는 서류 UI로 이 태도를 보여 준다. 지원 동기는 9종이며 게임 진행에는 영향이 없고, 고른 동기에 맞는 엔딩 문구만 달라진다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">03</span>핵심 루프</h2>
+    <ol class="loop">
+      <li><b>기지 정비</b><span>상점에서 무기 강화, 탄약·회복약·방어벽 구매</span></li>
+      <li><b>미션 확인</b><span>미션 보드에서 요구 금액과 마감일 확인</span></li>
+      <li><b>웨이브 선택</b><span>소환기에서 웨이브 정보 보고 선택</span></li>
+      <li><b>돌격 경고</b><span>사이렌이 울리면 방어벽으로 이동</span></li>
+      <li><b>방어벽 방어</b><span>벽 뒤에서 사격, 수류탄, 벽 수리</span></li>
+      <li><b>귀환</b><span>크리스탈 획득, 하루가 지나고 자동 저장</span></li>
+    </ol>
+    <p class="muted" style="margin-top:12px">날짜는 전투를 마치고 복귀할 때만 흐른다. 그래서 28일을 버티려면 웨이브를 28번 클리어해야 한다. 침대는 체력만 회복시키고 시간은 흐르지 않는다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">04</span>런 구조와 미션</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>미션: 크리스탈 상납</h3>
+        <ul>
+          <li>7일마다 마감, 총 4회 (7 · 14 · 21 · 28일)</li>
+          <li>마감 당일까지 상납(제출)하면 성공</li>
+          <li>마감을 넘기면 <b>즉시 게임오버</b></li>
+          <li>마지막 미션까지 내면 29일 아침 로켓 귀환 엔딩</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>난이도 (서류에서 선택)</h3>
+        <ul>
+          <li><b>노말</b>: 사망해도 마지막 저장에서 이어하기</li>
+          <li><b>서바이벌</b>: 사망하면 세이브 삭제</li>
+          <li>세이브 3칸, 전투 복귀 때 자동 저장</li>
+        </ul>
+      </div>
+    </div>
+    <h3>미션 요구 금액</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>주차</th><th>마감일</th><th class="num">요구 크리스탈</th></tr></thead>
+        <tbody>
+          <tr><td>1주차</td><td>7일</td><td class="num">5,000</td></tr>
+          <tr><td>2주차</td><td>14일</td><td class="num">8,000</td></tr>
+          <tr><td>3주차</td><td>21일</td><td class="num">12,000</td></tr>
+          <tr><td>4주차</td><td>28일</td><td class="num">22,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:10px">후반을 가파르게 잡아 마지막 주의 긴장을 만든다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">05</span>전투 시스템</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>무기와 소모품</h3>
+        <ul>
+          <li><b>권총</b>: 기본 무기, 연사와 범용 처치</li>
+          <li><b>저격총</b>: 해금 3,000. 헤비 좀비 전담 + 장거리 화력 (Lv1 데미지 250, 사거리 80)</li>
+          <li><b>수류탄</b>: 범위 데미지 80, 뭉친 좀비 처치용</li>
+          <li><b>회복약</b>: 전투 중 체력 회복</li>
+          <li>무기는 레벨 강화로 데미지, 재장전 등이 개선되고 무기별로 저장</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>좀비 2종</h3>
+        <ul>
+          <li><b>일반 좀비</b>: 체력 100, 킬 보상 200</li>
+          <li><b>헤비 좀비</b>: 체력 500, 이속 2.5, 킬 보상 500, 방어벽 공격력이 일반의 16배 (일반 5, 헤비 80)</li>
+          <li>플레이어를 향해 직진하고, 방어벽에 막히면 벽을 공격</li>
+          <li>좀비끼리 겹치지 않도록 분리 조향 적용</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>방어벽 (3등급)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>등급</th><th class="num">설치 비용</th><th class="num">내구도</th></tr></thead>
+        <tbody>
+          <tr><td>Lv1</td><td class="num">500</td><td class="num">400</td></tr>
+          <tr><td>Lv2</td><td class="num">1,000</td><td class="num">800</td></tr>
+          <tr><td>Lv3</td><td class="num">1,500</td><td class="num">1,200</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:10px">수리비는 설치비에 비례한다. 웨이브가 어려워질수록 더 높은 등급의 벽이 필요하도록 맞췄다.</p>
+
+    <h3>웨이브 구조</h3>
+    <p><b>선발</b>(밖에서 일반 좀비 소수를 순서대로 처치) → 필드가 정리되면 <b>경고 5초</b>(사이렌, 방어벽으로 이동) → <b>돌격</b>(헤비와 일반이 방어벽으로 동시에 몰려옴). 한 판은 모든 적을 소환하고 모두 처치하면 클리어된다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">06</span>웨이브와 경제</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>웨이브</th><th>방향</th><th class="num">일반 / 헤비</th><th class="num">획득 크리스탈</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>2방향</td><td class="num">8 / 0</td><td class="num">1,600</td></tr>
+          <tr><td>2</td><td>2방향</td><td class="num">12 / 0</td><td class="num">2,400</td></tr>
+          <tr><td>3</td><td>2방향</td><td class="num">16 / 0</td><td class="num">3,200</td></tr>
+          <tr><td>4</td><td>2방향</td><td class="num">18 / 0</td><td class="num">3,600</td></tr>
+          <tr><td>5</td><td>2방향</td><td class="num">16 / 2</td><td class="num">4,200</td></tr>
+          <tr><td>6</td><td>2방향</td><td class="num">20 / 2</td><td class="num">5,000</td></tr>
+          <tr><td>7</td><td>2방향</td><td class="num">24 / 2</td><td class="num">5,800</td></tr>
+          <tr><td>8</td><td>4방향</td><td class="num">32 / 2</td><td class="num">7,400</td></tr>
+          <tr><td>9</td><td>4방향</td><td class="num">32 / 4</td><td class="num">8,400</td></tr>
+          <tr><td>10</td><td>4방향</td><td class="num">32 / 8</td><td class="num">10,400</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:10px">후반 웨이브일수록 획득량이 올라가는 것이 원칙이다. 일반 좀비는 마리당 200, 헤비는 500을 준다.</p>
+    <h3>순차 해금</h3>
+    <p>주차별 상한(1주차 3 · 2주차 6 · 3주차 9 · 4주차 10) 안에서 이전 웨이브를 클리어해야 다음 웨이브가 열린다. 이미 연 웨이브는 언제든 다시 선택할 수 있다. 안 막으면 첫날 가장 보상이 큰 웨이브로 경제가 무너지기 때문이다.</p>
+    <h3>재화 흐름</h3>
+    <p>크리스탈 하나로 모든 것을 해결한다. <b>수입</b>은 웨이브 클리어와 처치 보상이고 <b>지출</b>은 무기 해금·강화, 탄약, 회복약, 방어벽 설치·수리, 그리고 미션 상납이다. 후반으로 갈수록 상납 부담이 크게 늘어서 무엇에 쓸지를 고민하게 된다.</p>
+  </section>
+
+  <section>
+    <h2><span class="no">07</span>아트와 사운드</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>비주얼</h3>
+        <ul>
+          <li>로우폴리 3D 모델 (AI 3D 생성 도구 Varco 3D 기반)</li>
+          <li>UI는 어두운 톤 + 서류철 위 근무계약서 콘셉트</li>
+          <li>도장, 체크 펜, 크리스탈 파편, 폭발·총구 화염 등 전투 피드백</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>사운드</h3>
+        <ul>
+          <li>씬별 BGM: 메인메뉴 · 기지 · 전투</li>
+          <li>무기, 좀비, 방어벽, UI, 웨이브 사이렌, 게임오버, 로켓 발사 효과음</li>
+          <li>무료 에셋팩 + Varco3D Sound</li>
+          <li>마스터 · 음악 · 효과음 음량 설정</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">08</span>기술 구성</h2>
+    <ul>
+      <li><b>씬</b>: MainMenu → Loading → Base ↔ ZWD. 씬이 바뀌어도 유지되는 매니저는 <code>DontDestroyOnLoad</code> 프리팹 하나로 관리</li>
+      <li><b>데이터 주도</b>: 웨이브, 무기, 사운드, 튜토리얼, 동기 문구를 ScriptableObject로 관리해 코드 수정 없이 조정</li>
+      <li><b>풀링</b>: 투사체, 좀비, 효과, 데미지 숫자를 오브젝트 풀로 재사용</li>
+      <li><b>좀비 AI</b>: NavMesh 없이 Transform 이동 + 방어벽은 SphereCast로 감지, 공격 피해는 애니메이션 이벤트 시점에 적용</li>
+      <li><b>세이브</b>: JSON 3칸, 에디터와 빌드의 저장 경로 분리, 전투 복귀 시 자동 저장</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="no">09</span>구현 범위</h2>
+    <div class="cols">
+      <div class="card">
+        <h3><span class="done">완료</span>MVP</h3>
+        <ul>
+          <li>28일 런, 7일 미션, 마감 실패 게임오버, 로켓 귀환 엔딩</li>
+          <li>웨이브 10개, 순차 해금, 방어벽 3등급</li>
+          <li>무기 2종 강화, 수류탄, 회복약</li>
+          <li>세이브 3칸, 난이도 2종, 서류 UI, 튜토리얼</li>
+          <li>사운드, BGM, 전투 이펙트, 로우폴리 모델</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="later">이후</span>확장 후보</h3>
+        <ul>
+          <li>좀비 3종째와 보스</li>
+          <li>맵 확장 (이후 웨이브 8~10 재보정)</li>
+          <li>소총 등 무기 추가, 수류탄 종류 확대</li>
+          <li>유산 기록 (지원 동기 기반 기록)</li>
+          <li>베타 테스트 피드백으로 밸런스 보정</li>
+          <li>파밍형 슈터로의 전환 검토</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Regardless of Reason (사유 불문) · One-page GDD · 2026-10-27
+  </footer>
+</div>
+</body>
+</html>

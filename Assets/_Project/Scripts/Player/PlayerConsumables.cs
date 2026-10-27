@@ -36,7 +36,6 @@ public class PlayerConsumables : MonoBehaviour
         if (!CurrencyManager.Instance.TrySpend(cost)) return false;
 
         grenadeCounts[grenadeIndex] += count;
-        Debug.Log($"{data.name} {count}개 구매 완료. 현재 보유: {grenadeCounts[grenadeIndex]}/{data.maxCount}");
         return true;
     }
 
@@ -64,7 +63,6 @@ public class PlayerConsumables : MonoBehaviour
         if (!CurrencyManager.Instance.TrySpend(cost)) return false;
 
         potionCounts[potionIndex] += count;
-        Debug.Log($"{data.name} {count}개 구매 완료. 현재 보유: {potionCounts[potionIndex]}/{data.maxCount}");
         return true;
     }
 

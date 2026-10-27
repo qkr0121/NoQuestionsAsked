@@ -104,16 +104,4 @@ public class EnemyAttack : MonoBehaviour
     {
         return (obstacleLayer.value & (1 << other.gameObject.layer)) != 0;
     }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = nearWall ? Color.red : Color.yellow;
-
-        Vector3 start = transform.position;
-        Vector3 end = start + transform.forward * sphereCastDistance;
-
-        Gizmos.DrawWireSphere(start, sphereCastRadius);
-        Gizmos.DrawWireSphere(end, sphereCastRadius);
-        Gizmos.DrawLine(start, end);
-    }
 }

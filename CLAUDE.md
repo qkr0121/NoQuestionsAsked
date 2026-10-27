@@ -23,6 +23,6 @@
 - 자세한 프로젝트 배경, 스코프, 일정, 아키텍처 결정은 SessionLog.md 참고.
 - 새 UI 패널(상점·미션·게임오버·일시정지·튜토리얼 등)을 만들 때는 UI 루트가 아니라 **처음에 꺼진 자식 Panel 오브젝트**에 `LocksInputWhileActive`를 붙인다. 빠지면 수류탄을 든 상태에서 커서가 갇히고 OS 커서가 숨겨진다.
 
-## 나중에 정리할 디버그 코드 (밸런싱 끝나면 삭제)
-- `EnemyAttack.cs`의 `OnDrawGizmos()` — SphereCast 범위 시각화(Scene 뷰 전용). 방어벽 공격 거리/간격 튜닝 끝나면 삭제.
-- `BarricadeManager.cs`의 `TakeDamage()` 안 `Debug.Log` 2줄(피격/파괴 로그) — 방어벽 내구도 UI(Issue 20) 구현되면 삭제.
+## 나중에 정리할 디버그 코드
+- 현재 없음 (2026-10-27 배포 전 정리 완료: `FilmingTools.cs`, `RunState.DebugJump`, `EnemyAttack.OnDrawGizmos`, `PlayerConsumables` 구매 로그 삭제).
+- 디버그·치트용 코드를 새로 넣을 때는 빌드에 섞이지 않게 `#if UNITY_EDITOR`로 감싸고 이 목록에 적는다.

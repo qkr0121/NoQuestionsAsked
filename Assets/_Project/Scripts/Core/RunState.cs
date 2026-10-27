@@ -100,18 +100,6 @@ public class RunState : MonoBehaviour
         if (wave != null && wave.WaveNumber > ClearedWaveNumber) ClearedWaveNumber = wave.WaveNumber;
     }
 
-    // 촬영용 - 마감 판정·게임오버 없이 날짜와 클리어 웨이브를 바로 맞춤
-    public void DebugJump(int day, int clearedWave)
-    {
-        currentDay = Mathf.Max(1, day);
-        ClearedWaveNumber = Mathf.Max(0, clearedWave);
-        ClearSelectedWave();
-
-        // 점프한 날짜의 주기에 맞는 미션으로 교체 - 옛 미션이 마감을 넘긴 채 남지 않게 함
-        IssueNewMission();
-        if (currentDay > totalDays) CurrentMission.IsSubmitted = true;   // 탈출 단계에서는 미제출 미션이 없어야 함
-    }
-
     // 하루 단위로 단순화 - 전투를 마치고 복귀할 때만 하루가 끝남 (시간대 구조가 필요하면 나중에 복구)
     public void EndDay()
     {
