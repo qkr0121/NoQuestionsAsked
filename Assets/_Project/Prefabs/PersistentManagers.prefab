@@ -2123,7 +2123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b836becc3983234f87076ebf6fbd802, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RunState
-  currentDay: 1
+  currentDay: 0
   totalDays: 28
   missionInterval: 7
   missionQuotas: 88130000401f0000e02e0000f0550000

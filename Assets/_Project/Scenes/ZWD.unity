@@ -1376,73 +1376,6 @@ Transform:
   - {fileID: 977968999}
   m_Father: {fileID: 535898363}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!21 &387966253
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: LiberationSans SDF Material (Instance)
-  m_Shader: {fileID: 4800000, guid: fe393ace9b354375a9cb14cdbbc28be4, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 1
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 28684132378477856, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _CullMode: 0
-    - _FaceDilate: 0
-    - _GradientScale: 10
-    - _MaskSoftnessX: 0
-    - _MaskSoftnessY: 0
-    - _OutlineSoftness: 0
-    - _OutlineWidth: 0
-    - _PerspectiveFilter: 0.875
-    - _ScaleRatioA: 0.9
-    - _ScaleRatioB: 1
-    - _ScaleRatioC: 0.73125
-    - _ScaleX: 1
-    - _ScaleY: 1
-    - _ShaderFlags: 0
-    - _Sharpness: 0
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _TextureHeight: 1024
-    - _TextureWidth: 1024
-    - _UnderlayDilate: 0
-    - _UnderlayOffsetX: 0
-    - _UnderlayOffsetY: 0
-    - _UnderlaySoftness: 0
-    - _VertexOffsetX: 0
-    - _VertexOffsetY: 0
-    - _WeightBold: 0.75
-    - _WeightNormal: 0
-    m_Colors:
-    - _ClipRect: {r: -32767, g: -32767, b: 32767, a: 32767}
-    - _FaceColor: {r: 1, g: 1, b: 1, a: 1}
-    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _UnderlayColor: {r: 0, g: 0, b: 0, a: 0.5}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &388788780
 GameObject:
   m_ObjectHideFlags: 0
@@ -5958,6 +5891,7 @@ MonoBehaviour:
   - {fileID: 560745437}
   spawnOffset: 4
   edgeSpread: 12
+  clearToWarningDelay: 1.5
 --- !u!4 &1206912861
 Transform:
   m_ObjectHideFlags: 0
@@ -6367,6 +6301,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1313808153}
   - component: {fileID: 1313808154}
+  - component: {fileID: 1313808155}
   m_Layer: 5
   m_Name: WaveWarning
   m_TagString: Untagged
@@ -6411,6 +6346,30 @@ MonoBehaviour:
   redOverlay: {fileID: 1184536173}
   maxAlpha: 0.35
   pulseSpeed: 3
+  sirenLoopSeconds: 2.598
+--- !u!223 &1313808155
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1313808152}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 1
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: -1
+  m_TargetDisplay: 0
 --- !u!1001 &1337255780
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9933,7 +9892,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RocketInteraction
   rocketModel: {fileID: 1781371634}
   endingUI: {fileID: 953311368}
-  launchDuration: 2.5
+  launchSeconds: 3.2
   launchHeight: 40
 --- !u!114 &2107842984
 MonoBehaviour:
@@ -10486,22 +10445,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: HUD
       objectReference: {fileID: 0}
-    - target: {fileID: 8674093655262534163, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
-      propertyPath: m_fontMaterial
-      value: 
-      objectReference: {fileID: 387966253}
-    - target: {fileID: 8674093655262534163, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: -6885073326787540606, guid: da2b80a66898bae45832ec23420cc41e, type: 2}
-    - target: {fileID: 8674093655262534163, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
-      propertyPath: 'm_fontMaterials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 387966253}
-    - target: {fileID: 8674093655262534163, guid: c6f307f9f8571384ba2f4aad2a9bf454, type: 3}
-      propertyPath: 'm_fontSharedMaterials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 387966253}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
