@@ -3,6 +3,7 @@ using UnityEngine;
 public class MainMenuUI : MonoBehaviour
 {
     [SerializeField] private GameObject continueButton;
+    [SerializeField] private StoryUI storyUI;
     [SerializeField] private DifficultySelectUI difficultySelectUI;
     [SerializeField] private SaveSlotSelectUI slotSelectUI;
     [SerializeField] private SettingsUI settingsUI;
@@ -58,12 +59,21 @@ public class MainMenuUI : MonoBehaviour
         });
     }
 
-    // 새 게임: 난이도 -> 빈 칸 -> 동기 -> 시작
+    // 새 게임: 스토리 -> 난이도 -> 빈 칸 -> 동기 -> 시작
     public void OnNewGameClicked()
     {
         Transition(() =>
         {
             SetMainMenuVisible(false);
+            storyUI.Open(OnStoryFinished);
+        });
+    }
+
+    private void OnStoryFinished()
+    {
+        Transition(() =>
+        {
+            storyUI.Close();
             difficultySelectUI.Open(OnDifficultyChosen, BackToMainMenu);
         });
     }
